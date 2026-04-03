@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Entrada from "./pages/Entrada";
@@ -21,30 +22,59 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-3">
+          <div className="h-10 w-10 rounded-xl bg-primary animate-pulse mx-auto" />
+          <p className="text-sm text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+    <Route path="/" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+    <Route path="/entrada" element={<ProtectedRoute><AppLayout><Entrada /></AppLayout></ProtectedRoute>} />
+    <Route path="/saida" element={<ProtectedRoute><AppLayout><Saida /></AppLayout></ProtectedRoute>} />
+    <Route path="/patio" element={<ProtectedRoute><AppLayout><Patio /></AppLayout></ProtectedRoute>} />
+    <Route path="/clientes" element={<ProtectedRoute><AppLayout><Clientes /></AppLayout></ProtectedRoute>} />
+    <Route path="/veiculos" element={<ProtectedRoute><AppLayout><Veiculos /></AppLayout></ProtectedRoute>} />
+    <Route path="/mensalistas" element={<ProtectedRoute><AppLayout><Mensalistas /></AppLayout></ProtectedRoute>} />
+    <Route path="/relatorios" element={<ProtectedRoute><AppLayout><Relatorios /></AppLayout></ProtectedRoute>} />
+    <Route path="/financeiro" element={<ProtectedRoute><AppLayout><Financeiro /></AppLayout></ProtectedRoute>} />
+    <Route path="/comprovantes" element={<ProtectedRoute><AppLayout><Comprovantes /></AppLayout></ProtectedRoute>} />
+    <Route path="/admin" element={<ProtectedRoute><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
+    <Route path="/configuracoes" element={<ProtectedRoute><AppLayout><Configuracoes /></AppLayout></ProtectedRoute>} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/entrada" element={<AppLayout><Entrada /></AppLayout>} />
-          <Route path="/saida" element={<AppLayout><Saida /></AppLayout>} />
-          <Route path="/patio" element={<AppLayout><Patio /></AppLayout>} />
-          <Route path="/clientes" element={<AppLayout><Clientes /></AppLayout>} />
-          <Route path="/veiculos" element={<AppLayout><Veiculos /></AppLayout>} />
-          <Route path="/mensalistas" element={<AppLayout><Mensalistas /></AppLayout>} />
-          <Route path="/relatorios" element={<AppLayout><Relatorios /></AppLayout>} />
-          <Route path="/financeiro" element={<AppLayout><Financeiro /></AppLayout>} />
-          <Route path="/comprovantes" element={<AppLayout><Comprovantes /></AppLayout>} />
-          <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
-          <Route path="/configuracoes" element={<AppLayout><Configuracoes /></AppLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
