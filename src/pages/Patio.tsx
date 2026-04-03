@@ -1,19 +1,19 @@
 import { Car, Clock, Search, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useStore } from "@/lib/store";
+import { useMovimentacoesAtivas } from "@/hooks/useDatabase";
 import { useState } from "react";
 
 export default function Patio() {
   const [busca, setBusca] = useState("");
-  const { veiculosAtivos } = useStore();
+  const { data: veiculosAtivos = [], isLoading } = useMovimentacoesAtivas();
 
   const filtered = busca.length > 0
-    ? veiculosAtivos.filter(v => v.placa.includes(busca.toUpperCase()) || v.modelo.toLowerCase().includes(busca.toLowerCase()))
+    ? veiculosAtivos.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
     : veiculosAtivos;
 
   const totalEstimado = veiculosAtivos.reduce((sum, v) => {
     const diffH = (Date.now() - new Date(v.entrada).getTime()) / 3600000;
-    return sum + Math.max(Math.ceil(diffH), 1) * v.valorHora;
+    return sum + Math.max(Math.ceil(diffH), 1) * Number(v.valor_hora);
   }, 0);
 
   return (
@@ -53,19 +53,17 @@ export default function Patio() {
         </div>
       </div>
 
+      {isLoading && <p className="text-center text-muted-foreground py-8">Carregando...</p>}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map((v, i) => {
           const diffMs = Date.now() - new Date(v.entrada).getTime();
           const h = Math.floor(diffMs / 3600000);
           const m = Math.round((diffMs % 3600000) / 60000);
-          const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * v.valorHora;
+          const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
 
           return (
-            <div
-              key={v.id}
-              className={`glass-card-hover p-5 animate-in stagger-${Math.min(i + 1, 8)}`}
-              style={{ opacity: 0 }}
-            >
+            <div key={v.id} className={`glass-card-hover p-5 animate-in stagger-${Math.min(i + 1, 8)}`} style={{ opacity: 0 }}>
               <div className="flex items-start justify-between mb-4">
                 <div className="h-11 w-11 rounded-xl bg-primary/[0.08] flex items-center justify-center">
                   <Car className="h-5 w-5 text-primary" />
@@ -77,8 +75,7 @@ export default function Patio() {
               <p className="text-xs text-muted-foreground">{v.cor}</p>
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  <span>{h}h {m}min</span>
+                  <Clock className="h-3 w-3" /><span>{h}h {m}min</span>
                 </div>
                 <span className="text-base font-display font-bold text-accent">R$ {valor}</span>
               </div>
@@ -87,7 +84,7 @@ export default function Patio() {
         })}
       </div>
 
-      {filtered.length === 0 && (
+      {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <Car className="h-16 w-16 mb-4 opacity-20" />
           <p className="text-lg font-medium">Pátio vazio</p>
