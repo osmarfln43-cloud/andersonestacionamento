@@ -1,6 +1,6 @@
-import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useStore } from "@/lib/store";
+import { useMovimentacoesAtivas, useMovimentacoesHoje } from "@/hooks/useDatabase";
 
 const hourlyData = [
   { hora: '06h', faturamento: 24, entradas: 2, saidas: 1 },
@@ -43,9 +43,9 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color, delay }: {
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg ${
-            trendUp ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'
+            trendUp !== false ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'
           }`}>
-            {trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            <ArrowUpRight className="h-3 w-3" />
             {trend}
           </div>
         )}
@@ -57,45 +57,40 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color, delay }: {
 }
 
 export default function Dashboard() {
-  const { veiculosAtivos, movimentacoesHoje, saidasHoje, faturamentoHoje } = useStore();
+  const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
+  const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
+
+  const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
+  const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = saidasHoje.length > 0 ? (faturamentoHoje / saidasHoje.length).toFixed(0) : '0';
   const ocupacao = Math.min(Math.round((veiculosAtivos.length / 50) * 100), 100);
 
   const stats = [
     { icon: Car, label: "Veículos no Pátio", value: veiculosAtivos.length, trend: "agora", trendUp: true, color: "hsl(217,91%,60%)", delay: 1 },
-    { icon: LogIn, label: "Entradas Hoje", value: movimentacoesHoje.length, trend: "+8%", trendUp: true, color: "hsl(160,65%,48%)", delay: 2 },
-    { icon: LogOut, label: "Saídas Hoje", value: saidasHoje.length, trend: "+5%", trendUp: true, color: "hsl(38,92%,55%)", delay: 3 },
+    { icon: LogIn, label: "Entradas Hoje", value: movimentacoesHoje.length, color: "hsl(160,65%,48%)", delay: 2 },
+    { icon: LogOut, label: "Saídas Hoje", value: saidasHoje.length, color: "hsl(38,92%,55%)", delay: 3 },
     { icon: DollarSign, label: "Faturamento Hoje", value: `R$ ${faturamentoHoje.toLocaleString()}`, trend: "+12%", trendUp: true, color: "hsl(160,65%,48%)", delay: 4 },
     { icon: DollarSign, label: "Ticket Médio", value: `R$ ${ticketMedio}`, color: "hsl(280,65%,62%)", delay: 5 },
-    { icon: Clock, label: "Tempo Médio", value: "2h 15m", color: "hsl(217,91%,60%)", delay: 6 },
-    { icon: Percent, label: "Taxa de Ocupação", value: `${ocupacao}%`, trend: `${ocupacao}%`, trendUp: ocupacao < 90, color: "hsl(38,92%,55%)", delay: 7 },
-    { icon: Users, label: "Mensalistas Ativos", value: 12, trend: "+2", trendUp: true, color: "hsl(280,65%,62%)", delay: 8 },
+    { icon: Clock, label: "Tempo Médio", value: "—", color: "hsl(217,91%,60%)", delay: 6 },
+    { icon: Percent, label: "Taxa de Ocupação", value: `${ocupacao}%`, color: "hsl(38,92%,55%)", delay: 7 },
+    { icon: Users, label: "Mensalistas", value: "—", color: "hsl(280,65%,62%)", delay: 8 },
   ];
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-display">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">Visão geral do estacionamento em tempo real</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
-          <StatCard key={i} {...s} />
-        ))}
+        {stats.map((s, i) => <StatCard key={i} {...s} />)}
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue Chart */}
         <div className="lg:col-span-2 glass-card p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="section-title">Faturamento por Hora</h3>
-            <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" />Faturamento</span>
-            </div>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={hourlyData}>
@@ -114,7 +109,6 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Payment Pie */}
         <div className="glass-card p-6 flex flex-col">
           <h3 className="section-title mb-6">Formas de Pagamento</h3>
           <div className="flex-1 flex items-center justify-center">
@@ -139,7 +133,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Movement Chart + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-6">
           <h3 className="section-title mb-6">Movimentação por Hora</h3>
@@ -153,19 +146,17 @@ export default function Dashboard() {
               <Bar dataKey="saidas" fill="hsl(160,65%,48%)" radius={[6, 6, 0, 0]} maxBarSize={20} name="Saídas" />
             </BarChart>
           </ResponsiveContainer>
-          <div className="flex justify-center gap-6 mt-4">
-            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-2 rounded-full bg-primary" />Entradas</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-2 rounded-full bg-accent" />Saídas</span>
-          </div>
         </div>
 
-        {/* Recent Activity */}
         <div className="glass-card p-6">
           <h3 className="section-title mb-4">Últimas Movimentações</h3>
           <div className="space-y-2">
-            {movimentacoesHoje.slice(-6).reverse().map((m) => (
+            {movimentacoesHoje.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma movimentação hoje</p>
+            )}
+            {movimentacoesHoje.slice(0, 6).map((m) => (
               <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40 hover:bg-secondary/60 transition-colors">
-                <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${m.statusMovimentacao === 'ativo' ? 'bg-accent' : 'bg-muted-foreground/40'}`} />
+                <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${m.status_movimentacao === 'ativo' ? 'bg-accent' : 'bg-muted-foreground/40'}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-sm text-foreground">{m.placa}</span>
@@ -176,11 +167,9 @@ export default function Dashboard() {
                   {new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-lg ${
-                  m.statusMovimentacao === 'ativo'
-                    ? 'bg-accent/10 text-accent'
-                    : 'bg-muted text-muted-foreground'
+                  m.status_movimentacao === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'
                 }`}>
-                  {m.statusMovimentacao === 'ativo' ? 'No pátio' : 'Saiu'}
+                  {m.status_movimentacao === 'ativo' ? 'No pátio' : 'Saiu'}
                 </span>
               </div>
             ))}

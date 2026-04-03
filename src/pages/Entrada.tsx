@@ -3,7 +3,7 @@ import { LogIn, Car, Clock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore } from "@/lib/store";
+import { useRegistrarEntrada } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Entrada() {
@@ -12,7 +12,7 @@ export default function Entrada() {
   const [cor, setCor] = useState("");
   const [observacao, setObservacao] = useState("");
   const [tipo, setTipo] = useState<'avulso' | 'mensalista'>('avulso');
-  const { registrarEntrada } = useStore();
+  const registrarEntrada = useRegistrarEntrada();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -21,9 +21,18 @@ export default function Entrada() {
       toast({ title: "Preencha placa e modelo", variant: "destructive" });
       return;
     }
-    registrarEntrada({ placa: placa.toUpperCase(), modelo, cor, tipoCliente: tipo, observacao });
-    toast({ title: "✓ Entrada registrada", description: `${placa.toUpperCase()} – ${modelo}` });
-    setPlaca(""); setModelo(""); setCor(""); setObservacao("");
+    registrarEntrada.mutate(
+      { placa: placa.toUpperCase(), modelo, cor, tipo_cliente: tipo, observacao },
+      {
+        onSuccess: () => {
+          toast({ title: "✓ Entrada registrada", description: `${placa.toUpperCase()} – ${modelo}` });
+          setPlaca(""); setModelo(""); setCor(""); setObservacao("");
+        },
+        onError: (err: any) => {
+          toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
+        },
+      }
+    );
   };
 
   return (
@@ -39,11 +48,9 @@ export default function Entrada() {
       </div>
 
       <form onSubmit={handleSubmit} className="glass-card p-8 space-y-6 animate-in" style={{ opacity: 0 }}>
-        {/* Plate — hero field */}
         <div className="space-y-2">
-          <Label htmlFor="placa" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Placa do Veículo</Label>
+          <Label className="stat-label">Placa do Veículo</Label>
           <Input
-            id="placa"
             placeholder="ABC1D23"
             value={placa}
             onChange={(e) => setPlaca(e.target.value.toUpperCase())}
@@ -64,7 +71,6 @@ export default function Entrada() {
           </div>
         </div>
 
-        {/* Client type */}
         <div className="space-y-2">
           <Label className="stat-label">Tipo de Cliente</Label>
           <div className="grid grid-cols-2 gap-3">
@@ -90,8 +96,8 @@ export default function Entrada() {
           <Input placeholder="Alguma observação..." value={observacao} onChange={(e) => setObservacao(e.target.value)} className="h-12" />
         </div>
 
-        <Button type="submit" className="w-full h-14 text-base font-semibold gap-2 rounded-xl">
-          <Zap className="h-5 w-5" /> Registrar Entrada
+        <Button type="submit" className="w-full h-14 text-base font-semibold gap-2 rounded-xl" disabled={registrarEntrada.isPending}>
+          <Zap className="h-5 w-5" /> {registrarEntrada.isPending ? 'Registrando...' : 'Registrar Entrada'}
         </Button>
 
         <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
