@@ -1,15 +1,15 @@
-import { CalendarCheck, Search, Plus, AlertTriangle } from "lucide-react";
+import { CalendarCheck, Search, Plus, AlertTriangle, DollarSign, Users, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { motion } from "framer-motion";
 
 const demoMensalistas = [
-  { id: '1', cliente: 'Carlos Silva', placa: 'ABC1D23', plano: 'Mensal', valor: 350, vencimento: '15/04/2026', status: 'ativo' },
-  { id: '2', cliente: 'João Oliveira', placa: 'MNO7F89', plano: 'Mensal', valor: 350, vencimento: '10/04/2026', status: 'ativo' },
-  { id: '3', cliente: 'Pedro Lima', placa: 'DEF5H67', plano: 'Quinzenal', valor: 200, vencimento: '05/04/2026', status: 'atrasado' },
-  { id: '4', cliente: 'Fernanda Rocha', placa: 'RST1A23', plano: 'Mensal', valor: 350, vencimento: '01/04/2026', status: 'atrasado' },
-  { id: '5', cliente: 'Lucas Pereira', placa: 'UVW4B56', plano: 'Mensal', valor: 400, vencimento: '20/04/2026', status: 'ativo' },
+  { id: '1', cliente: 'Carlos Silva', placa: 'ABC1D23', plano: 'Mensal Integral', valor: 350, vencimento: '15/04/2026', status: 'ativo' },
+  { id: '2', cliente: 'João Oliveira', placa: 'MNO7F89', plano: 'Mensal Integral', valor: 350, vencimento: '10/04/2026', status: 'ativo' },
+  { id: '3', cliente: 'Pedro Lima', placa: 'DEF5H67', plano: 'Mensal Noturno', valor: 200, vencimento: '05/04/2026', status: 'atrasado' },
+  { id: '4', cliente: 'Fernanda Rocha', placa: 'RST1A23', plano: 'Mensal Integral', valor: 350, vencimento: '01/04/2026', status: 'atrasado' },
+  { id: '5', cliente: 'Lucas Pereira', placa: 'UVW4B56', plano: 'Mensal VIP', valor: 500, vencimento: '20/04/2026', status: 'ativo' },
+  { id: '6', cliente: 'Amanda Souza', placa: 'YZA7C89', plano: 'Mensal Integral', valor: 350, vencimento: '25/04/2026', status: 'ativo' },
 ];
 
 export default function Mensalistas() {
@@ -20,66 +20,111 @@ export default function Mensalistas() {
   const receita = demoMensalistas.filter(m => m.status === 'ativo').reduce((s, m) => s + m.valor, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-            <CalendarCheck className="h-6 w-6 text-primary" /> Mensalistas
+          <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <CalendarCheck className="h-5 w-5 text-primary" />
+            </div>
+            Mensalistas
           </h1>
-          <p className="text-sm text-muted-foreground">{demoMensalistas.length} mensalistas</p>
+          <p className="text-sm text-muted-foreground mt-2">{demoMensalistas.length} contratos</p>
         </div>
-        <Button className="gap-2"><Plus className="h-4 w-4" /> Novo Mensalista</Button>
+        <Button className="gap-2 h-11 px-6 rounded-xl">
+          <Plus className="h-4 w-4" /> Novo Mensalista
+        </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Ativos', value: ativos, color: 'text-accent' },
-          { label: 'Atrasados', value: atrasados, color: 'text-destructive' },
-          { label: 'Receita Recorrente', value: `R$ ${receita}`, color: 'text-accent' },
-          { label: 'Total', value: demoMensalistas.length, color: 'text-primary' },
-        ].map((s) => (
-          <div key={s.label} className="glass-card p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{s.label}</p>
-            <p className={`stat-value mt-1 ${s.color}`}>{s.value}</p>
+        <div className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-4 w-4 text-accent" />
+            <p className="stat-label">Ativos</p>
           </div>
-        ))}
-      </div>
-
-      <div className="glass-card p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar mensalista..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10" />
+          <p className="stat-value text-accent">{ativos}</p>
+        </div>
+        <div className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <p className="stat-label">Em Atraso</p>
+          </div>
+          <p className="stat-value text-destructive">{atrasados}</p>
+        </div>
+        <div className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-4 w-4 text-accent" />
+            <p className="stat-label">Receita Recorrente</p>
+          </div>
+          <p className="stat-value text-accent">R$ {receita.toLocaleString()}</p>
+        </div>
+        <div className="glass-card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-warning" />
+            <p className="stat-label">Vencendo Hoje</p>
+          </div>
+          <p className="stat-value text-warning">1</p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((m, i) => (
-          <motion.div
-            key={m.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass-card-hover p-4 flex items-center gap-4"
-          >
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-              {m.cliente.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground">{m.cliente}</p>
-              <p className="text-xs text-muted-foreground font-mono">{m.placa} • {m.plano}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-mono font-bold text-foreground">R$ {m.valor}</p>
-              <p className="text-xs text-muted-foreground">Venc: {m.vencimento}</p>
-            </div>
-            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
-              m.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'
-            }`}>
-              {m.status === 'atrasado' && <AlertTriangle className="h-3 w-3" />}
-              {m.status}
-            </span>
-          </motion.div>
-        ))}
+      <div className="glass-card p-3">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar mensalista por nome ou placa..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-11 h-12 text-base border-0 bg-transparent" />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-4 stat-label">Cliente</th>
+                <th className="text-left p-4 stat-label">Placa</th>
+                <th className="text-left p-4 stat-label hidden md:table-cell">Plano</th>
+                <th className="text-left p-4 stat-label">Valor</th>
+                <th className="text-left p-4 stat-label hidden md:table-cell">Vencimento</th>
+                <th className="text-left p-4 stat-label">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((m) => (
+                <tr key={m.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                        {m.cliente.charAt(0)}
+                      </div>
+                      <span className="font-medium text-foreground text-sm">{m.cliente}</span>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span className="font-mono font-bold text-foreground tracking-wide">{m.placa}</span>
+                  </td>
+                  <td className="p-4 hidden md:table-cell">
+                    <span className="text-sm text-muted-foreground">{m.plano}</span>
+                  </td>
+                  <td className="p-4">
+                    <span className="font-display font-bold text-foreground">R$ {m.valor}</span>
+                  </td>
+                  <td className="p-4 hidden md:table-cell">
+                    <span className="text-sm font-mono text-muted-foreground">{m.vencimento}</span>
+                  </td>
+                  <td className="p-4">
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 w-fit ${
+                      m.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'
+                    }`}>
+                      {m.status === 'atrasado' && <AlertTriangle className="h-3 w-3" />}
+                      {m.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

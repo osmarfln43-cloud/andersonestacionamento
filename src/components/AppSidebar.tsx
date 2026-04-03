@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
-  FileText, Printer, Settings, UserCog, Building2, Wallet, ChevronLeft,
-  ChevronRight, ParkingCircle, Sparkles
+  FileText, Printer, Settings, Wallet, ChevronLeft,
+  ChevronRight, ParkingCircle, Sparkles, ShieldCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -31,8 +31,7 @@ const businessItems = [
 ];
 
 const systemItems = [
-  { title: "Unidades", url: "/unidades", icon: Building2 },
-  { title: "Usuários", url: "/usuarios", icon: UserCog },
+  { title: "Admin", url: "/admin", icon: ShieldCheck },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
