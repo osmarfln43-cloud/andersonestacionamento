@@ -14,8 +14,7 @@ import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
 import Financeiro from "./pages/Financeiro";
 import Comprovantes from "./pages/Comprovantes";
-import Unidades from "./pages/Unidades";
-import Usuarios from "./pages/Usuarios";
+import Admin from "./pages/Admin";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -40,8 +39,7 @@ const App = () => (
           <Route path="/relatorios" element={<AppLayout><Relatorios /></AppLayout>} />
           <Route path="/financeiro" element={<AppLayout><Financeiro /></AppLayout>} />
           <Route path="/comprovantes" element={<AppLayout><Comprovantes /></AppLayout>} />
-          <Route path="/unidades" element={<AppLayout><Unidades /></AppLayout>} />
-          <Route path="/usuarios" element={<AppLayout><Usuarios /></AppLayout>} />
+          <Route path="/admin" element={<AppLayout><Admin /></AppLayout>} />
           <Route path="/configuracoes" element={<AppLayout><Configuracoes /></AppLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
