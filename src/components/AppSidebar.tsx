@@ -1,99 +1,130 @@
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
-  FileText, Printer, Settings, UserCog, Building2, Wallet, ChevronLeft, Bot, ParkingCircle
+  FileText, Printer, Settings, UserCog, Building2, Wallet, ChevronLeft,
+  ChevronRight, ParkingCircle, Sparkles
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
-  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
+const operationalItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Entrada", url: "/entrada", icon: LogIn },
   { title: "Saída", url: "/saida", icon: LogOut },
   { title: "Pátio", url: "/patio", icon: Car },
+];
+
+const managementItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Veículos", url: "/veiculos", icon: CarFront },
   { title: "Mensalistas", url: "/mensalistas", icon: CalendarCheck },
-  { title: "Relatórios", url: "/relatorios", icon: FileText },
+];
+
+const businessItems = [
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Relatórios", url: "/relatorios", icon: FileText },
   { title: "Comprovantes", url: "/comprovantes", icon: Printer },
+];
+
+const systemItems = [
   { title: "Unidades", url: "/unidades", icon: Building2 },
   { title: "Usuários", url: "/usuarios", icon: UserCog },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
+function MenuSection({ label, items, collapsed }: { label: string; items: typeof operationalItems; collapsed: boolean }) {
+  const location = useLocation();
+  return (
+    <SidebarGroup className="py-1">
+      {!collapsed && (
+        <div className="px-4 pt-4 pb-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">{label}</span>
+        </div>
+      )}
+      {collapsed && <div className="h-3" />}
+      <SidebarGroupContent>
+        <SidebarMenu className="space-y-0.5 px-2">
+          {items.map((item) => {
+            const isActive = location.pathname === item.url;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to={item.url}
+                    end
+                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-primary/[0.08] text-primary'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    }`}
+                    activeClassName=""
+                  >
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                    )}
+                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                    {!collapsed && <span>{item.title}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="p-4">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border/50">
+      <SidebarHeader className="p-4 pb-2">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary glow-primary">
             <ParkingCircle className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col animate-fade-in">
-              <span className="text-sm font-bold text-sidebar-accent-foreground tracking-tight">ME PARK AI</span>
-              <span className="text-[10px] text-sidebar-foreground">Estacionamento Inteligente</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[15px] font-bold text-foreground tracking-tight font-display">ME PARK AI</span>
+              <span className="text-[10px] text-muted-foreground tracking-wide">Estacionamento Inteligente</span>
             </div>
-          )}
-          {!collapsed && (
-            <button onClick={toggleSidebar} className="ml-auto text-sidebar-foreground hover:text-sidebar-accent-foreground transition-colors">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-3 mb-1">
-            {!collapsed && "Menu"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                          isActive
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                        }`}
-                        activeClassName=""
-                      >
-                        <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="mt-1">
+        <MenuSection label="Operacional" items={operationalItems} collapsed={collapsed} />
+        <MenuSection label="Cadastros" items={managementItems} collapsed={collapsed} />
+        <MenuSection label="Negócios" items={businessItems} collapsed={collapsed} />
+        <MenuSection label="Sistema" items={systemItems} collapsed={collapsed} />
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 space-y-2">
         {!collapsed && (
-          <div className="glass-card p-3 flex items-center gap-2">
-            <Bot className="h-4 w-4 text-accent shrink-0" />
-            <span className="text-xs text-muted-foreground">IA ativa</span>
-            <span className="ml-auto h-2 w-2 rounded-full bg-accent animate-pulse-glow" />
+          <div className="glass-card p-3 flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-foreground">IA Ativa</p>
+              <p className="text-[10px] text-muted-foreground">Monitorando operação</p>
+            </div>
+            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
           </div>
         )}
+        <button
+          onClick={toggleSidebar}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all"
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4" /><span>Recolher</span></>}
+        </button>
       </SidebarFooter>
     </Sidebar>
   );
