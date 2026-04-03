@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,63 +6,57 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 92%;
+    --background: 225 25% 6%;
+    --foreground: 210 25% 95%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 92%;
+    --card: 225 22% 9%;
+    --card-foreground: 210 25% 95%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 225 22% 9%;
+    --popover-foreground: 210 25% 95%;
 
-    --primary: 210 100% 52%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 16%;
-    --secondary-foreground: 210 20% 88%;
+    --secondary: 225 18% 13%;
+    --secondary-foreground: 210 20% 85%;
 
-    --muted: 220 14% 14%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 225 16% 12%;
+    --muted-foreground: 218 12% 50%;
 
-    --accent: 152 60% 45%;
+    --accent: 160 65% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 210 100% 52%;
+    --border: 225 15% 14%;
+    --input: 225 15% 16%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    --warning: 42 95% 55%;
-    --warning-foreground: 0 0% 10%;
-    --success: 152 60% 45%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 8%;
+    --success: 160 65% 48%;
     --success-foreground: 0 0% 100%;
-    --info: 210 100% 52%;
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 210 15% 70%;
-    --sidebar-primary: 210 100% 52%;
+    --sidebar-background: 225 25% 7%;
+    --sidebar-foreground: 218 12% 52%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 16% 14%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 14% 15%;
-    --sidebar-ring: 210 100% 52%;
+    --sidebar-accent: 225 18% 12%;
+    --sidebar-accent-foreground: 210 25% 95%;
+    --sidebar-border: 225 15% 12%;
+    --sidebar-ring: 217 91% 60%;
 
-    --chart-1: 210 100% 52%;
-    --chart-2: 152 60% 45%;
-    --chart-3: 42 95% 55%;
-    --chart-4: 280 65% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 160 65% 48%;
+    --chart-3: 38 92% 55%;
+    --chart-4: 280 65% 62%;
     --chart-5: 0 72% 55%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 52%), hsl(220 90% 42%));
-    --gradient-accent: linear-gradient(135deg, hsl(152 60% 45%), hsl(170 55% 38%));
-    --gradient-card: linear-gradient(145deg, hsl(220 18% 11%), hsl(220 18% 9%));
-    --shadow-glow: 0 0 30px -5px hsl(210 100% 52% / 0.15);
-    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.3);
   }
 }
 
@@ -70,47 +64,91 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* Premium scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(225 15% 18%); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(225 15% 25%); }
+}
+
+@layer components {
+  .glass-card {
+    @apply relative bg-card border border-border rounded-2xl overflow-hidden;
+    box-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.2), 0 0 0 1px hsl(225 15% 14% / 0.5);
   }
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 ease-out;
   }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 3px;
+  .glass-card-hover:hover {
+    border-color: hsl(217 91% 60% / 0.25);
+    box-shadow: 0 4px 24px -4px hsl(217 91% 60% / 0.08), 0 0 0 1px hsl(217 91% 60% / 0.15);
+    transform: translateY(-1px);
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(217 91% 65%), hsl(160 65% 55%));
+  }
+  .stat-value {
+    @apply text-3xl font-bold tracking-tight;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  .stat-label {
+    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground;
+  }
+  .section-title {
+    @apply text-sm font-semibold text-foreground tracking-tight;
+  }
+  .glow-primary {
+    box-shadow: 0 0 40px -8px hsl(217 91% 60% / 0.25);
+  }
+  .glow-accent {
+    box-shadow: 0 0 40px -8px hsl(160 65% 48% / 0.2);
+  }
+
+  /* Thermal receipt */
+  .receipt-paper {
+    background: hsl(45 30% 96%);
+    color: hsl(0 0% 10%);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    border-radius: 4px;
+    position: relative;
+  }
+  .receipt-paper::before,
+  .receipt-paper::after {
+    content: '';
+    display: block;
+    height: 12px;
+    background: repeating-linear-gradient(
+      135deg,
+      transparent,
+      transparent 4px,
+      hsl(45 30% 90%) 4px,
+      hsl(45 30% 90%) 8px
+    );
   }
 }
 
 @layer utilities {
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
-    box-shadow: var(--shadow-card);
+  .animate-in {
+    animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .glass-card-hover {
-    @apply glass-card transition-all duration-300;
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .glass-card-hover:hover {
-    @apply border-primary/30;
-    box-shadow: var(--shadow-glow);
-  }
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
-  }
-  .stat-value {
-    @apply text-2xl font-bold tracking-tight;
-    font-family: 'JetBrains Mono', monospace;
-  }
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-7 { animation-delay: 0.35s; }
+  .stagger-8 { animation-delay: 0.4s; }
 }
