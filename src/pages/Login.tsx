@@ -1,10 +1,9 @@
-import { ParkingCircle } from "lucide-react";
+import { ParkingCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,35 +16,57 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md space-y-8"
-      >
-        <div className="text-center space-y-3">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-            <ParkingCircle className="h-8 w-8 text-primary" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-[420px] space-y-8 relative z-10 animate-in" style={{ opacity: 0 }}>
+        <div className="text-center space-y-4">
+          <div className="h-20 w-20 rounded-3xl bg-primary glow-primary flex items-center justify-center mx-auto">
+            <ParkingCircle className="h-10 w-10 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">ME PARK AI</h1>
-          <p className="text-sm text-muted-foreground">Estacionamento Inteligente</p>
+          <div>
+            <h1 className="text-3xl font-bold font-display gradient-text">ME PARK AI</h1>
+            <p className="text-sm text-muted-foreground mt-1">Estacionamento Inteligente</p>
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} className="glass-card p-6 space-y-4">
+        <form onSubmit={handleLogin} className="glass-card p-8 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" placeholder="admin@mepark.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Label className="stat-label">E-mail</Label>
+            <Input
+              type="email"
+              placeholder="operador@mepark.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12"
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="senha">Senha</Label>
-            <Input id="senha" type="password" placeholder="••••••••" value={senha} onChange={(e) => setSenha(e.target.value)} />
+            <Label className="stat-label">Senha</Label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className="h-12"
+            />
           </div>
-          <Button type="submit" className="w-full h-11">Entrar</Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Demo: qualquer credencial funciona
+          <Button type="submit" className="w-full h-13 text-base font-semibold gap-2 rounded-xl">
+            Entrar <ArrowRight className="h-4 w-4" />
+          </Button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            Demo — qualquer credencial funciona
           </p>
         </form>
-      </motion.div>
+
+        <p className="text-center text-[10px] text-muted-foreground/50">
+          © 2026 ME PARK AI • Estacionamento Inteligente
+        </p>
+      </div>
     </div>
   );
 }
