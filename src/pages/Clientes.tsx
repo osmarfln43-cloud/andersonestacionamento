@@ -160,13 +160,47 @@ export default function Clientes() {
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">Carregando...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">Nenhum cliente encontrado</p>
+        ) : filtered.map((c: any) => (
+          <div key={c.id} className="glass-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                  {c.nome.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                </div>
+                <div>
+                  <p className="font-medium text-foreground text-sm">{c.nome}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{c.cpf_cnpj || '—'}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setViewCliente(c)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"><Eye className="h-4 w-4" /></button>
+                <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"><Pencil className="h-4 w-4" /></button>
+                <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {c.telefone && <span className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{c.telefone}</span>}
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${c.tipo === 'mensalista' ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'}`}>{c.tipo}</span>
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-lg ${c.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>{c.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left p-4 stat-label">Cliente</th>
-                <th className="text-left p-4 stat-label hidden lg:table-cell">Contato</th>
+                <th className="text-left p-4 stat-label">Contato</th>
                 <th className="text-left p-4 stat-label">Tipo</th>
                 <th className="text-left p-4 stat-label">Status</th>
                 <th className="text-right p-4 stat-label">Ações</th>
@@ -190,7 +224,7 @@ export default function Clientes() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 hidden lg:table-cell">
+                  <td className="p-4">
                     <div className="space-y-1 text-xs text-muted-foreground">
                       {c.telefone && <p className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.telefone}</p>}
                       {c.email && <p className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</p>}
