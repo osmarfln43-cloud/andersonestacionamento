@@ -66,7 +66,7 @@ export default function Saida() {
       tipoChavePix: config?.tipo_chave_pix,
       nomeBeneficiario: config?.nome_beneficiario,
       mensagemComprovante: config?.mensagem_comprovante,
-      tipo: "saida",
+      tipo: "unico",
       horarioAbertura: (config as any)?.horario_abertura,
       horarioFechamento: (config as any)?.horario_fechamento,
       diasFuncionamento: (config as any)?.dias_funcionamento,

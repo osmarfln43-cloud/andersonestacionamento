@@ -121,7 +121,7 @@ export default function Entrada() {
             nomeBeneficiario: config?.nome_beneficiario,
             mensagemComprovante: config?.mensagem_comprovante,
             valorHora: result.valor_hora,
-            tipo: "entrada" as const,
+            tipo: "unico" as const,
             horarioAbertura: (config as any)?.horario_abertura,
             horarioFechamento: (config as any)?.horario_fechamento,
             diasFuncionamento: (config as any)?.dias_funcionamento,

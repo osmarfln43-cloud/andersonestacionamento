@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import { QRCodeCanvas } from "qrcode.react";
+import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 
 export interface ReceiptData {
   placa: string;
@@ -20,7 +21,7 @@ export interface ReceiptData {
   nomeBeneficiario?: string;
   mensagemComprovante?: string;
   valorHora?: number;
-  tipo: "entrada" | "saida";
+  tipo: "entrada" | "saida" | "unico";
   horarioAbertura?: string;
   horarioFechamento?: string;
   diasFuncionamento?: string;
@@ -38,22 +39,23 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   useEffect(() => {
     if (!data) return;
-    const timeout = setTimeout(() => generatePDF(), 600);
+    const timeout = setTimeout(() => generatePDF(), 800);
     return () => clearTimeout(timeout);
   }, [data]);
 
   const generatePDF = async () => {
     if (!data) return;
 
-    // Load uploaded QR image if available
     let qrImageData: string | null = null;
+
+    // 1) Try uploaded QR image
     if (data.qrCodeUrl) {
       try {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         await new Promise<void>((resolve, reject) => {
           img.onload = () => resolve();
-          img.onerror = () => reject();
+          img.onerror = () => reject(new Error('Failed to load QR image'));
           img.src = data.qrCodeUrl!;
         });
         const canvas = document.createElement('canvas');
@@ -62,23 +64,47 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         canvas.getContext('2d')!.drawImage(img, 0, 0);
         qrImageData = canvas.toDataURL('image/png');
       } catch {
-        // fallback to generated QR
+        // fallback below
       }
     }
 
-    // Get generated QR canvas as fallback
-    const qrCanvas = (!qrImageData && data.chavePix) ? qrRef.current?.querySelector("canvas") : null;
-    const finalQrData = qrImageData || (qrCanvas ? (qrCanvas as HTMLCanvasElement).toDataURL('image/png') : null);
+    // 2) Try generated QR canvas (from chavePix)
+    if (!qrImageData && data.chavePix) {
+      const qrCanvas = qrRef.current?.querySelector("canvas");
+      if (qrCanvas) {
+        qrImageData = (qrCanvas as HTMLCanvasElement).toDataURL('image/png');
+      }
+    }
+
+    // 3) Fallback: load the bundled fallback image
+    if (!qrImageData) {
+      try {
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Failed to load fallback QR'));
+          img.src = pixQrFallback;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        qrImageData = canvas.toDataURL('image/png');
+      } catch {
+        // no QR at all
+      }
+    }
 
     // First pass: calculate height
     const calcDoc = new jsPDF({ unit: "mm", format: [80, 500] });
-    const finalHeight = renderContent(calcDoc, data, finalQrData);
+    const finalHeight = renderContent(calcDoc, data, qrImageData);
 
     // Second pass: create with exact height
     const doc = new jsPDF({ unit: "mm", format: [80, finalHeight + 5] });
-    renderContent(doc, data, finalQrData);
+    renderContent(doc, data, qrImageData);
 
-    const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
+    const tipoLabel = data.saida ? 'saida' : 'entrada';
+    const filename = `comprovante-${data.placa}-${tipoLabel}-${Date.now()}.pdf`;
     doc.save(filename);
     onDone();
   };
@@ -151,7 +177,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     leftRight("Entrada:", `${entradaDate} as ${entradaTime}`, y, 8);
     y += 5;
 
-    if (data.tipo === "saida" && data.saida) {
+    if (data.saida) {
       const saidaDt = new Date(data.saida);
       const saidaDate = saidaDt.toLocaleDateString("pt-BR");
       const saidaTime = saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -179,7 +205,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     dashed(y); y += 5;
 
     // ========== TOTAL ==========
-    if (data.tipo === "saida" && data.valorTotal != null) {
+    if (data.saida && data.valorTotal != null) {
       center("Total", y, 12, "bold");
       y += 6;
       center(`R$ ${Number(data.valorTotal).toFixed(2)}`, y, 16, "bold");

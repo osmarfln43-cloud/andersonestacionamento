@@ -63,7 +63,7 @@ export default function Comprovantes() {
     chavePix: config?.chave_pix || undefined,
     nomeBeneficiario: config?.nome_beneficiario || undefined,
     mensagemComprovante: config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA',
-    tipo: m.saida ? "saida" : "entrada",
+    tipo: "unico",
     horarioAbertura: (config as any)?.horario_abertura || '07:00',
     horarioFechamento: (config as any)?.horario_fechamento || '19:00',
     diasFuncionamento: (config as any)?.dias_funcionamento || 'Segunda a Sexta',
