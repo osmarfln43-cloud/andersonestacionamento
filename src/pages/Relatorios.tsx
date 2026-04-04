@@ -2,9 +2,13 @@ import { FileText, Download, Filter, DollarSign, Car, Clock, TrendingUp, Calenda
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useConfiguracoes } from "@/hooks/useDatabase";
+import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const tooltipStyle = {
   background: 'hsl(225, 22%, 9%)',
@@ -23,7 +27,6 @@ function getDateRange(periodo: Periodo) {
   ate.setHours(23, 59, 59, 999);
   const de = new Date(now);
   de.setHours(0, 0, 0, 0);
-
   switch (periodo) {
     case 'hoje': break;
     case 'semanal': de.setDate(de.getDate() - 7); break;
@@ -63,6 +66,10 @@ export default function Relatorios() {
   const [customDe, setCustomDe] = useState('');
   const [customAte, setCustomAte] = useState('');
   const [filtroPlaca, setFiltroPlaca] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const { data: config } = useConfiguracoes();
+  const { toast } = useToast();
 
   const { data: movimentacoes = [] } = useMovimentacoesPeriodo(
     periodo,
@@ -78,6 +85,8 @@ export default function Relatorios() {
   const ativos = filtrados.filter(m => m.status_movimentacao === 'ativo');
   const faturamento = finalizados.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = finalizados.length > 0 ? faturamento / finalizados.length : 0;
+  const pixTotal = finalizados.filter(m => m.forma_pagamento === 'pix').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
+  const dinheiroTotal = finalizados.filter(m => m.forma_pagamento === 'dinheiro').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
   const pixCount = finalizados.filter(m => m.forma_pagamento === 'pix').length;
   const dinheiroCount = finalizados.filter(m => m.forma_pagamento === 'dinheiro').length;
 
@@ -98,6 +107,198 @@ export default function Relatorios() {
 
   const periodoLabel = { hoje: 'Hoje', semanal: 'Última Semana', quinzenal: 'Últimos 15 Dias', mensal: 'Este Mês' };
 
+  const exportPDF = useCallback(async () => {
+    setExporting(true);
+    try {
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      const w = 210;
+      const margin = 15;
+      const contentW = w - margin * 2;
+      let y = margin;
+
+      const drawText = (text: string, x: number, yPos: number, size = 10, style: 'normal' | 'bold' = 'normal', color = [30, 30, 30]) => {
+        doc.setFontSize(size);
+        doc.setFont('helvetica', style);
+        doc.setTextColor(color[0], color[1], color[2]);
+        doc.text(text, x, yPos);
+      };
+
+      const drawLine = (yPos: number) => {
+        doc.setDrawColor(200);
+        doc.setLineWidth(0.3);
+        doc.line(margin, yPos, w - margin, yPos);
+      };
+
+      const checkPage = (needed: number) => {
+        if (y + needed > 280) {
+          doc.addPage();
+          y = margin;
+        }
+      };
+
+      // === HEADER ===
+      drawText(config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO', margin, y, 18, 'bold');
+      y += 6;
+      drawText('RELATÓRIO FINANCEIRO COMPLETO', margin, y, 10, 'normal', [100, 100, 100]);
+      y += 5;
+      const periodoText = customDe ? `${customDe} a ${customAte}` : periodoLabel[periodo];
+      drawText(`Período: ${periodoText}`, margin, y, 9, 'normal', [100, 100, 100]);
+      y += 4;
+      drawText(`Emitido: ${new Date().toLocaleString('pt-BR')}`, margin, y, 8, 'normal', [140, 140, 140]);
+      y += 6;
+      drawLine(y); y += 8;
+
+      // === RESUMO FINANCEIRO ===
+      drawText('RESUMO FINANCEIRO', margin, y, 13, 'bold');
+      y += 8;
+
+      const stats = [
+        ['Total de Entradas', `${filtrados.length}`],
+        ['Saídas Finalizadas', `${finalizados.length}`],
+        ['Em Aberto', `${ativos.length}`],
+        ['Faturamento Total', `R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
+        ['Ticket Médio', `R$ ${ticketMedio.toFixed(2)}`],
+        ['Receita PIX', `R$ ${pixTotal.toFixed(2)} (${pixCount} pagamentos)`],
+        ['Receita Dinheiro', `R$ ${dinheiroTotal.toFixed(2)} (${dinheiroCount} pagamentos)`],
+      ];
+
+      // Draw stats in 2 columns
+      const colW = contentW / 2;
+      stats.forEach((s, i) => {
+        const col = i % 2;
+        const xPos = margin + col * colW;
+        if (col === 0) checkPage(12);
+        doc.setFillColor(245, 245, 248);
+        doc.roundedRect(xPos, y - 4, colW - 4, 11, 2, 2, 'F');
+        drawText(s[0], xPos + 3, y, 7, 'normal', [100, 100, 100]);
+        drawText(s[1], xPos + 3, y + 5, 10, 'bold');
+        if (col === 1) y += 14;
+      });
+      if (stats.length % 2 !== 0) y += 14;
+      y += 4;
+      drawLine(y); y += 8;
+
+      // === CHART (capture from DOM) ===
+      if (chartRef.current) {
+        checkPage(80);
+        drawText('FATURAMENTO POR DIA', margin, y, 13, 'bold');
+        y += 6;
+        try {
+          const canvas = await html2canvas(chartRef.current, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false,
+          });
+          const imgData = canvas.toDataURL('image/png');
+          const imgH = (canvas.height * contentW) / canvas.width;
+          doc.addImage(imgData, 'PNG', margin, y, contentW, Math.min(imgH, 70));
+          y += Math.min(imgH, 70) + 6;
+        } catch {
+          drawText('(Gráfico indisponível)', margin, y, 9, 'normal', [150, 150, 150]);
+          y += 8;
+        }
+        drawLine(y); y += 8;
+      }
+
+      // === BALANÇO DIÁRIO ===
+      checkPage(20);
+      drawText('BALANÇO DIÁRIO', margin, y, 13, 'bold');
+      y += 8;
+
+      if (chartData.length > 0) {
+        // Table header
+        const cols = [margin, margin + 25, margin + 70, margin + 110];
+        doc.setFillColor(30, 30, 40);
+        doc.rect(margin, y - 4, contentW, 8, 'F');
+        drawText('DIA', cols[0] + 2, y, 8, 'bold', [255, 255, 255]);
+        drawText('FATURAMENTO', cols[1] + 2, y, 8, 'bold', [255, 255, 255]);
+        drawText('VEÍCULOS', cols[2] + 2, y, 8, 'bold', [255, 255, 255]);
+        drawText('TICKET MÉDIO', cols[3] + 2, y, 8, 'bold', [255, 255, 255]);
+        y += 6;
+
+        chartData.forEach((row, i) => {
+          checkPage(8);
+          if (i % 2 === 0) {
+            doc.setFillColor(248, 248, 252);
+            doc.rect(margin, y - 3.5, contentW, 7, 'F');
+          }
+          const tm = row.veiculos > 0 ? (row.faturamento / row.veiculos).toFixed(2) : '0.00';
+          drawText(row.dia, cols[0] + 2, y, 8);
+          drawText(`R$ ${row.faturamento.toFixed(2)}`, cols[1] + 2, y, 8, 'bold');
+          drawText(`${row.veiculos}`, cols[2] + 2, y, 8);
+          drawText(`R$ ${tm}`, cols[3] + 2, y, 8);
+          y += 7;
+        });
+
+        // Total row
+        checkPage(10);
+        doc.setFillColor(30, 30, 40);
+        doc.rect(margin, y - 3.5, contentW, 8, 'F');
+        drawText('TOTAL', cols[0] + 2, y, 9, 'bold', [255, 255, 255]);
+        drawText(`R$ ${faturamento.toFixed(2)}`, cols[1] + 2, y, 9, 'bold', [255, 255, 255]);
+        drawText(`${finalizados.length}`, cols[2] + 2, y, 9, 'bold', [255, 255, 255]);
+        drawText(`R$ ${ticketMedio.toFixed(2)}`, cols[3] + 2, y, 9, 'bold', [255, 255, 255]);
+        y += 10;
+      }
+
+      drawLine(y); y += 8;
+
+      // === MOVIMENTAÇÕES DETALHADAS ===
+      checkPage(20);
+      drawText('MOVIMENTAÇÕES DETALHADAS', margin, y, 13, 'bold');
+      y += 8;
+
+      // Table header
+      const mCols = [margin, margin + 20, margin + 55, margin + 90, margin + 115, margin + 140, margin + 162];
+      doc.setFillColor(30, 30, 40);
+      doc.rect(margin, y - 4, contentW, 8, 'F');
+      ['PLACA', 'ENTRADA', 'SAÍDA', 'TEMPO', 'VALOR', 'PGTO', 'STATUS'].forEach((h, i) => {
+        drawText(h, mCols[i] + 1, y, 6, 'bold', [255, 255, 255]);
+      });
+      y += 6;
+
+      filtrados.forEach((m, i) => {
+        checkPage(8);
+        if (i % 2 === 0) {
+          doc.setFillColor(248, 248, 252);
+          doc.rect(margin, y - 3.5, contentW, 7, 'F');
+        }
+        drawText(m.placa, mCols[0] + 1, y, 7, 'bold');
+        drawText(new Date(m.entrada).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }), mCols[1] + 1, y, 6);
+        drawText(m.saida ? new Date(m.saida).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—', mCols[2] + 1, y, 6);
+        drawText(m.tempo_total || '—', mCols[3] + 1, y, 6);
+        drawText(m.valor_total ? `R$ ${Number(m.valor_total).toFixed(2)}` : '—', mCols[4] + 1, y, 7, 'bold');
+        drawText((m.forma_pagamento || '—').toUpperCase(), mCols[5] + 1, y, 6);
+        drawText(m.status_movimentacao === 'ativo' ? 'ATIVO' : 'FINAL.', mCols[6] + 1, y, 6);
+        y += 7;
+      });
+
+      // === FOOTER ===
+      y += 6;
+      checkPage(20);
+      drawLine(y); y += 6;
+      drawText(config?.endereco?.toUpperCase() || '', margin, y, 7, 'normal', [140, 140, 140]);
+      y += 4;
+      drawText(config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERENCIA', margin, y, 7, 'bold', [100, 100, 100]);
+
+      // Page numbers
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(160, 160, 160);
+        doc.text(`Página ${i} de ${totalPages}`, w - margin, 290, { align: 'right' });
+      }
+
+      doc.save(`relatorio-${periodo}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: '✓ Relatório exportado', description: 'PDF gerado com sucesso' });
+    } catch (err: any) {
+      toast({ title: 'Erro ao exportar', description: err.message, variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  }, [filtrados, finalizados, ativos, faturamento, ticketMedio, pixTotal, dinheiroTotal, pixCount, dinheiroCount, chartData, periodo, customDe, customAte, config]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -110,6 +311,10 @@ export default function Relatorios() {
           </h1>
           <p className="text-sm text-muted-foreground mt-2">Análises e relatórios operacionais completos</p>
         </div>
+        <Button onClick={exportPDF} disabled={exporting} className="gap-2 rounded-xl h-12 px-6">
+          <Download className="h-4 w-4" />
+          {exporting ? 'Gerando PDF...' : 'Exportar PDF'}
+        </Button>
       </div>
 
       {/* Period Selector */}
@@ -158,7 +363,7 @@ export default function Relatorios() {
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <div className="glass-card p-6">
+        <div className="glass-card p-6" ref={chartRef}>
           <h3 className="section-title mb-6">Faturamento por Dia — {customDe ? 'Personalizado' : periodoLabel[periodo]}</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData}>
