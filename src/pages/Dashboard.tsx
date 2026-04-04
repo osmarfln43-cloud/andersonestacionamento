@@ -115,13 +115,13 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display text-destructive">Gerenciador</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visão geral do estacionamento em tempo real</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-display text-destructive">Gerenciador</h1>
+        <p className="text-xs md:text-sm text-muted-foreground mt-1">Visão geral do estacionamento em tempo real</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         {stats.map((s, i) => <StatCard key={i} {...s} />)}
       </div>
 
