@@ -64,9 +64,9 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
                     activeClassName=""
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full ${item.title === 'Gerenciador' ? 'bg-destructive' : 'bg-primary'}`} />
                     )}
-                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${item.title === 'Gerenciador' ? 'text-destructive' : (isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}`} />
                     {!collapsed && <span>{item.title}</span>}
                   </NavLink>
                 </SidebarMenuButton>
