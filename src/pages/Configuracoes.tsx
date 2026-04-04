@@ -154,6 +154,26 @@ export default function Configuracoes() {
 
   const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
 
+  const handleUploadQR = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filename = `qrcode-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('qrcode-images').upload(filename, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('qrcode-images').getPublicUrl(filename);
+      setField('qr_code_url', urlData.publicUrl);
+      toast({ title: "✓ QR Code enviado!", description: "Salve as configurações para aplicar." });
+    } catch (err: any) {
+      toast({ title: "Erro no upload", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (isLoading) return <p className="text-center py-12 text-muted-foreground">Carregando...</p>;
 
   return (
