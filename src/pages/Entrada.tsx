@@ -356,7 +356,7 @@ export default function Entrada() {
                 const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
                 setPlaca(v);
               }}
-              className="h-16 text-3xl font-mono font-bold tracking-[0.15em] text-center uppercase bg-secondary border-border focus:border-primary"
+              className="h-14 md:h-16 text-2xl md:text-3xl font-mono font-bold tracking-[0.15em] text-center uppercase bg-secondary border-border focus:border-primary"
               maxLength={7}
               autoFocus
             />
