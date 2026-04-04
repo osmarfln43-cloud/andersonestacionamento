@@ -4,6 +4,7 @@ import {
   ChevronRight, ParkingCircle, Sparkles, ShieldCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -80,6 +81,7 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
 
   return (
@@ -118,6 +120,13 @@ export function AppSidebar() {
             <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
           </div>
         )}
+        <button
+          onClick={() => { signOut(); }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-all"
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && <span>Sair</span>}
+        </button>
         <button
           onClick={toggleSidebar}
           className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all"
