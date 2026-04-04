@@ -20,9 +20,10 @@ type ClienteForm = {
   status: string;
   endereco: string;
   observacao: string;
+  valor_mensal: string;
 };
 
-const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '' };
+const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '' };
 
 export default function Clientes() {
   const [busca, setBusca] = useState("");
@@ -51,25 +52,42 @@ export default function Clientes() {
 
   const openNew = () => { setForm(emptyForm); setEditId(null); setDialogOpen(true); };
   const openEdit = (c: any) => {
-    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '' });
+    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '', valor_mensal: '' });
     setEditId(c.id);
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.nome.trim()) { toast({ title: "Nome é obrigatório", variant: "destructive" }); return; }
+    if (form.tipo === 'mensalista' && !editId && (!form.valor_mensal || Number(form.valor_mensal) <= 0)) {
+      toast({ title: "Informe o valor mensal", variant: "destructive" }); return;
+    }
     setSaving(true);
     try {
+      const payload = { nome: form.nome, cpf_cnpj: form.cpf_cnpj || null, telefone: form.telefone || null, email: form.email || null, tipo: form.tipo, status: form.status, endereco: form.endereco || null, observacao: form.observacao || null };
       if (editId) {
-        const { error } = await supabase.from('clientes').update({ ...form }).eq('id', editId);
+        const { error } = await supabase.from('clientes').update(payload).eq('id', editId);
         if (error) throw error;
         toast({ title: "Cliente atualizado!" });
       } else {
-        const { error } = await supabase.from('clientes').insert({ ...form });
+        const { data: newCliente, error } = await supabase.from('clientes').insert(payload).select().single();
         if (error) throw error;
+        // If mensalista, create mensalista record
+        if (form.tipo === 'mensalista' && newCliente) {
+          const vencimento = new Date();
+          vencimento.setMonth(vencimento.getMonth() + 1);
+          await supabase.from('mensalistas').insert({
+            cliente_id: newCliente.id,
+            valor_mensal: Number(form.valor_mensal),
+            vencimento: vencimento.toISOString().split('T')[0],
+            plano: 'Mensal Integral',
+            status: 'ativo',
+          });
+        }
         toast({ title: "Cliente cadastrado!" });
       }
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: ['mensalistas'] });
       setDialogOpen(false);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -182,8 +200,8 @@ export default function Clientes() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
@@ -214,6 +232,18 @@ export default function Clientes() {
                   </SelectContent>
                 </Select>
               </div>
+              {form.tipo === 'mensalista' && !editId && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="stat-label">Valor Mensal (R$) *</Label>
+                  <Input
+                    type="number"
+                    value={form.valor_mensal}
+                    onChange={e => setField('valor_mensal', e.target.value)}
+                    placeholder="Ex: 350.00"
+                    className="h-12 font-mono text-lg"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="stat-label">Status</Label>
                 <Select value={form.status} onValueChange={v => setField('status', v)}>
@@ -233,9 +263,11 @@ export default function Clientes() {
                 <Textarea value={form.observacao} onChange={e => setField('observacao', e.target.value)} placeholder="Observações..." rows={2} />
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-1">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : editId ? 'Atualizar' : 'Cadastrar'}</Button>
+              <Button onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? 'Salvando...' : editId ? 'Atualizar' : 'Salvar'}
+              </Button>
             </div>
           </div>
         </DialogContent>
