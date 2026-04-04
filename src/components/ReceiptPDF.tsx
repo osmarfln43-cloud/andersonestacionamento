@@ -44,7 +44,21 @@ export default function ReceiptPDF({ data, onDone }: Props) {
   const generatePDF = async () => {
     if (!data) return;
 
-    const doc = new jsPDF({ unit: "mm", format: [80, 300] });
+    // First pass: calculate height
+    const calcDoc = new jsPDF({ unit: "mm", format: [80, 500] });
+    const finalHeight = renderContent(calcDoc, data, null);
+
+    // Second pass: create with exact height
+    const doc = new jsPDF({ unit: "mm", format: [80, finalHeight + 5] });
+    const qrCanvas = data.chavePix ? qrRef.current?.querySelector("canvas") : null;
+    renderContent(doc, data, qrCanvas as HTMLCanvasElement | null);
+
+    const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
+    doc.save(filename);
+    onDone();
+  };
+
+  const renderContent = (doc: jsPDF, data: ReceiptData, qrCanvas: HTMLCanvasElement | null): number => {
     const w = 80;
     let y = 6;
 
@@ -153,14 +167,11 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     y += 6;
 
     // ========== QR CODE ==========
-    if (data.chavePix) {
-      const qrCanvas = qrRef.current?.querySelector("canvas");
-      if (qrCanvas) {
-        const qrData = (qrCanvas as HTMLCanvasElement).toDataURL("image/png");
-        const qrSize = 28;
-        doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
-        y += qrSize + 3;
-      }
+    if (data.chavePix && qrCanvas) {
+      const qrData = qrCanvas.toDataURL("image/png");
+      const qrSize = 28;
+      doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
+      y += qrSize + 3;
     }
 
     // ========== PAYMENT HIGHLIGHT (below QR) ==========
@@ -178,15 +189,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     }
 
     y += 3;
-
-    // Resize
-    doc.internal.pageSize.height = y + 3;
-
-    // Download PDF directly
-    const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
-    doc.save(filename);
-
-    onDone();
+    return y;
   };
 
   if (!data) return null;
