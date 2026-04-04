@@ -251,10 +251,30 @@ export default function Entrada() {
               autoFocus
             />
             {aiResult && (
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30' : 'bg-accent/5 border-accent/20'}`}>
-                <Sparkles className={`h-4 w-4 shrink-0 ${aiResult.source === 'mensalista' ? 'text-primary' : 'text-accent'}`} />
-                <span className={`text-xs ${aiResult.source === 'mensalista' ? 'text-primary font-semibold' : 'text-accent'}`}>
-                  {aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` : aiResult.source === 'database' ? 'Encontrado no sistema' : `IA: ${aiResult.confianca}`} — {aiResult.marca} {aiResult.modelo}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                aiResult.source === 'patio' ? 'bg-destructive/10 border-destructive/30' :
+                aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30' :
+                aiResult.source === 'retorno' ? 'bg-warning/10 border-warning/30' :
+                'bg-accent/5 border-accent/20'
+              }`}>
+                <Sparkles className={`h-4 w-4 shrink-0 ${
+                  aiResult.source === 'patio' ? 'text-destructive' :
+                  aiResult.source === 'mensalista' ? 'text-primary' :
+                  aiResult.source === 'retorno' ? 'text-warning' :
+                  'text-accent'
+                }`} />
+                <span className={`text-xs font-semibold ${
+                  aiResult.source === 'patio' ? 'text-destructive' :
+                  aiResult.source === 'mensalista' ? 'text-primary' :
+                  aiResult.source === 'retorno' ? 'text-warning' :
+                  'text-accent'
+                }`}>
+                  {aiResult.source === 'patio' ? '⚠️ JÁ ESTÁ NO PÁTIO' :
+                   aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
+                   aiResult.source === 'retorno' ? '🔄 CLIENTE RETORNOU (2ª vez+)' :
+                   aiResult.source === 'database' ? '✓ Encontrado no sistema' :
+                   `🤖 IA: ${aiResult.confianca}`}
+                  {' — '}{aiResult.marca} {aiResult.modelo}
                 </span>
               </div>
             )}
