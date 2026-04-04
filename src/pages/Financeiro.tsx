@@ -1,6 +1,6 @@
-import { Wallet, TrendingUp, ArrowUp } from "lucide-react";
+import { Wallet, TrendingUp, Banknote, QrCode, Users, Calendar } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { useMovimentacoesHoje } from "@/hooks/useDatabase";
+import { useMovimentacoesHoje, useMovimentacoesFinalizadasHoje, useMensalistas } from "@/hooks/useDatabase";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -16,14 +16,31 @@ function usePagamentos() {
   });
 }
 
+function usePagamentosHoje() {
+  return useQuery({
+    queryKey: ['pagamentos', 'hoje'],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase.from('pagamentos').select('*').gte('created_at', today.toISOString()).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 30000,
+  });
+}
+
 export default function Financeiro() {
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
+  const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
   const { data: pagamentos = [] } = usePagamentos();
+  const { data: pagamentosHoje = [] } = usePagamentosHoje();
+  const { data: mensalistas = [] } = useMensalistas();
 
-  const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
-  const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
+  const faturamentoHoje = finalizadosHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
+  const dinheiroHoje = pagamentosHoje.filter((p: any) => p.tipo === 'dinheiro').reduce((s: number, p: any) => s + Number(p.valor), 0);
+  const pixHoje = pagamentosHoje.filter((p: any) => p.tipo === 'pix').reduce((s: number, p: any) => s + Number(p.valor), 0);
 
-  // This month's data from pagamentos
   const thisMonth = useMemo(() => {
     const now = new Date();
     return pagamentos.filter((p: any) => {
@@ -34,14 +51,12 @@ export default function Financeiro() {
 
   const faturamentoMes = thisMonth.reduce((s: number, p: any) => s + Number(p.valor), 0);
 
-  // Weekly (last 7 days)
   const faturamentoSemana = useMemo(() => {
     const now = Date.now();
     const week = pagamentos.filter((p: any) => now - new Date(p.created_at).getTime() < 7 * 86400000);
     return week.reduce((s: number, p: any) => s + Number(p.valor), 0);
   }, [pagamentos]);
 
-  // Chart: daily this month
   const monthData = useMemo(() => {
     const days: Record<string, number> = {};
     thisMonth.forEach((p: any) => {
@@ -61,6 +76,13 @@ export default function Financeiro() {
     ];
   }, [thisMonth]);
 
+  // Mensalistas ativos com vencimento
+  const mensalistasAtivos = useMemo(() => {
+    return (mensalistas || []).filter((m: any) => m.status === 'ativo');
+  }, [mensalistas]);
+
+  const receitaMensalistas = mensalistasAtivos.reduce((s: number, m: any) => s + Number(m.valor_mensal || 0), 0);
+
   return (
     <div className="space-y-6">
       <div>
@@ -70,15 +92,16 @@ export default function Financeiro() {
           </div>
           Financeiro
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">Controle financeiro e receitas</p>
+        <p className="text-sm text-muted-foreground mt-2">Controle financeiro diário e mensal</p>
       </div>
 
+      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Hoje', value: `R$ ${faturamentoHoje.toLocaleString()}`, color: 'text-accent' },
           { label: 'Semana', value: `R$ ${faturamentoSemana.toLocaleString()}`, color: 'text-primary' },
           { label: 'Mês', value: `R$ ${faturamentoMes.toLocaleString()}`, color: 'text-primary' },
-          { label: 'Pagamentos', value: thisMonth.length, color: 'text-foreground' },
+          { label: 'Mensalistas', value: `R$ ${receitaMensalistas.toLocaleString()}`, color: 'text-foreground' },
         ].map((s) => (
           <div key={s.label} className="glass-card p-5">
             <p className="stat-label">{s.label}</p>
@@ -87,6 +110,49 @@ export default function Financeiro() {
         ))}
       </div>
 
+      {/* Daily Cash Control */}
+      <div className="glass-card p-6">
+        <h3 className="section-title mb-4 flex items-center gap-2"><Banknote className="h-4 w-4 text-accent" /> Controle Diário — {new Date().toLocaleDateString('pt-BR')}</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl bg-secondary/40">
+            <p className="stat-label mb-1">Entradas Hoje</p>
+            <p className="text-2xl font-display font-bold text-foreground">{movimentacoesHoje.length}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-secondary/40">
+            <p className="stat-label mb-1">Saídas Hoje</p>
+            <p className="text-2xl font-display font-bold text-accent">{finalizadosHoje.length}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-secondary/40">
+            <p className="stat-label mb-1">💵 Dinheiro</p>
+            <p className="text-2xl font-display font-bold text-foreground">R$ {dinheiroHoje.toLocaleString()}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-secondary/40">
+            <p className="stat-label mb-1">📱 PIX</p>
+            <p className="text-2xl font-display font-bold text-primary">R$ {pixHoje.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Today's transactions */}
+        {pagamentosHoje.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Transações do Dia</p>
+            <div className="max-h-[200px] overflow-y-auto space-y-1.5">
+              {pagamentosHoje.map((p: any) => (
+                <div key={p.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/20">
+                  <div className="flex items-center gap-2">
+                    {p.tipo === 'pix' ? <QrCode className="h-3.5 w-3.5 text-primary" /> : <Banknote className="h-3.5 w-3.5 text-accent" />}
+                    <span className="text-xs font-medium text-foreground uppercase">{p.tipo}</span>
+                  </div>
+                  <span className="text-xs font-mono text-muted-foreground">{new Date(p.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-sm font-display font-bold text-accent">R$ {Number(p.valor).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 glass-card p-6">
           <h3 className="section-title mb-6">Receita Mensal</h3>
@@ -134,6 +200,59 @@ export default function Financeiro() {
           ) : (
             <p className="text-sm text-muted-foreground text-center py-16">Sem dados</p>
           )}
+        </div>
+      </div>
+
+      {/* Mensalistas Section */}
+      <div className="glass-card p-6">
+        <h3 className="section-title mb-4 flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Mensalistas — Controle de Pagamentos</h3>
+        {mensalistasAtivos.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left py-2 px-3 stat-label">Cliente</th>
+                  <th className="text-left py-2 px-3 stat-label">Plano</th>
+                  <th className="text-left py-2 px-3 stat-label">Valor Mensal</th>
+                  <th className="text-left py-2 px-3 stat-label">Vencimento</th>
+                  <th className="text-left py-2 px-3 stat-label">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mensalistasAtivos.map((m: any) => {
+                  const venc = new Date(m.vencimento + 'T12:00:00');
+                  const hoje = new Date();
+                  const vencido = venc < hoje;
+                  return (
+                    <tr key={m.id} className="border-b border-border/20 hover:bg-secondary/20">
+                      <td className="py-3 px-3 font-medium text-foreground">{m.clientes?.nome || '—'}</td>
+                      <td className="py-3 px-3 text-muted-foreground">{m.plano}</td>
+                      <td className="py-3 px-3 font-mono font-bold text-accent">R$ {Number(m.valor_mensal).toLocaleString()}</td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <span className={`font-mono text-xs ${vencido ? 'text-destructive font-bold' : 'text-foreground'}`}>
+                            {venc.toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold uppercase ${vencido ? 'bg-destructive/10 text-destructive' : 'bg-accent/10 text-accent'}`}>
+                          {vencido ? 'Vencido' : 'Em dia'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">Nenhum mensalista ativo</p>
+        )}
+        <div className="mt-4 p-4 rounded-xl bg-primary/[0.04] border border-primary/10 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Receita mensal estimada (mensalistas)</span>
+          <span className="text-xl font-display font-bold text-primary">R$ {receitaMensalistas.toLocaleString()}</span>
         </div>
       </div>
     </div>

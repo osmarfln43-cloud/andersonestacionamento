@@ -18,6 +18,25 @@ export function useMovimentacoesAtivas() {
   });
 }
 
+export function useMovimentacoesFinalizadasHoje() {
+  return useQuery({
+    queryKey: ['movimentacoes', 'finalizadas-hoje'],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('*')
+        .eq('status_movimentacao', 'finalizado')
+        .gte('saida', today.toISOString())
+        .order('saida', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 30000,
+  });
+}
+
 export function useMovimentacoesHoje() {
   return useQuery({
     queryKey: ['movimentacoes', 'hoje'],
