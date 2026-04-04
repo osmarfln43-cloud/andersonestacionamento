@@ -22,6 +22,7 @@ export default function Entrada() {
   const [receiptData, setReceiptData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [capturedFile, setCapturedFile] = useState<File | null>(null);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
   const { toast } = useToast();
@@ -87,6 +88,7 @@ export default function Entrada() {
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCapturedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
@@ -96,46 +98,64 @@ export default function Entrada() {
     reader.readAsDataURL(file);
   };
 
+  const uploadVehiclePhoto = async (placaStr: string): Promise<string | null> => {
+    if (!capturedFile) return null;
+    try {
+      const ext = capturedFile.name.split('.').pop() || 'jpg';
+      const filename = `${placaStr}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('vehicle-photos').upload(filename, capturedFile, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('vehicle-photos').getPublicUrl(filename);
+      return urlData.publicUrl;
+    } catch {
+      return null;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!placa.trim()) {
       toast({ title: "Preencha a placa", variant: "destructive" });
       return;
     }
-    registrarEntrada.mutate(
-      { placa: placa.toUpperCase(), modelo: `${marca} ${modelo}`.trim() || 'N/I', cor, tipo_cliente: tipo, observacao },
-      {
-        onSuccess: (result) => {
-          toast({ title: "✓ Entrada registrada", description: `${placa.toUpperCase()} – ${marca} ${modelo}` });
-          // Trigger receipt PDF
-          setReceiptData({
-            placa: placa.toUpperCase(),
-            modelo: `${marca} ${modelo}`.trim() || 'N/I',
-            cor,
-            tipo_cliente: tipo,
-            entrada: result.entrada,
-            nomeEstacionamento: config?.nome_estacionamento,
-            endereco: config?.endereco,
-            telefone: config?.telefone,
-            chavePix: config?.chave_pix,
-            tipoChavePix: config?.tipo_chave_pix,
-            nomeBeneficiario: config?.nome_beneficiario,
-            mensagemComprovante: config?.mensagem_comprovante,
-            valorHora: result.valor_hora,
-            tipo: "unico" as const,
-            horarioAbertura: (config as any)?.horario_abertura,
-            horarioFechamento: (config as any)?.horario_fechamento,
-            diasFuncionamento: (config as any)?.dias_funcionamento,
-            disclaimerComprovante: (config as any)?.disclaimer_comprovante,
-            qrCodeUrl: (config as any)?.qr_code_url || undefined,
-          });
-          setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
-        },
-        onError: (err: any) => {
-          toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
-        },
-      }
-    );
+    const doSubmit = async () => {
+      const placaUpper = placa.toUpperCase();
+      const fotoUrl = await uploadVehiclePhoto(placaUpper);
+      registrarEntrada.mutate(
+        { placa: placaUpper, modelo: `${marca} ${modelo}`.trim() || 'N/I', cor, tipo_cliente: tipo, observacao, foto_url: fotoUrl || undefined },
+        {
+          onSuccess: (result) => {
+            toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${marca} ${modelo}` });
+            setReceiptData({
+              placa: placaUpper,
+              modelo: `${marca} ${modelo}`.trim() || 'N/I',
+              cor,
+              tipo_cliente: tipo,
+              entrada: result.entrada,
+              nomeEstacionamento: config?.nome_estacionamento,
+              endereco: config?.endereco,
+              telefone: config?.telefone,
+              chavePix: config?.chave_pix,
+              tipoChavePix: config?.tipo_chave_pix,
+              nomeBeneficiario: config?.nome_beneficiario,
+              mensagemComprovante: config?.mensagem_comprovante,
+              valorHora: result.valor_hora,
+              tipo: "unico" as const,
+              horarioAbertura: (config as any)?.horario_abertura,
+              horarioFechamento: (config as any)?.horario_fechamento,
+              diasFuncionamento: (config as any)?.dias_funcionamento,
+              disclaimerComprovante: (config as any)?.disclaimer_comprovante,
+              qrCodeUrl: (config as any)?.qr_code_url || undefined,
+            });
+            setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null); setCapturedFile(null);
+          },
+          onError: (err: any) => {
+            toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
+          },
+        }
+      );
+    };
+    doSubmit();
   };
 
   return (
