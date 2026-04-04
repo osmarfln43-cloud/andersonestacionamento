@@ -1,10 +1,11 @@
-import { Printer, Search, Eye, X } from "lucide-react";
+import { Printer, Search, Eye, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useConfiguracoes } from "@/hooks/useDatabase";
+import { useToast } from "@/hooks/use-toast";
 import ReceiptPDF, { type ReceiptData } from "@/components/ReceiptPDF";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -26,9 +27,20 @@ function useTodasMovimentacoes() {
 export default function Comprovantes() {
   const { data: movimentacoes = [] } = useTodasMovimentacoes();
   const { data: config } = useConfiguracoes();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [viewMov, setViewMov] = useState<any>(null);
+
+  const handleDelete = async (id: string, placa: string) => {
+    if (!confirm(`Excluir comprovante de ${placa}?`)) return;
+    const { error } = await supabase.from('movimentacoes').delete().eq('id', id);
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    if (viewMov?.id === id) setViewMov(null);
+    queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+    toast({ title: "✓ Comprovante excluído" });
+  };
 
   const filtered = busca
     ? movimentacoes.filter(m => m.placa.includes(busca.toUpperCase()))
@@ -105,9 +117,12 @@ export default function Comprovantes() {
                     <td className="p-4 font-mono text-xs text-muted-foreground">{new Date(m.entrada).toLocaleDateString('pt-BR')}</td>
                     <td className="p-4 text-xs font-semibold uppercase text-foreground">{m.forma_pagamento || (m.status_movimentacao === 'ativo' ? 'Em aberto' : '—')}</td>
                     <td className="p-4 font-display font-bold text-accent">{m.status_movimentacao === 'ativo' ? '—' : `R$ ${Number(m.valor_total || 0).toFixed(2)}`}</td>
-                    <td className="p-4">
+                    <td className="p-4 flex gap-1">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setViewMov(m); }} className="gap-1.5 rounded-xl h-9 px-3">
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(m.id, m.placa); }} className="gap-1.5 rounded-xl h-9 px-3 text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
