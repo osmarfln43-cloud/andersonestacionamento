@@ -72,7 +72,11 @@ export type Database = {
           chave_pix: string | null
           cnpj: string | null
           created_at: string
+          dias_funcionamento: string | null
+          disclaimer_comprovante: string | null
           endereco: string | null
+          horario_abertura: string | null
+          horario_fechamento: string | null
           id: string
           largura_papel: string | null
           mensagem_comprovante: string | null
@@ -91,7 +95,11 @@ export type Database = {
           chave_pix?: string | null
           cnpj?: string | null
           created_at?: string
+          dias_funcionamento?: string | null
+          disclaimer_comprovante?: string | null
           endereco?: string | null
+          horario_abertura?: string | null
+          horario_fechamento?: string | null
           id?: string
           largura_papel?: string | null
           mensagem_comprovante?: string | null
@@ -110,7 +118,11 @@ export type Database = {
           chave_pix?: string | null
           cnpj?: string | null
           created_at?: string
+          dias_funcionamento?: string | null
+          disclaimer_comprovante?: string | null
           endereco?: string | null
+          horario_abertura?: string | null
+          horario_fechamento?: string | null
           id?: string
           largura_papel?: string | null
           mensagem_comprovante?: string | null
