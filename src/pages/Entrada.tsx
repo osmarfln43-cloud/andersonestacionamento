@@ -55,20 +55,47 @@ export default function Entrada() {
     setAiResult(null);
     try {
       const placaUpper = placa.toUpperCase();
-      // Check if mensalista by plate
+
+      // Check if vehicle is already in patio (active movement)
+      const { data: ativo } = await supabase
+        .from('movimentacoes')
+        .select('*')
+        .eq('placa', placaUpper)
+        .eq('status_movimentacao', 'ativo')
+        .limit(1)
+        .maybeSingle();
+
+      // Check previous visits (finalized)
+      const { data: historico } = await supabase
+        .from('movimentacoes')
+        .select('placa, modelo, cor')
+        .eq('placa', placaUpper)
+        .eq('status_movimentacao', 'finalizado')
+        .order('saida', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (ativo) {
+        toast({ title: "⚠️ Veículo já está no pátio!", description: `${placaUpper} entrou em ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
+        if (ativo.modelo) setModelo(ativo.modelo.replace(ativo.cor || '', '').trim());
+        if (ativo.cor) setCor(ativo.cor);
+        setAiResult({ marca: '', modelo: ativo.modelo, cor: ativo.cor, confianca: 'alta', source: 'patio' });
+        setAiLoading(false);
+        return;
+      }
+
+      // Check veiculos table (mensalista etc)
       const { data: veiculoMensalista } = await supabase
         .from('veiculos')
         .select('*, clientes(nome, tipo)')
         .eq('placa', placaUpper)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (veiculoMensalista) {
         setMarca(veiculoMensalista.marca || '');
         setModelo(veiculoMensalista.modelo);
         setCor(veiculoMensalista.cor || '');
-
-        // Check if client is mensalista
         const cliente = veiculoMensalista.clientes as any;
         if (cliente?.tipo === 'mensalista') {
           setTipo('mensalista');
@@ -78,6 +105,18 @@ export default function Entrada() {
           setAiResult({ marca: veiculoMensalista.marca, modelo: veiculoMensalista.modelo, cor: veiculoMensalista.cor, confianca: 'alta', source: 'database' });
           toast({ title: "✓ Veículo encontrado no sistema", description: `${veiculoMensalista.marca || ''} ${veiculoMensalista.modelo}` });
         }
+        setAiLoading(false);
+        return;
+      }
+
+      // Check previous visit history - auto-fill
+      if (historico) {
+        const parts = (historico.modelo || '').split(' ');
+        setMarca(parts[0] || '');
+        setModelo(parts.slice(1).join(' ') || parts[0] || '');
+        setCor(historico.cor || '');
+        setAiResult({ marca: parts[0], modelo: historico.modelo, cor: historico.cor, confianca: 'alta', source: 'retorno' });
+        toast({ title: "🔄 Cliente retornou!", description: `2ª vez ou mais — ${historico.modelo} ${historico.cor || ''}` });
         setAiLoading(false);
         return;
       }
@@ -212,10 +251,30 @@ export default function Entrada() {
               autoFocus
             />
             {aiResult && (
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30' : 'bg-accent/5 border-accent/20'}`}>
-                <Sparkles className={`h-4 w-4 shrink-0 ${aiResult.source === 'mensalista' ? 'text-primary' : 'text-accent'}`} />
-                <span className={`text-xs ${aiResult.source === 'mensalista' ? 'text-primary font-semibold' : 'text-accent'}`}>
-                  {aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` : aiResult.source === 'database' ? 'Encontrado no sistema' : `IA: ${aiResult.confianca}`} — {aiResult.marca} {aiResult.modelo}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                aiResult.source === 'patio' ? 'bg-destructive/10 border-destructive/30' :
+                aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30' :
+                aiResult.source === 'retorno' ? 'bg-warning/10 border-warning/30' :
+                'bg-accent/5 border-accent/20'
+              }`}>
+                <Sparkles className={`h-4 w-4 shrink-0 ${
+                  aiResult.source === 'patio' ? 'text-destructive' :
+                  aiResult.source === 'mensalista' ? 'text-primary' :
+                  aiResult.source === 'retorno' ? 'text-warning' :
+                  'text-accent'
+                }`} />
+                <span className={`text-xs font-semibold ${
+                  aiResult.source === 'patio' ? 'text-destructive' :
+                  aiResult.source === 'mensalista' ? 'text-primary' :
+                  aiResult.source === 'retorno' ? 'text-warning' :
+                  'text-accent'
+                }`}>
+                  {aiResult.source === 'patio' ? '⚠️ JÁ ESTÁ NO PÁTIO' :
+                   aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
+                   aiResult.source === 'retorno' ? '🔄 CLIENTE RETORNOU (2ª vez+)' :
+                   aiResult.source === 'database' ? '✓ Encontrado no sistema' :
+                   `🤖 IA: ${aiResult.confianca}`}
+                  {' — '}{aiResult.marca} {aiResult.modelo}
                 </span>
               </div>
             )}
