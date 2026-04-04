@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import InstallPWA from "@/components/InstallPWA";
 
 const queryClient = new QueryClient();
 
