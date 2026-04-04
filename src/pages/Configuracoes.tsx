@@ -261,7 +261,36 @@ export default function Configuracoes() {
                   </Field>
                   <Field label="Nome do Beneficiário"><Input value={form.nome_beneficiario || ''} onChange={e => setField('nome_beneficiario', e.target.value)} className="h-12" /></Field>
                 </div>
-                <p className="text-xs text-muted-foreground">A chave PIX será usada para gerar o QR Code no comprovante.</p>
+                <p className="text-xs text-muted-foreground">A chave PIX gera o QR Code automaticamente. Ou envie uma imagem do QR Code abaixo.</p>
+              </Section>
+
+              <Section title="Upload de Imagem QR Code">
+                <div className="flex flex-col items-center gap-4">
+                  {form.qr_code_url ? (
+                    <div className="relative">
+                      <img src={form.qr_code_url} alt="QR Code enviado" className="w-40 h-40 object-contain rounded-xl border border-border bg-white p-2" />
+                      <button
+                        onClick={() => setField('qr_code_url', null)}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-40 h-40 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground text-center px-2">Clique para enviar QR Code</span>
+                    </div>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUploadQR} />
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 rounded-xl">
+                    <Upload className="h-4 w-4" /> {uploading ? 'Enviando...' : 'Enviar Imagem QR Code'}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center">A imagem enviada substituirá o QR Code gerado automaticamente. Salve após enviar.</p>
+                </div>
               </Section>
               <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
             </TabsContent>
