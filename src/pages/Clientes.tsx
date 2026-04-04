@@ -73,17 +73,29 @@ export default function Clientes() {
       } else {
         const { data: newCliente, error } = await supabase.from('clientes').insert(payload).select().single();
         if (error) throw error;
-        // If mensalista, create mensalista record
+        // If mensalista, create vehicle + mensalista record
         if (form.tipo === 'mensalista' && newCliente) {
+          let veiculoId: string | null = null;
+          if (form.placa_veiculo.trim()) {
+            const placaUpper = form.placa_veiculo.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const { data: veiculo } = await supabase.from('veiculos').insert({
+              placa: placaUpper,
+              modelo: 'N/I',
+              cliente_id: newCliente.id,
+            }).select().single();
+            veiculoId = veiculo?.id || null;
+          }
           const vencimento = new Date();
           vencimento.setMonth(vencimento.getMonth() + 1);
           await supabase.from('mensalistas').insert({
             cliente_id: newCliente.id,
+            veiculo_id: veiculoId,
             valor_mensal: Number(form.valor_mensal),
             vencimento: vencimento.toISOString().split('T')[0],
             plano: 'Mensal Integral',
             status: 'ativo',
           });
+          queryClient.invalidateQueries({ queryKey: ['veiculos'] });
         }
         toast({ title: "Cliente cadastrado!" });
       }
