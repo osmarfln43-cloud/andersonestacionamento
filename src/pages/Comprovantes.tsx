@@ -64,6 +64,10 @@ export default function Comprovantes() {
     nomeBeneficiario: config?.nome_beneficiario,
     mensagemComprovante: config?.mensagem_comprovante,
     tipo: m.saida ? "saida" : "entrada",
+    horarioAbertura: (config as any)?.horario_abertura,
+    horarioFechamento: (config as any)?.horario_fechamento,
+    diasFuncionamento: (config as any)?.dias_funcionamento,
+    disclaimerComprovante: (config as any)?.disclaimer_comprovante,
   });
 
   const pixCode = config?.chave_pix
