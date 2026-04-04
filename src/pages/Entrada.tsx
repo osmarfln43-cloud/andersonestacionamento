@@ -191,15 +191,15 @@ export default function Entrada() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="stat-label">Marca</Label>
-                <Input placeholder="Ex: Honda" value={marca} onChange={(e) => setMarca(e.target.value)} className="h-12" />
+                <Input placeholder="Ex: Honda (opcional)" value={marca} onChange={(e) => setMarca(e.target.value)} className="h-12" />
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Modelo</Label>
-                <Input placeholder="Ex: Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-12" />
+                <Input placeholder="Ex: Civic (opcional)" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-12" />
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Cor</Label>
-                <Input placeholder="Ex: Preto" value={cor} onChange={(e) => setCor(e.target.value)} className="h-12" />
+                <Input placeholder="Ex: Preto (opcional)" value={cor} onChange={(e) => setCor(e.target.value)} className="h-12" />
               </div>
             </div>
 
