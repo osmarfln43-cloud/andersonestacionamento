@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
