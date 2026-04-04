@@ -177,7 +177,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     leftRight("Entrada:", `${entradaDate} as ${entradaTime}`, y, 8);
     y += 5;
 
-    if (data.tipo === "saida" && data.saida) {
+    if (data.saida) {
       const saidaDt = new Date(data.saida);
       const saidaDate = saidaDt.toLocaleDateString("pt-BR");
       const saidaTime = saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -205,7 +205,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     dashed(y); y += 5;
 
     // ========== TOTAL ==========
-    if (data.tipo === "saida" && data.valorTotal != null) {
+    if (data.saida && data.valorTotal != null) {
       center("Total", y, 12, "bold");
       y += 6;
       center(`R$ ${Number(data.valorTotal).toFixed(2)}`, y, 16, "bold");
