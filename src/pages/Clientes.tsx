@@ -1,10 +1,15 @@
-import { Users, Search, Plus, Phone, Mail, Eye, Pencil, Trash2, X } from "lucide-react";
+import { Users, Search, Plus, Phone, Mail, Eye, Pencil, Trash2, X, CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { useClientes } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,9 +27,10 @@ type ClienteForm = {
   observacao: string;
   valor_mensal: string;
   placa_veiculo: string;
+  vencimento: Date | undefined;
 };
 
-const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '', placa_veiculo: '' };
+const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '', placa_veiculo: '', vencimento: undefined };
 
 export default function Clientes() {
   const [busca, setBusca] = useState("");
@@ -53,7 +59,7 @@ export default function Clientes() {
 
   const openNew = () => { setForm(emptyForm); setEditId(null); setDialogOpen(true); };
   const openEdit = (c: any) => {
-    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '', valor_mensal: '', placa_veiculo: '' });
+    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '', valor_mensal: '', placa_veiculo: '', vencimento: undefined });
     setEditId(c.id);
     setDialogOpen(true);
   };
@@ -85,8 +91,7 @@ export default function Clientes() {
             }).select().single();
             veiculoId = veiculo?.id || null;
           }
-          const vencimento = new Date();
-          vencimento.setMonth(vencimento.getMonth() + 1);
+          const vencimento = form.vencimento || new Date(Date.now() + 30 * 86400000);
           await supabase.from('mensalistas').insert({
             cliente_id: newCliente.id,
             veiculo_id: veiculoId,
@@ -266,6 +271,27 @@ export default function Clientes() {
                       className="h-12 font-mono text-lg tracking-widest uppercase"
                       maxLength={7}
                     />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="stat-label">Data de Vencimento *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full h-12 justify-start text-left font-mono text-base", !form.vencimento && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {form.vencimento ? format(form.vencimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de vencimento"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={form.vencimento}
+                          onSelect={(date) => setForm(prev => ({ ...prev, vencimento: date || undefined }))}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          locale={ptBR}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </>
               )}

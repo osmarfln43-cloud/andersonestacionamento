@@ -54,21 +54,37 @@ export default function Entrada() {
     setAiLoading(true);
     setAiResult(null);
     try {
-      // First try to find in database
-      const { data: existing } = await supabase.from('veiculos').select('*').eq('placa', placa.toUpperCase()).limit(1).single();
-      if (existing) {
-        setMarca(existing.marca || '');
-        setModelo(existing.modelo);
-        setCor(existing.cor || '');
-        setAiResult({ marca: existing.marca, modelo: existing.modelo, cor: existing.cor, confianca: 'alta', source: 'database' });
-        toast({ title: "✓ Veículo encontrado no sistema", description: `${existing.marca || ''} ${existing.modelo}` });
+      const placaUpper = placa.toUpperCase();
+      // Check if mensalista by plate
+      const { data: veiculoMensalista } = await supabase
+        .from('veiculos')
+        .select('*, clientes(nome, tipo)')
+        .eq('placa', placaUpper)
+        .limit(1)
+        .single();
+
+      if (veiculoMensalista) {
+        setMarca(veiculoMensalista.marca || '');
+        setModelo(veiculoMensalista.modelo);
+        setCor(veiculoMensalista.cor || '');
+
+        // Check if client is mensalista
+        const cliente = veiculoMensalista.clientes as any;
+        if (cliente?.tipo === 'mensalista') {
+          setTipo('mensalista');
+          setAiResult({ marca: veiculoMensalista.marca, modelo: veiculoMensalista.modelo, cor: veiculoMensalista.cor, confianca: 'alta', source: 'mensalista', clienteNome: cliente.nome });
+          toast({ title: "📋 Mensalista identificado!", description: `${cliente.nome} — ${veiculoMensalista.marca || ''} ${veiculoMensalista.modelo}` });
+        } else {
+          setAiResult({ marca: veiculoMensalista.marca, modelo: veiculoMensalista.modelo, cor: veiculoMensalista.cor, confianca: 'alta', source: 'database' });
+          toast({ title: "✓ Veículo encontrado no sistema", description: `${veiculoMensalista.marca || ''} ${veiculoMensalista.modelo}` });
+        }
         setAiLoading(false);
         return;
       }
 
       // If not found, use AI
       const { data, error } = await supabase.functions.invoke('identify-vehicle', {
-        body: { placa: placa.toUpperCase() },
+        body: { placa: placaUpper },
       });
       if (error) throw error;
       if (data) {
@@ -196,10 +212,10 @@ export default function Entrada() {
               autoFocus
             />
             {aiResult && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/5 border border-accent/20">
-                <Sparkles className="h-4 w-4 text-accent shrink-0" />
-                <span className="text-xs text-accent">
-                  {aiResult.source === 'database' ? 'Encontrado no sistema' : `IA: ${aiResult.confianca}`} — {aiResult.marca} {aiResult.modelo}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30' : 'bg-accent/5 border-accent/20'}`}>
+                <Sparkles className={`h-4 w-4 shrink-0 ${aiResult.source === 'mensalista' ? 'text-primary' : 'text-accent'}`} />
+                <span className={`text-xs ${aiResult.source === 'mensalista' ? 'text-primary font-semibold' : 'text-accent'}`}>
+                  {aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` : aiResult.source === 'database' ? 'Encontrado no sistema' : `IA: ${aiResult.confianca}`} — {aiResult.marca} {aiResult.modelo}
                 </span>
               </div>
             )}
