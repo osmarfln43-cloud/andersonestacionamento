@@ -1,17 +1,59 @@
-import { Printer, Search, FileText } from "lucide-react";
+import { Printer, Search, FileText, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useMovimentacoesHoje } from "@/hooks/useDatabase";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useConfiguracoes } from "@/hooks/useDatabase";
+import ReceiptPDF, { type ReceiptData } from "@/components/ReceiptPDF";
+
+function useTodasMovimentacoes() {
+  return useQuery({
+    queryKey: ['movimentacoes', 'todas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('*')
+        .eq('status_movimentacao', 'finalizado')
+        .order('saida', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 30000,
+  });
+}
 
 export default function Comprovantes() {
-  const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
+  const { data: movimentacoes = [] } = useTodasMovimentacoes();
+  const { data: config } = useConfiguracoes();
   const [busca, setBusca] = useState("");
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
-  const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
   const filtered = busca
-    ? saidasHoje.filter(m => m.placa.includes(busca.toUpperCase()))
-    : saidasHoje;
+    ? movimentacoes.filter(m => m.placa.includes(busca.toUpperCase()))
+    : movimentacoes;
+
+  const handleView = (m: any) => {
+    setReceiptData({
+      placa: m.placa,
+      modelo: m.modelo || "N/I",
+      cor: m.cor || "",
+      tipo_cliente: m.tipo_cliente,
+      entrada: m.entrada,
+      saida: m.saida || undefined,
+      tempoTotal: m.tempo_total || undefined,
+      valorTotal: m.valor_total ?? undefined,
+      formaPagamento: m.forma_pagamento || undefined,
+      valorHora: m.valor_hora,
+      nomeEstacionamento: config?.nome_estacionamento,
+      endereco: config?.endereco,
+      telefone: config?.telefone,
+      chavePix: config?.chave_pix,
+      nomeBeneficiario: config?.nome_beneficiario,
+      mensagemComprovante: config?.mensagem_comprovante,
+      tipo: m.saida ? "saida" : "entrada",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -32,22 +74,54 @@ export default function Comprovantes() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((m) => (
-          <div key={m.id} className="glass-card-hover p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-mono font-bold text-foreground">{m.placa}</p>
-              <p className="text-xs text-muted-foreground">{m.modelo} • {(m.forma_pagamento || '').toUpperCase()} • {new Date(m.entrada).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</p>
-            </div>
-            <p className="font-display font-bold text-foreground">R$ {Number(m.valor_total)}</p>
-            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl"><Printer className="h-3.5 w-3.5" /> Reimprimir</Button>
-          </div>
-        ))}
-        {filtered.length === 0 && <p className="text-center py-12 text-muted-foreground">Nenhum comprovante encontrado</p>}
+      <div className="glass-card overflow-hidden">
+        <div className="p-5 border-b border-border/50">
+          <h3 className="section-title">Todos os Comprovantes ({filtered.length})</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-4 stat-label">Placa</th>
+                <th className="text-left p-4 stat-label hidden md:table-cell">Veículo</th>
+                <th className="text-left p-4 stat-label">Entrada</th>
+                <th className="text-left p-4 stat-label">Saída</th>
+                <th className="text-left p-4 stat-label hidden md:table-cell">Tempo</th>
+                <th className="text-left p-4 stat-label">Pagamento</th>
+                <th className="text-left p-4 stat-label">Valor</th>
+                <th className="text-left p-4 stat-label">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={8} className="p-12 text-center text-muted-foreground">Nenhum comprovante encontrado</td></tr>
+              ) : filtered.map((m) => (
+                <tr key={m.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                  <td className="p-4 font-mono font-bold text-foreground tracking-wide">{m.placa}</td>
+                  <td className="p-4 text-sm text-muted-foreground hidden md:table-cell">{m.modelo} {m.cor ? `• ${m.cor}` : ''}</td>
+                  <td className="p-4 font-mono text-xs text-muted-foreground">{new Date(m.entrada).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                  <td className="p-4 font-mono text-xs text-muted-foreground">{m.saida ? new Date(m.saida).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                  <td className="p-4 text-xs text-muted-foreground hidden md:table-cell">{m.tempo_total || '—'}</td>
+                  <td className="p-4 text-xs font-semibold uppercase text-foreground">{m.forma_pagamento || '—'}</td>
+                  <td className="p-4 font-display font-bold text-accent">R$ {Number(m.valor_total || 0).toFixed(2)}</td>
+                  <td className="p-4">
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleView(m)} className="gap-1.5 rounded-xl h-9 px-3">
+                        <Eye className="h-4 w-4" /> Ver
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleView(m)} className="gap-1.5 rounded-xl h-9 px-3">
+                        <Printer className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <ReceiptPDF data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
   );
 }
