@@ -50,7 +50,7 @@ export default function Patio() {
           </div>
           <p className="text-2xl font-display font-bold text-foreground">{noPatio}</p>
         </div>
-        <div className="glass-card p-5">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <LogIn className="h-4 w-4 text-accent" />
             <p className="stat-label">Entradas Hoje</p>
