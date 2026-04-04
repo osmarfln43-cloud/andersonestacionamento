@@ -153,7 +153,13 @@ export function useConfiguracoes() {
   return useQuery({
     queryKey: ['configuracoes'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('configuracoes').select('*').limit(1).single();
+      const { data, error } = await supabase
+        .from('configuracoes')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
