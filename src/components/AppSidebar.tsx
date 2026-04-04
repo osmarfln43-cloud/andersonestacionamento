@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const operationalItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Gerenciador", url: "/", icon: LayoutDashboard },
   { title: "Entrada", url: "/entrada", icon: LogIn },
   { title: "Saída", url: "/saida", icon: LogOut },
   { title: "Pátio", url: "/patio", icon: Car },
