@@ -172,7 +172,7 @@ export default function Veiculos() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>{editId ? 'Editar Veículo' : 'Novo Veículo'}</DialogTitle>
           </DialogHeader>
@@ -233,7 +233,7 @@ export default function Veiculos() {
 
       {/* View Dialog */}
       <Dialog open={!!viewVeiculo} onOpenChange={() => setViewVeiculo(null)}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Veículo</DialogTitle>
           </DialogHeader>
@@ -248,9 +248,9 @@ export default function Veiculos() {
                 ['Proprietário', viewVeiculo.clientes?.nome],
                 ['Observação', viewVeiculo.observacao],
               ].map(([label, value]) => (
-                <div key={label as string} className="flex justify-between py-2 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                  <span className="text-sm text-foreground font-medium">{(value as string) || '—'}</span>
+                <div key={label as string} className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-border/30 gap-0.5">
+                  <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
+                  <span className="text-sm text-foreground font-medium break-words">{(value as string) || '—'}</span>
                 </div>
               ))}
             </div>

@@ -28,10 +28,10 @@ export default function Patio() {
   }, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-display flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Car className="h-5 w-5 text-primary" />
             </div>
@@ -42,29 +42,29 @@ export default function Patio() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card p-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <Car className="h-4 w-4 text-primary" />
             <p className="stat-label">No Pátio</p>
           </div>
           <p className="text-2xl font-display font-bold text-foreground">{noPatio}</p>
         </div>
-        <div className="glass-card p-5">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <LogIn className="h-4 w-4 text-accent" />
             <p className="stat-label">Entradas Hoje</p>
           </div>
           <p className="text-2xl font-display font-bold text-accent">{entradasHoje}</p>
         </div>
-        <div className="glass-card p-5">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <LogOut className="h-4 w-4 text-warning" />
             <p className="stat-label">Saídas Hoje</p>
           </div>
           <p className="text-2xl font-display font-bold text-warning">{saidasHoje}</p>
         </div>
-        <div className="glass-card p-5">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-accent" />
             <p className="stat-label">Receita Estimada</p>

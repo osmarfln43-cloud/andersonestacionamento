@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useState, useCallback } from "react";
 import Dashboard from "./pages/Dashboard";
 import Entrada from "./pages/Entrada";
 import Saida from "./pages/Saida";
@@ -65,19 +67,34 @@ const AppRoutes = () => (
   </Routes>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-          <InstallPWA />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash on standalone PWA mode or first visit
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const hasSeenSplash = sessionStorage.getItem('mepark-splash-seen');
+    return isStandalone && !hasSeenSplash;
+  });
+
+  const handleSplashFinish = useCallback(() => {
+    sessionStorage.setItem('mepark-splash-seen', 'true');
+    setShowSplash(false);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+          <BrowserRouter>
+            <AppRoutes />
+            <InstallPWA />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

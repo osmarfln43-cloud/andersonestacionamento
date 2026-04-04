@@ -180,7 +180,7 @@ export default function Mensalistas() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader><DialogTitle>{editId ? 'Editar Mensalista' : 'Novo Mensalista'}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
