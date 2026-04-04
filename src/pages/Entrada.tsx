@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRegistrarEntrada, useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import EntradaReceipt from "@/components/EntradaReceipt";
+import ReceiptPDF from "@/components/ReceiptPDF";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
@@ -121,6 +121,7 @@ export default function Entrada() {
             nomeBeneficiario: config?.nome_beneficiario,
             mensagemComprovante: config?.mensagem_comprovante,
             valorHora: result.valor_hora,
+            tipo: "entrada" as const,
           });
           setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
         },
@@ -316,7 +317,7 @@ export default function Entrada() {
         </div>
       </div>
 
-      <EntradaReceipt data={receiptData} onDone={() => setReceiptData(null)} />
+      <ReceiptPDF data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
   );
 }
