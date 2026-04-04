@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRegistrarEntrada, useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import EntradaReceipt from "@/components/EntradaReceipt";
+import ReceiptPDF from "@/components/ReceiptPDF";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
