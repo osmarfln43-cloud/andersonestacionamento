@@ -121,6 +121,7 @@ export default function Entrada() {
             nomeBeneficiario: config?.nome_beneficiario,
             mensagemComprovante: config?.mensagem_comprovante,
             valorHora: result.valor_hora,
+            tipo: "entrada" as const,
           });
           setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
         },
