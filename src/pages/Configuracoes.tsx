@@ -80,12 +80,16 @@ function ReceiptPreview({ form }: { form: any }) {
           <p className="text-xs font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
         </div>
 
-        {/* QR Code */}
-        {pixCode && (
-          <div className="flex justify-center py-2">
+        {/* QR Code - uploaded or generated */}
+        <div className="flex justify-center py-2">
+          {form.qr_code_url ? (
+            <img src={form.qr_code_url} alt="QR Code PIX" className="w-[100px] h-[100px] object-contain" />
+          ) : pixCode ? (
             <QRCodeSVG value={pixCode} size={100} level="M" />
-          </div>
-        )}
+          ) : (
+            <img src={pixQrFallback} alt="QR Code" className="w-[100px] h-[100px] object-contain" />
+          )}
+        </div>
 
         {/* Payment highlight below */}
         <div className="text-center py-1">
