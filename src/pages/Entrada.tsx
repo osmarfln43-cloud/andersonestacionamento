@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useRegistrarEntrada } from "@/hooks/useDatabase";
+import { useRegistrarEntrada, useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import EntradaReceipt from "@/components/EntradaReceipt";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
