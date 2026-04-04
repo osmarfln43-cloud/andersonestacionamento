@@ -1,0 +1,1 @@
+CREATE POLICY "Authenticated can delete movimentacoes" ON public.movimentacoes FOR DELETE TO authenticated USING (true);
