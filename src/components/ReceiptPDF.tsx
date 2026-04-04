@@ -134,18 +134,26 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
     // Payment info (saida only)
     if (data.tipo === "saida" && data.valorTotal != null) {
-      doc.setFontSize(12);
+      // Draw highlighted box for total
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(6, y - 2, w - 12, 18, 1, 1, "F");
+
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       const totalText = `TOTAL: R$ ${Number(data.valorTotal).toFixed(2)}`;
       const ttw = doc.getTextWidth(totalText);
-      doc.text(totalText, (w - ttw) / 2, y);
-      y += 6;
+      doc.text(totalText, (w - ttw) / 2, y + 5);
+      y += 10;
 
       if (data.formaPagamento) {
-        center(`Pagamento: ${data.formaPagamento.toUpperCase()}`, y, 8, "bold");
-        y += 5;
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        const pagText = `PAGAMENTO: ${data.formaPagamento.toUpperCase()}`;
+        const ptw = doc.getTextWidth(pagText);
+        doc.text(pagText, (w - ptw) / 2, y + 2);
+        y += 8;
       }
-      line(y); y += 5;
+      y += 4;
     }
 
     // QR Code PIX
