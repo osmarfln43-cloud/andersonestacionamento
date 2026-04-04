@@ -108,7 +108,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-display text-destructive">Gerenciador</h1>
         <p className="text-sm text-muted-foreground mt-1">Visão geral do estacionamento em tempo real</p>
       </div>
 
