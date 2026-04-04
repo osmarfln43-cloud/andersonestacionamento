@@ -340,7 +340,7 @@ export default function Entrada() {
         {/* Left - Main Form */}
         <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-5">
           {/* Plate Input */}
-          <div className="glass-card p-6 space-y-4">
+          <div className="glass-card p-4 md:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <Label className="stat-label">Placa do Veículo</Label>
               {placa.length >= 7 && (
