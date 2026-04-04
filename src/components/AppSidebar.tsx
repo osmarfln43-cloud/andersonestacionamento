@@ -120,6 +120,13 @@ export function AppSidebar() {
           </div>
         )}
         <button
+          onClick={() => { signOut(); }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-all"
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && <span>Sair</span>}
+        </button>
+        <button
           onClick={toggleSidebar}
           className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all"
         >
