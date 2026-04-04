@@ -71,6 +71,7 @@ export default function Saida() {
       horarioFechamento: (config as any)?.horario_fechamento,
       diasFuncionamento: (config as any)?.dias_funcionamento,
       disclaimerComprovante: (config as any)?.disclaimer_comprovante,
+      qrCodeUrl: (config as any)?.qr_code_url || undefined,
     });
   };
 

@@ -25,6 +25,7 @@ export interface ReceiptData {
   horarioFechamento?: string;
   diasFuncionamento?: string;
   disclaimerComprovante?: string;
+  qrCodeUrl?: string;
 }
 
 interface Props {
@@ -44,21 +45,45 @@ export default function ReceiptPDF({ data, onDone }: Props) {
   const generatePDF = async () => {
     if (!data) return;
 
+    // Load uploaded QR image if available
+    let qrImageData: string | null = null;
+    if (data.qrCodeUrl) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject();
+          img.src = data.qrCodeUrl!;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        qrImageData = canvas.toDataURL('image/png');
+      } catch {
+        // fallback to generated QR
+      }
+    }
+
+    // Get generated QR canvas as fallback
+    const qrCanvas = (!qrImageData && data.chavePix) ? qrRef.current?.querySelector("canvas") : null;
+    const finalQrData = qrImageData || (qrCanvas ? (qrCanvas as HTMLCanvasElement).toDataURL('image/png') : null);
+
     // First pass: calculate height
     const calcDoc = new jsPDF({ unit: "mm", format: [80, 500] });
-    const finalHeight = renderContent(calcDoc, data, null);
+    const finalHeight = renderContent(calcDoc, data, finalQrData);
 
     // Second pass: create with exact height
     const doc = new jsPDF({ unit: "mm", format: [80, finalHeight + 5] });
-    const qrCanvas = data.chavePix ? qrRef.current?.querySelector("canvas") : null;
-    renderContent(doc, data, qrCanvas as HTMLCanvasElement | null);
+    renderContent(doc, data, finalQrData);
 
     const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
     doc.save(filename);
     onDone();
   };
 
-  const renderContent = (doc: jsPDF, data: ReceiptData, qrCanvas: HTMLCanvasElement | null): number => {
+  const renderContent = (doc: jsPDF, data: ReceiptData, qrImageData: string | null): number => {
     const w = 80;
     let y = 6;
 
@@ -167,10 +192,9 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     y += 6;
 
     // ========== QR CODE ==========
-    if (data.chavePix && qrCanvas) {
-      const qrData = qrCanvas.toDataURL("image/png");
+    if (qrImageData) {
       const qrSize = 28;
-      doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
+      doc.addImage(qrImageData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
       y += qrSize + 3;
     }
 

@@ -8,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfiguracoes } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
+import { Upload, ImageIcon, X } from "lucide-react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -79,12 +80,16 @@ function ReceiptPreview({ form }: { form: any }) {
           <p className="text-xs font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
         </div>
 
-        {/* QR Code */}
-        {pixCode && (
-          <div className="flex justify-center py-2">
+        {/* QR Code - uploaded or generated */}
+        <div className="flex justify-center py-2">
+          {form.qr_code_url ? (
+            <img src={form.qr_code_url} alt="QR Code PIX" className="w-[100px] h-[100px] object-contain" />
+          ) : pixCode ? (
             <QRCodeSVG value={pixCode} size={100} level="M" />
-          </div>
-        )}
+          ) : (
+            <img src={pixQrFallback} alt="QR Code" className="w-[100px] h-[100px] object-contain" />
+          )}
+        </div>
 
         {/* Payment highlight below */}
         <div className="text-center py-1">
@@ -107,6 +112,8 @@ export default function Configuracoes() {
   const { data: config, isLoading } = useConfiguracoes();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<any>({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config) setForm(config);
@@ -131,6 +138,7 @@ export default function Configuracoes() {
       horario_fechamento: form.horario_fechamento || '19:00',
       dias_funcionamento: form.dias_funcionamento || 'Segunda a Sexta',
       disclaimer_comprovante: form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
+      qr_code_url: form.qr_code_url || null,
     } as any;
 
     if (!form.id) {
@@ -145,6 +153,26 @@ export default function Configuracoes() {
   };
 
   const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+
+  const handleUploadQR = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filename = `qrcode-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('qrcode-images').upload(filename, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('qrcode-images').getPublicUrl(filename);
+      setField('qr_code_url', urlData.publicUrl);
+      toast({ title: "✓ QR Code enviado!", description: "Salve as configurações para aplicar." });
+    } catch (err: any) {
+      toast({ title: "Erro no upload", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   if (isLoading) return <p className="text-center py-12 text-muted-foreground">Carregando...</p>;
 
@@ -233,7 +261,36 @@ export default function Configuracoes() {
                   </Field>
                   <Field label="Nome do Beneficiário"><Input value={form.nome_beneficiario || ''} onChange={e => setField('nome_beneficiario', e.target.value)} className="h-12" /></Field>
                 </div>
-                <p className="text-xs text-muted-foreground">A chave PIX será usada para gerar o QR Code no comprovante.</p>
+                <p className="text-xs text-muted-foreground">A chave PIX gera o QR Code automaticamente. Ou envie uma imagem do QR Code abaixo.</p>
+              </Section>
+
+              <Section title="Upload de Imagem QR Code">
+                <div className="flex flex-col items-center gap-4">
+                  {form.qr_code_url ? (
+                    <div className="relative">
+                      <img src={form.qr_code_url} alt="QR Code enviado" className="w-40 h-40 object-contain rounded-xl border border-border bg-white p-2" />
+                      <button
+                        onClick={() => setField('qr_code_url', null)}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-40 h-40 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/30 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground text-center px-2">Clique para enviar QR Code</span>
+                    </div>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUploadQR} />
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 rounded-xl">
+                    <Upload className="h-4 w-4" /> {uploading ? 'Enviando...' : 'Enviar Imagem QR Code'}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center">A imagem enviada substituirá o QR Code gerado automaticamente. Salve após enviar.</p>
+                </div>
               </Section>
               <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
             </TabsContent>

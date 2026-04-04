@@ -68,6 +68,7 @@ export default function Comprovantes() {
     horarioFechamento: (config as any)?.horario_fechamento || '19:00',
     diasFuncionamento: (config as any)?.dias_funcionamento || 'Segunda a Sexta',
     disclaimerComprovante: (config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
+    qrCodeUrl: (config as any)?.qr_code_url || undefined,
   });
 
   const pixCode = config?.chave_pix
@@ -191,11 +192,15 @@ export default function Comprovantes() {
                   <div className="text-center py-1">
                     <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
                   </div>
-                  {pixCode && (
+                  {(config as any)?.qr_code_url ? (
+                    <div className="flex justify-center py-3">
+                      <img src={(config as any).qr_code_url} alt="QR Code" className="w-[120px] h-[120px] object-contain" />
+                    </div>
+                  ) : pixCode ? (
                     <div className="flex justify-center py-3">
                       <QRCodeSVG value={pixCode} size={120} level="M" />
                     </div>
-                  )}
+                  ) : null}
                   <div className="text-center py-1">
                     <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
                   </div>
