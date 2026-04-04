@@ -122,6 +122,10 @@ export default function Entrada() {
             mensagemComprovante: config?.mensagem_comprovante,
             valorHora: result.valor_hora,
             tipo: "entrada" as const,
+            horarioAbertura: (config as any)?.horario_abertura,
+            horarioFechamento: (config as any)?.horario_fechamento,
+            diasFuncionamento: (config as any)?.dias_funcionamento,
+            disclaimerComprovante: (config as any)?.disclaimer_comprovante,
           });
           setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
         },

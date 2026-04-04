@@ -67,6 +67,10 @@ export default function Saida() {
       nomeBeneficiario: config?.nome_beneficiario,
       mensagemComprovante: config?.mensagem_comprovante,
       tipo: "saida",
+      horarioAbertura: (config as any)?.horario_abertura,
+      horarioFechamento: (config as any)?.horario_fechamento,
+      diasFuncionamento: (config as any)?.dias_funcionamento,
+      disclaimerComprovante: (config as any)?.disclaimer_comprovante,
     });
   };
 
