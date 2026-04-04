@@ -180,7 +180,7 @@ export default function Mensalistas() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
+        <DialogContent className="max-w-lg rounded-xl">
           <DialogHeader><DialogTitle>{editId ? 'Editar Mensalista' : 'Novo Mensalista'}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -193,10 +193,10 @@ export default function Mensalistas() {
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Veículo</Label>
-                <Select value={form.veiculo_id} onValueChange={v => setForm(p => ({ ...p, veiculo_id: v }))}>
+                <Select value={form.veiculo_id || undefined} onValueChange={v => setForm(p => ({ ...p, veiculo_id: v === '__none__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {veiculos.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} - {v.modelo}</SelectItem>)}
                   </SelectContent>
                 </Select>

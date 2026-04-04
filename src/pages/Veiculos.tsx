@@ -196,7 +196,7 @@ export default function Veiculos() {
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Categoria</Label>
-                <Select value={form.categoria} onValueChange={v => setField('categoria', v)}>
+                <Select value={form.categoria || undefined} onValueChange={v => setField('categoria', v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="carro">Carro</SelectItem>
@@ -208,10 +208,10 @@ export default function Veiculos() {
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Proprietário</Label>
-                <Select value={form.cliente_id} onValueChange={v => setField('cliente_id', v)}>
+                <Select value={form.cliente_id || undefined} onValueChange={v => setField('cliente_id', v === '__none__' ? '' : v)}>
                   <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {clientes.map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                     ))}
