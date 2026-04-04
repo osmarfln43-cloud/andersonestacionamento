@@ -272,6 +272,27 @@ export default function Clientes() {
                       maxLength={7}
                     />
                   </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="stat-label">Data de Vencimento *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full h-12 justify-start text-left font-mono text-base", !form.vencimento && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {form.vencimento ? format(form.vencimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data de vencimento"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={form.vencimento}
+                          onSelect={(date) => setForm(prev => ({ ...prev, vencimento: date || undefined }))}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          locale={ptBR}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </>
               )}
               <div className="space-y-2">
