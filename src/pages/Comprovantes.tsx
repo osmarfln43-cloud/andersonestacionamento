@@ -192,11 +192,15 @@ export default function Comprovantes() {
                   <div className="text-center py-1">
                     <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
                   </div>
-                  {pixCode && (
+                  {(config as any)?.qr_code_url ? (
+                    <div className="flex justify-center py-3">
+                      <img src={(config as any).qr_code_url} alt="QR Code" className="w-[120px] h-[120px] object-contain" />
+                    </div>
+                  ) : pixCode ? (
                     <div className="flex justify-center py-3">
                       <QRCodeSVG value={pixCode} size={120} level="M" />
                     </div>
-                  )}
+                  ) : null}
                   <div className="text-center py-1">
                     <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
                   </div>
