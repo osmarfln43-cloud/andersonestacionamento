@@ -42,8 +42,8 @@ export default function Patio() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card p-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="glass-card p-3 md:p-5">
           <div className="flex items-center gap-2 mb-2">
             <Car className="h-4 w-4 text-primary" />
             <p className="stat-label">No Pátio</p>
