@@ -1,10 +1,15 @@
-import { Users, Search, Plus, Phone, Mail, Eye, Pencil, Trash2, X } from "lucide-react";
+import { Users, Search, Plus, Phone, Mail, Eye, Pencil, Trash2, X, CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { useClientes } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
