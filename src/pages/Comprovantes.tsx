@@ -27,9 +27,20 @@ function useTodasMovimentacoes() {
 export default function Comprovantes() {
   const { data: movimentacoes = [] } = useTodasMovimentacoes();
   const { data: config } = useConfiguracoes();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [viewMov, setViewMov] = useState<any>(null);
+
+  const handleDelete = async (id: string, placa: string) => {
+    if (!confirm(`Excluir comprovante de ${placa}?`)) return;
+    const { error } = await supabase.from('movimentacoes').delete().eq('id', id);
+    if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    if (viewMov?.id === id) setViewMov(null);
+    queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+    toast({ title: "✓ Comprovante excluído" });
+  };
 
   const filtered = busca
     ? movimentacoes.filter(m => m.placa.includes(busca.toUpperCase()))
