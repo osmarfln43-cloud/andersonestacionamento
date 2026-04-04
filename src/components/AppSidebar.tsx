@@ -81,6 +81,7 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
 
   return (
