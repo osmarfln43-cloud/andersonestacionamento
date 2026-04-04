@@ -17,13 +17,13 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color, delay }: {
   icon: any; label: string; value: string | number; trend?: string; trendUp?: boolean; color: string; delay: number;
 }) {
   return (
-    <div className={`glass-card-hover p-6 animate-in stagger-${delay}`} style={{ opacity: 0 }}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="h-11 w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}12` }}>
-          <Icon className="h-5 w-5" style={{ color }} />
+    <div className={`glass-card-hover p-3 md:p-6 animate-in stagger-${delay}`} style={{ opacity: 0 }}>
+      <div className="flex items-start justify-between mb-2 md:mb-4">
+        <div className="h-8 w-8 md:h-11 md:w-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}12` }}>
+          <Icon className="h-4 w-4 md:h-5 md:w-5" style={{ color }} />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg ${
+          <div className={`flex items-center gap-1 text-[10px] md:text-[11px] font-medium px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg ${
             trendUp !== false ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'
           }`}>
             <ArrowUpRight className="h-3 w-3" />
@@ -31,8 +31,8 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color, delay }: {
           </div>
         )}
       </div>
-      <p className="stat-label mb-1">{label}</p>
-      <p className="stat-value text-foreground">{value}</p>
+      <p className="stat-label mb-0.5 md:mb-1 text-[10px] md:text-xs">{label}</p>
+      <p className="text-base md:text-2xl font-display font-bold text-foreground truncate">{value}</p>
     </div>
   );
 }
