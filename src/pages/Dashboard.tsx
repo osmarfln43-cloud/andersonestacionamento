@@ -107,7 +107,11 @@ export default function Dashboard() {
     { icon: DollarSign, label: "Ticket Médio", value: `R$ ${ticketMedio}`, color: "hsl(280,65%,62%)", delay: 5 },
     { icon: Clock, label: "Tempo Médio", value: tempoMedio, color: "hsl(217,91%,60%)", delay: 6 },
     { icon: Percent, label: "Taxa de Ocupação", value: `${ocupacao}%`, color: "hsl(38,92%,55%)", delay: 7 },
-    { icon: Users, label: "Mensalistas", value: mensalistasAtivos, color: "hsl(280,65%,62%)", delay: 8 },
+    { icon: Users, label: "Mensalistas Ativos", value: mensalistasAtivos, color: "hsl(280,65%,62%)", delay: 8 },
+    { icon: CalendarCheck, label: "Receita Mensalistas", value: `R$ ${receitaMensalistas.toLocaleString()}`, color: "hsl(160,65%,48%)", delay: 1 },
+    { icon: CreditCard, label: "PIX Hoje", value: `R$ ${faturamentoPix.toLocaleString()}`, color: "hsl(217,91%,60%)", delay: 2 },
+    { icon: Banknote, label: "Dinheiro Hoje", value: `R$ ${faturamentoDinheiro.toLocaleString()}`, color: "hsl(38,92%,55%)", delay: 3 },
+    { icon: TrendingUp, label: "Faturamento Total", value: `R$ ${(faturamentoHoje + receitaMensalistas).toLocaleString()}`, color: "hsl(160,65%,48%)", delay: 4 },
   ];
 
   return (
