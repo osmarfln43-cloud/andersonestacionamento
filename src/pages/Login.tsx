@@ -75,7 +75,7 @@ export default function Login() {
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={meparkLogo} alt="" className="w-[600px] max-w-[90vw] opacity-15 select-none" draggable={false} />
+          <img src={meparkLogo} alt="" className="w-[900px] max-w-[95vw] opacity-25 select-none scale-110" draggable={false} style={{ filter: 'brightness(1.2) contrast(1.1)' }} />
         </div>
       </div>
 
