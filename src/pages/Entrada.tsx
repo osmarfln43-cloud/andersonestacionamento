@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search } from "lucide-react";
+import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ export default function Entrada() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [receiptData, setReceiptData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
   const { toast } = useToast();
@@ -244,6 +245,7 @@ export default function Entrada() {
             <p className="text-xs text-muted-foreground">Tire uma foto do veículo e a IA identificará automaticamente marca, modelo e cor</p>
 
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageCapture} />
+            <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageCapture} />
 
             {imagePreview ? (
               <div className="relative rounded-xl overflow-hidden border border-border">
@@ -261,19 +263,34 @@ export default function Entrada() {
                 )}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground"
-              >
-                <div className="h-14 w-14 rounded-2xl bg-primary/[0.06] flex items-center justify-center">
-                  <Camera className="h-7 w-7 text-primary" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">Capturar Foto</p>
-                  <p className="text-[11px] text-muted-foreground">Câmera ou galeria</p>
-                </div>
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-44 rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground"
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-primary/[0.06] flex items-center justify-center">
+                    <Camera className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Câmera</p>
+                    <p className="text-[10px] text-muted-foreground">Tirar foto agora</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => uploadInputRef.current?.click()}
+                  className="h-44 rounded-xl border-2 border-dashed border-border hover:border-accent/40 transition-colors flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground"
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-accent/[0.06] flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-accent" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Galeria</p>
+                    <p className="text-[10px] text-muted-foreground">Enviar da galeria</p>
+                  </div>
+                </button>
+              </div>
             )}
           </div>
 
