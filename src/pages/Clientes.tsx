@@ -300,7 +300,7 @@ export default function Clientes() {
 
       {/* View Dialog */}
       <Dialog open={!!viewCliente} onOpenChange={() => setViewCliente(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader>
             <DialogTitle>Detalhes do Cliente</DialogTitle>
           </DialogHeader>
