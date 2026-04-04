@@ -20,9 +20,10 @@ type ClienteForm = {
   status: string;
   endereco: string;
   observacao: string;
+  valor_mensal: string;
 };
 
-const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '' };
+const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '' };
 
 export default function Clientes() {
   const [busca, setBusca] = useState("");
