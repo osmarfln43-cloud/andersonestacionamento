@@ -41,12 +41,16 @@ export default function Dashboard() {
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
   const { data: mensalistas = [] } = useMensalistas();
+  const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
 
   const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
   const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = saidasHoje.length > 0 ? (faturamentoHoje / saidasHoje.length).toFixed(0) : '0';
   const ocupacao = Math.min(Math.round((veiculosAtivos.length / 50) * 100), 100);
   const mensalistasAtivos = mensalistas.filter((m: any) => m.status === 'ativo').length;
+  const receitaMensalistas = mensalistas.filter((m: any) => m.status === 'ativo').reduce((s: number, m: any) => s + Number(m.valor_mensal), 0);
+  const faturamentoPix = saidasHoje.filter(m => m.forma_pagamento === 'pix').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
+  const faturamentoDinheiro = saidasHoje.filter(m => m.forma_pagamento === 'dinheiro').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
 
   // Build hourly data from real movements
   const hourlyData = useMemo(() => {
