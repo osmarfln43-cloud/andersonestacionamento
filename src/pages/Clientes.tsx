@@ -360,7 +360,7 @@ export default function Clientes() {
 
       {/* View Dialog */}
       <Dialog open={!!viewCliente} onOpenChange={() => setViewCliente(null)}>
-        <DialogContent className="max-w-md" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Cliente</DialogTitle>
           </DialogHeader>
@@ -376,9 +376,9 @@ export default function Clientes() {
                 ['Endereço', viewCliente.endereco],
                 ['Observação', viewCliente.observacao],
               ].map(([label, value]) => (
-                <div key={label as string} className="flex justify-between py-2 border-b border-border/30">
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                  <span className="text-sm text-foreground font-medium">{(value as string) || '—'}</span>
+                <div key={label as string} className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-border/30 gap-0.5">
+                  <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
+                  <span className="text-sm text-foreground font-medium break-words">{(value as string) || '—'}</span>
                 </div>
               ))}
             </div>
