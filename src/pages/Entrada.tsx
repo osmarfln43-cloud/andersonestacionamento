@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useRegistrarEntrada } from "@/hooks/useDatabase";
+import { useRegistrarEntrada, useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import EntradaReceipt from "@/components/EntradaReceipt";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
@@ -18,8 +19,10 @@ export default function Entrada() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const registrarEntrada = useRegistrarEntrada();
+  const { data: config } = useConfiguracoes();
   const { toast } = useToast();
 
   const identifyByPhoto = async (base64: string) => {
@@ -101,8 +104,24 @@ export default function Entrada() {
     registrarEntrada.mutate(
       { placa: placa.toUpperCase(), modelo: `${marca} ${modelo}`.trim() || 'N/I', cor, tipo_cliente: tipo, observacao },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           toast({ title: "✓ Entrada registrada", description: `${placa.toUpperCase()} – ${marca} ${modelo}` });
+          // Trigger receipt PDF
+          setReceiptData({
+            placa: placa.toUpperCase(),
+            modelo: `${marca} ${modelo}`.trim() || 'N/I',
+            cor,
+            tipo_cliente: tipo,
+            entrada: result.entrada,
+            nomeEstacionamento: config?.nome_estacionamento,
+            endereco: config?.endereco,
+            telefone: config?.telefone,
+            chavePix: config?.chave_pix,
+            tipoChavePix: config?.tipo_chave_pix,
+            nomeBeneficiario: config?.nome_beneficiario,
+            mensagemComprovante: config?.mensagem_comprovante,
+            valorHora: result.valor_hora,
+          });
           setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
         },
         onError: (err: any) => {
@@ -296,6 +315,8 @@ export default function Entrada() {
           </div>
         </div>
       </div>
+
+      <EntradaReceipt data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
   );
 }
