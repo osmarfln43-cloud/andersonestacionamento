@@ -8,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfiguracoes } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
+import { Upload, ImageIcon, X } from "lucide-react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
