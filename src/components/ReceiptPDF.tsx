@@ -25,6 +25,7 @@ export interface ReceiptData {
   horarioFechamento?: string;
   diasFuncionamento?: string;
   disclaimerComprovante?: string;
+  qrCodeUrl?: string;
 }
 
 interface Props {
