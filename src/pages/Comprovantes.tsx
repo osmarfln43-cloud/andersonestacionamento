@@ -164,6 +164,12 @@ export default function Comprovantes() {
                     <p className="text-2xl font-bold tracking-widest">{viewMov.placa}</p>
                     <p className="text-xs font-bold mt-1">({(viewMov.modelo || 'N/I').toUpperCase()} {(viewMov.cor || '').toUpperCase()})</p>
                   </div>
+                  {/* Vehicle Photo */}
+                  {viewMov.foto_url && (
+                    <div className="flex justify-center py-2">
+                      <img src={viewMov.foto_url} alt={`Foto ${viewMov.placa}`} className="w-full max-w-[200px] h-auto rounded-lg border border-gray-300" />
+                    </div>
+                  )}
                   <div className="border-b border-dashed border-gray-400" />
 
                   {/* Details */}

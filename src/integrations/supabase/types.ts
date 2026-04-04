@@ -218,6 +218,7 @@ export type Database = {
           created_at: string
           entrada: string
           forma_pagamento: string | null
+          foto_url: string | null
           id: string
           modelo: string | null
           observacao: string | null
@@ -241,6 +242,7 @@ export type Database = {
           created_at?: string
           entrada?: string
           forma_pagamento?: string | null
+          foto_url?: string | null
           id?: string
           modelo?: string | null
           observacao?: string | null
@@ -264,6 +266,7 @@ export type Database = {
           created_at?: string
           entrada?: string
           forma_pagamento?: string | null
+          foto_url?: string | null
           id?: string
           modelo?: string | null
           observacao?: string | null
