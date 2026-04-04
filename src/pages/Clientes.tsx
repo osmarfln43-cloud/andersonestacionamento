@@ -21,9 +21,10 @@ type ClienteForm = {
   endereco: string;
   observacao: string;
   valor_mensal: string;
+  placa_veiculo: string;
 };
 
-const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '' };
+const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '', valor_mensal: '', placa_veiculo: '' };
 
 export default function Clientes() {
   const [busca, setBusca] = useState("");
@@ -52,7 +53,7 @@ export default function Clientes() {
 
   const openNew = () => { setForm(emptyForm); setEditId(null); setDialogOpen(true); };
   const openEdit = (c: any) => {
-    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '', valor_mensal: '' });
+    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '', valor_mensal: '', placa_veiculo: '' });
     setEditId(c.id);
     setDialogOpen(true);
   };
@@ -72,17 +73,29 @@ export default function Clientes() {
       } else {
         const { data: newCliente, error } = await supabase.from('clientes').insert(payload).select().single();
         if (error) throw error;
-        // If mensalista, create mensalista record
+        // If mensalista, create vehicle + mensalista record
         if (form.tipo === 'mensalista' && newCliente) {
+          let veiculoId: string | null = null;
+          if (form.placa_veiculo.trim()) {
+            const placaUpper = form.placa_veiculo.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const { data: veiculo } = await supabase.from('veiculos').insert({
+              placa: placaUpper,
+              modelo: 'N/I',
+              cliente_id: newCliente.id,
+            }).select().single();
+            veiculoId = veiculo?.id || null;
+          }
           const vencimento = new Date();
           vencimento.setMonth(vencimento.getMonth() + 1);
           await supabase.from('mensalistas').insert({
             cliente_id: newCliente.id,
+            veiculo_id: veiculoId,
             valor_mensal: Number(form.valor_mensal),
             vencimento: vencimento.toISOString().split('T')[0],
             plano: 'Mensal Integral',
             status: 'ativo',
           });
+          queryClient.invalidateQueries({ queryKey: ['veiculos'] });
         }
         toast({ title: "Cliente cadastrado!" });
       }
@@ -200,7 +213,7 @@ export default function Clientes() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto sm:top-[5%] sm:translate-y-0" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
@@ -233,16 +246,28 @@ export default function Clientes() {
                 </Select>
               </div>
               {form.tipo === 'mensalista' && !editId && (
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="stat-label">Valor Mensal (R$) *</Label>
-                  <Input
-                    type="number"
-                    value={form.valor_mensal}
-                    onChange={e => setField('valor_mensal', e.target.value)}
-                    placeholder="Ex: 350.00"
-                    className="h-12 font-mono text-lg"
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label className="stat-label">Valor Mensal (R$) *</Label>
+                    <Input
+                      type="number"
+                      value={form.valor_mensal}
+                      onChange={e => setField('valor_mensal', e.target.value)}
+                      placeholder="Ex: 350.00"
+                      className="h-12 font-mono text-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="stat-label">Placa do Veículo</Label>
+                    <Input
+                      value={form.placa_veiculo}
+                      onChange={e => setField('placa_veiculo', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
+                      placeholder="ABC1D23"
+                      className="h-12 font-mono text-lg tracking-widest uppercase"
+                      maxLength={7}
+                    />
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label className="stat-label">Status</Label>
