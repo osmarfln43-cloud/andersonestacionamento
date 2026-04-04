@@ -15,8 +15,7 @@ function useTodasMovimentacoes() {
       const { data, error } = await supabase
         .from('movimentacoes')
         .select('*')
-        .eq('status_movimentacao', 'finalizado')
-        .order('saida', { ascending: false });
+        .order('entrada', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -104,8 +103,8 @@ export default function Comprovantes() {
                     <td className="p-4 font-mono font-bold text-foreground tracking-wide">{m.placa}</td>
                     <td className="p-4 text-sm text-muted-foreground hidden md:table-cell">{m.modelo}</td>
                     <td className="p-4 font-mono text-xs text-muted-foreground">{new Date(m.entrada).toLocaleDateString('pt-BR')}</td>
-                    <td className="p-4 text-xs font-semibold uppercase text-foreground">{m.forma_pagamento || '—'}</td>
-                    <td className="p-4 font-display font-bold text-accent">R$ {Number(m.valor_total || 0).toFixed(2)}</td>
+                    <td className="p-4 text-xs font-semibold uppercase text-foreground">{m.forma_pagamento || (m.status_movimentacao === 'ativo' ? 'Em aberto' : '—')}</td>
+                    <td className="p-4 font-display font-bold text-accent">{m.status_movimentacao === 'ativo' ? '—' : `R$ ${Number(m.valor_total || 0).toFixed(2)}`}</td>
                     <td className="p-4">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setViewMov(m); }} className="gap-1.5 rounded-xl h-9 px-3">
                         <Eye className="h-4 w-4" />
