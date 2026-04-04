@@ -200,8 +200,8 @@ export default function Clientes() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
@@ -232,6 +232,18 @@ export default function Clientes() {
                   </SelectContent>
                 </Select>
               </div>
+              {form.tipo === 'mensalista' && !editId && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="stat-label">Valor Mensal (R$) *</Label>
+                  <Input
+                    type="number"
+                    value={form.valor_mensal}
+                    onChange={e => setField('valor_mensal', e.target.value)}
+                    placeholder="Ex: 350.00"
+                    className="h-12 font-mono text-lg"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="stat-label">Status</Label>
                 <Select value={form.status} onValueChange={v => setField('status', v)}>
@@ -251,9 +263,11 @@ export default function Clientes() {
                 <Textarea value={form.observacao} onChange={e => setField('observacao', e.target.value)} placeholder="Observações..." rows={2} />
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-1">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : editId ? 'Atualizar' : 'Cadastrar'}</Button>
+              <Button onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? 'Salvando...' : editId ? 'Atualizar' : 'Salvar'}
+              </Button>
             </div>
           </div>
         </DialogContent>
