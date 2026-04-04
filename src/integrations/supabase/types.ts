@@ -82,6 +82,7 @@ export type Database = {
           mensagem_comprovante: string | null
           nome_beneficiario: string | null
           nome_estacionamento: string
+          qr_code_url: string | null
           telefone: string | null
           tipo_chave_pix: string | null
           tolerancia_minutos: number
@@ -105,6 +106,7 @@ export type Database = {
           mensagem_comprovante?: string | null
           nome_beneficiario?: string | null
           nome_estacionamento?: string
+          qr_code_url?: string | null
           telefone?: string | null
           tipo_chave_pix?: string | null
           tolerancia_minutos?: number
@@ -128,6 +130,7 @@ export type Database = {
           mensagem_comprovante?: string | null
           nome_beneficiario?: string | null
           nome_estacionamento?: string
+          qr_code_url?: string | null
           telefone?: string | null
           tipo_chave_pix?: string | null
           tolerancia_minutos?: number
