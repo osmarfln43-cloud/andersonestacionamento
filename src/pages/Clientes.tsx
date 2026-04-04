@@ -252,7 +252,7 @@ export default function Clientes() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
+        <DialogContent className="left-1/2 top-1/2 w-[92vw] max-w-lg max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl">
           <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
@@ -360,7 +360,7 @@ export default function Clientes() {
 
       {/* View Dialog */}
       <Dialog open={!!viewCliente} onOpenChange={() => setViewCliente(null)}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85vh] overflow-y-auto rounded-xl">
+        <DialogContent className="left-1/2 top-1/2 w-[92vw] max-w-md max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Cliente</DialogTitle>
           </DialogHeader>
