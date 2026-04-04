@@ -15,8 +15,7 @@ function useTodasMovimentacoes() {
       const { data, error } = await supabase
         .from('movimentacoes')
         .select('*')
-        .eq('status_movimentacao', 'finalizado')
-        .order('saida', { ascending: false });
+        .order('entrada', { ascending: false });
       if (error) throw error;
       return data;
     },
