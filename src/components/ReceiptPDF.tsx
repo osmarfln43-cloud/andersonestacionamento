@@ -148,6 +148,10 @@ export default function ReceiptPDF({ data, onDone }: Props) {
       dashed(y); y += 5;
     }
 
+    // ========== PAYMENT HIGHLIGHT (above QR) ==========
+    center("PAGAMENTO DINHEIRO OU PIX", y, 12, "bold");
+    y += 6;
+
     // ========== QR CODE ==========
     if (data.chavePix) {
       const qrCanvas = qrRef.current?.querySelector("canvas");
@@ -157,8 +161,12 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
         y += qrSize + 3;
       }
-      dashed(y); y += 4;
     }
+
+    // ========== PAYMENT HIGHLIGHT (below QR) ==========
+    center("PAGAMENTO DINHEIRO OU PIX", y, 12, "bold");
+    y += 6;
+    dashed(y); y += 4;
 
     // ========== FOOTER ==========
     center(data.mensagemComprovante || "ME PARK AGRADECE A PREFERENCIA", y, 7, "bold");
@@ -166,10 +174,6 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
     if (data.endereco) {
       center(data.endereco.toUpperCase(), y, 6, "normal");
-      y += 3;
-    }
-    if (data.telefone) {
-      center(`TEL: ${data.telefone}`, y, 6, "normal");
       y += 3;
     }
 
