@@ -169,9 +169,13 @@ export default function Saida() {
         <div className="lg:col-span-3 space-y-6">
           <div className="glass-card p-8 animate-in" style={{ opacity: 0 }}>
             <div className="flex items-center gap-5 mb-8">
-              <div className="h-16 w-16 rounded-2xl bg-primary/[0.08] flex items-center justify-center">
-                <span className="text-primary font-mono font-bold text-xl">{(displayData as any).placa.slice(0, 3)}</span>
-              </div>
+              {(displayData as any).foto_url ? (
+                <img src={(displayData as any).foto_url} alt="Veículo" className="h-16 w-16 rounded-2xl object-cover border border-border" />
+              ) : (
+                <div className="h-16 w-16 rounded-2xl bg-primary/[0.08] flex items-center justify-center">
+                  <span className="text-primary font-mono font-bold text-xl">{(displayData as any).placa.slice(0, 3)}</span>
+                </div>
+              )}
               <div>
                 <p className="text-3xl font-mono font-bold text-foreground tracking-wider">{(displayData as any).placa}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">{(displayData as any).modelo} • {(displayData as any).cor}</p>
