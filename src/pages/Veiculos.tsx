@@ -172,7 +172,7 @@ export default function Veiculos() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>{editId ? 'Editar Veículo' : 'Novo Veículo'}</DialogTitle>
           </DialogHeader>

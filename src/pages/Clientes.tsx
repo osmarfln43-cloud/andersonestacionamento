@@ -252,7 +252,7 @@ export default function Clientes() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto sm:top-[5%] sm:translate-y-0" style={{ top: '5%', transform: 'translateX(-50%)' }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           </DialogHeader>
