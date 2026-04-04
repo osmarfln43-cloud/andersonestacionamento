@@ -1,5 +1,6 @@
 import { ParkingCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import meparkLogo from "@/assets/mepark-logo.png";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -73,6 +74,9 @@ export default function Login() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img src={meparkLogo} alt="" className="w-[600px] max-w-[90vw] opacity-15 select-none" draggable={false} />
+        </div>
       </div>
 
       <div className="w-full max-w-[420px] space-y-8 relative z-10 animate-in" style={{ opacity: 0 }}>
