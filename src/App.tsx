@@ -69,10 +69,10 @@ const AppRoutes = () => (
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash on standalone PWA mode or first visit
+    // Show splash on standalone PWA mode and also on the first browser visit
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     const hasSeenSplash = sessionStorage.getItem('mepark-splash-seen');
-    return isStandalone && !hasSeenSplash;
+    return !hasSeenSplash || isStandalone;
   });
 
   const handleSplashFinish = useCallback(() => {
