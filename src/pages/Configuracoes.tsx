@@ -112,6 +112,8 @@ export default function Configuracoes() {
   const { data: config, isLoading } = useConfiguracoes();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<any>({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config) setForm(config);
