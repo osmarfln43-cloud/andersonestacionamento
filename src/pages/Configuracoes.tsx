@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -112,9 +113,25 @@ export default function Configuracoes() {
   }, [config]);
 
   const save = async () => {
-    const payload = Object.fromEntries(
-      Object.entries(form).filter(([, value]) => value !== undefined)
-    );
+    const payload = {
+      nome_estacionamento: form.nome_estacionamento || 'ME PARK ESTACIONAMENTO',
+      cnpj: form.cnpj || null,
+      endereco: form.endereco || null,
+      telefone: form.telefone || null,
+      valor_hora: Number(form.valor_hora ?? 10),
+      tolerancia_minutos: Number(form.tolerancia_minutos ?? 15),
+      valor_minimo: form.valor_minimo === '' || form.valor_minimo == null ? null : Number(form.valor_minimo),
+      valor_maximo_diario: form.valor_maximo_diario === '' || form.valor_maximo_diario == null ? null : Number(form.valor_maximo_diario),
+      chave_pix: form.chave_pix || null,
+      tipo_chave_pix: form.tipo_chave_pix || null,
+      nome_beneficiario: form.nome_beneficiario || null,
+      mensagem_comprovante: form.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA',
+      largura_papel: form.largura_papel || '80mm',
+      horario_abertura: form.horario_abertura || '07:00',
+      horario_fechamento: form.horario_fechamento || '19:00',
+      dias_funcionamento: form.dias_funcionamento || 'Segunda a Sexta',
+      disclaimer_comprovante: form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
+    } as any;
 
     if (!form.id) {
       const { error } = await (supabase.from('configuracoes') as any).insert(payload);
