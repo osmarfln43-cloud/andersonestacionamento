@@ -81,7 +81,7 @@ export default function Veiculos() {
   const setField = (k: keyof VeiculoForm, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
@@ -104,15 +104,44 @@ export default function Veiculos() {
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">Carregando...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">Nenhum veículo encontrado</p>
+        ) : filtered.map((v: any) => (
+          <div key={v.id} className="glass-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setViewVeiculo(v)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Eye className="h-4 w-4" /></button>
+                <button onClick={() => openEdit(v)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
+                <button onClick={() => handleDelete(v.id)} className="p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-sm">
+              <span className="text-muted-foreground">Veículo:</span>
+              <span className="text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</span>
+              <span className="text-muted-foreground">Cor:</span>
+              <span className="text-foreground">{v.cor || '—'}</span>
+              <span className="text-muted-foreground">Proprietário:</span>
+              <span className="text-foreground">{v.clientes?.nome || '—'}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left p-4 stat-label">Placa</th>
                 <th className="text-left p-4 stat-label">Veículo</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Cor</th>
-                <th className="text-left p-4 stat-label hidden lg:table-cell">Proprietário</th>
+                <th className="text-left p-4 stat-label">Cor</th>
+                <th className="text-left p-4 stat-label">Proprietário</th>
                 <th className="text-right p-4 stat-label">Ações</th>
               </tr>
             </thead>
@@ -123,18 +152,10 @@ export default function Veiculos() {
                 <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum veículo encontrado</td></tr>
               ) : filtered.map((v: any) => (
                 <tr key={v.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                  <td className="p-4">
-                    <span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span>
-                  </td>
-                  <td className="p-4">
-                    <p className="text-sm text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</p>
-                  </td>
-                  <td className="p-4 hidden md:table-cell">
-                    <span className="text-sm text-muted-foreground">{v.cor || '—'}</span>
-                  </td>
-                  <td className="p-4 hidden lg:table-cell">
-                    <span className="text-sm text-muted-foreground">{v.clientes?.nome || '—'}</span>
-                  </td>
+                  <td className="p-4"><span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span></td>
+                  <td className="p-4"><p className="text-sm text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</p></td>
+                  <td className="p-4"><span className="text-sm text-muted-foreground">{v.cor || '—'}</span></td>
+                  <td className="p-4"><span className="text-sm text-muted-foreground">{v.clientes?.nome || '—'}</span></td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => setViewVeiculo(v)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Eye className="h-4 w-4" /></button>
@@ -151,7 +172,7 @@ export default function Veiculos() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader>
             <DialogTitle>{editId ? 'Editar Veículo' : 'Novo Veículo'}</DialogTitle>
           </DialogHeader>
@@ -212,7 +233,7 @@ export default function Veiculos() {
 
       {/* View Dialog */}
       <Dialog open={!!viewVeiculo} onOpenChange={() => setViewVeiculo(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader>
             <DialogTitle>Detalhes do Veículo</DialogTitle>
           </DialogHeader>

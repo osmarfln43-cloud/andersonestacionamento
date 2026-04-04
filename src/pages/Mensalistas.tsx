@@ -63,7 +63,7 @@ export default function Mensalistas() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
@@ -93,16 +93,53 @@ export default function Mensalistas() {
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">Carregando...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">Nenhum mensalista encontrado</p>
+        ) : filtered.map((m: any) => (
+          <div key={m.id} className="glass-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                  {(m.clientes?.nome || '?').charAt(0)}
+                </div>
+                <span className="font-medium text-foreground text-sm">{m.clientes?.nome || '—'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => { setForm({ cliente_id: m.cliente_id, veiculo_id: m.veiculo_id || '', plano: m.plano, valor_mensal: String(m.valor_mensal), vencimento: m.vencimento, status: m.status }); setEditId(m.id); setDialogOpen(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"><Pencil className="h-4 w-4" /></button>
+                <button onClick={() => handleDelete(m.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-sm">
+              <span className="text-muted-foreground">Placa:</span>
+              <span className="font-mono font-bold text-foreground">{m.veiculos?.placa || '—'}</span>
+              <span className="text-muted-foreground">Plano:</span>
+              <span className="text-foreground">{m.plano}</span>
+              <span className="text-muted-foreground">Valor:</span>
+              <span className="font-bold text-foreground">R$ {Number(m.valor_mensal)}</span>
+              <span className="text-muted-foreground">Vencimento:</span>
+              <span className="font-mono text-foreground">{m.vencimento}</span>
+              <span className="text-muted-foreground">Status:</span>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg w-fit ${m.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'}`}>{m.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="glass-card overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left p-4 stat-label">Cliente</th>
                 <th className="text-left p-4 stat-label">Placa</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Plano</th>
+                <th className="text-left p-4 stat-label">Plano</th>
                 <th className="text-left p-4 stat-label">Valor</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Vencimento</th>
+                <th className="text-left p-4 stat-label">Vencimento</th>
                 <th className="text-left p-4 stat-label">Status</th>
                 <th className="text-right p-4 stat-label">Ações</th>
               </tr>
@@ -123,9 +160,9 @@ export default function Mensalistas() {
                     </div>
                   </td>
                   <td className="p-4"><span className="font-mono font-bold text-foreground tracking-wide">{m.veiculos?.placa || '—'}</span></td>
-                  <td className="p-4 hidden md:table-cell"><span className="text-sm text-muted-foreground">{m.plano}</span></td>
+                  <td className="p-4"><span className="text-sm text-muted-foreground">{m.plano}</span></td>
                   <td className="p-4"><span className="font-display font-bold text-foreground">R$ {Number(m.valor_mensal)}</span></td>
-                  <td className="p-4 hidden md:table-cell"><span className="text-sm font-mono text-muted-foreground">{m.vencimento}</span></td>
+                  <td className="p-4"><span className="text-sm font-mono text-muted-foreground">{m.vencimento}</span></td>
                   <td className="p-4">
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${m.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-destructive/10 text-destructive'}`}>{m.status}</span>
                   </td>
@@ -143,7 +180,7 @@ export default function Mensalistas() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader><DialogTitle>{editId ? 'Editar Mensalista' : 'Novo Mensalista'}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
