@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const operationalItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Gerenciador", url: "/", icon: LayoutDashboard },
   { title: "Entrada", url: "/entrada", icon: LogIn },
   { title: "Saída", url: "/saida", icon: LogOut },
   { title: "Pátio", url: "/patio", icon: Car },
@@ -57,16 +57,16 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
                     to={item.url}
                     end
                     className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'bg-primary/[0.08] text-primary'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      item.title === 'Gerenciador'
+                        ? (isActive ? 'bg-destructive/10 text-destructive' : 'text-destructive hover:bg-destructive/10')
+                        : (isActive ? 'bg-primary/[0.08] text-primary' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground')
                     }`}
                     activeClassName=""
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full ${item.title === 'Gerenciador' ? 'bg-destructive' : 'bg-primary'}`} />
                     )}
-                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${item.title === 'Gerenciador' ? 'text-destructive' : (isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}`} />
                     {!collapsed && <span>{item.title}</span>}
                   </NavLink>
                 </SidebarMenuButton>
