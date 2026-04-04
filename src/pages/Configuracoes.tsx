@@ -1,4 +1,4 @@
-import { Settings, Save, Clock, Receipt, CreditCard, Printer } from "lucide-react";
+import { Settings, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { useConfiguracoes } from "@/hooks/useDatabase";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -24,6 +25,78 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div className="space-y-2">
       <Label className="stat-label">{label}</Label>
       {children}
+    </div>
+  );
+}
+
+function ReceiptPreview({ form }: { form: any }) {
+  const nome = form.nome_estacionamento || 'ME PARK ESTACIONAMENTO';
+  const disclaimer = form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
+  const dias = (form.dias_funcionamento || 'Segunda a Sexta').toUpperCase();
+  const abertura = form.horario_abertura || '07:00';
+  const fechamento = form.horario_fechamento || '19:00';
+  const endereco = (form.endereco || '').toUpperCase();
+  const mensagem = form.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA';
+  const valorHora = Number(form.valor_hora || 10).toFixed(2);
+  const chavePix = form.chave_pix || '';
+  const pixCode = chavePix
+    ? `00020126580014br.gov.bcb.pix0136${chavePix}5204000053039865802BR5913ME PARK AI6008SAOPAULO`
+    : '';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return (
+    <div className="bg-[#f5f0e8] text-[#1a1a1a] rounded-xl shadow-xl overflow-hidden max-w-[300px] mx-auto" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      <div className="p-5 space-y-2.5 text-[10px] leading-relaxed">
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <p className="text-xs font-bold tracking-wide">{nome}</p>
+          <div className="border-b border-dashed border-gray-400 my-2" />
+          <p className="text-[8px] leading-snug">{disclaimer}. HORARIO DE FUNCIONAMENTO {dias} DAS {abertura} ATE AS {fechamento}</p>
+          <div className="border-b border-dashed border-gray-400 my-2" />
+        </div>
+
+        {/* Plate */}
+        <div className="text-center py-1">
+          <p className="text-xl font-bold tracking-widest">ABC1D23</p>
+          <p className="text-[9px] font-bold mt-0.5">(HONDA CIVIC PRETO)</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        {/* Details */}
+        <div className="space-y-1 py-1">
+          <div className="flex justify-between"><span>Entrada:</span><span>{dateStr} as {timeStr}</span></div>
+          <div className="flex justify-between"><span>Tabela:</span><span>Avulso</span></div>
+          <div className="flex justify-between"><span>Valor/hora:</span><span>R$ {valorHora}</span></div>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        {/* Payment highlight */}
+        <div className="text-center py-1">
+          <p className="text-xs font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+        </div>
+
+        {/* QR Code */}
+        {pixCode && (
+          <div className="flex justify-center py-2">
+            <QRCodeSVG value={pixCode} size={100} level="M" />
+          </div>
+        )}
+
+        {/* Payment highlight below */}
+        <div className="text-center py-1">
+          <p className="text-xs font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        {/* Footer */}
+        <div className="text-center space-y-0.5 pt-1">
+          <p className="font-bold text-[9px]">{mensagem}</p>
+          {endereco && <p className="text-[8px]">{endereco}</p>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -59,7 +132,7 @@ export default function Configuracoes() {
   if (isLoading) return <p className="text-center py-12 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -70,117 +143,125 @@ export default function Configuracoes() {
         <p className="text-sm text-muted-foreground mt-2">Gerencie todas as configurações do sistema e dos comprovantes</p>
       </div>
 
-      <Tabs defaultValue="geral" className="space-y-6">
-        <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
-          {[
-            { label: 'Geral', value: 'geral' },
-            { label: 'Horários', value: 'horarios' },
-            { label: 'Cobrança', value: 'cobranca' },
-            { label: 'PIX / QR Code', value: 'pix' },
-            { label: 'Comprovante', value: 'comprovante' },
-            { label: 'Impressão', value: 'impressao' },
-          ].map((t) => (
-            <TabsTrigger
-              key={t.value}
-              value={t.value}
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5 px-4"
-            >
-              {t.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left - Form */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="geral" className="space-y-6">
+            <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
+              {[
+                { label: 'Geral', value: 'geral' },
+                { label: 'Horários', value: 'horarios' },
+                { label: 'Cobrança', value: 'cobranca' },
+                { label: 'PIX / QR Code', value: 'pix' },
+                { label: 'Comprovante', value: 'comprovante' },
+                { label: 'Impressão', value: 'impressao' },
+              ].map((t) => (
+                <TabsTrigger
+                  key={t.value}
+                  value={t.value}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5 px-4"
+                >
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-        {/* GERAL */}
-        <TabsContent value="geral" className="space-y-6">
-          <Section title="Dados da Empresa">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Nome do Estacionamento"><Input value={form.nome_estacionamento || ''} onChange={e => setField('nome_estacionamento', e.target.value)} className="h-12" /></Field>
-              <Field label="CNPJ"><Input value={form.cnpj || ''} onChange={e => setField('cnpj', e.target.value)} className="h-12 font-mono" /></Field>
-              <Field label="Endereço"><Input value={form.endereco || ''} onChange={e => setField('endereco', e.target.value)} className="h-12" /></Field>
-              <Field label="Telefone"><Input value={form.telefone || ''} onChange={e => setField('telefone', e.target.value)} className="h-12" /></Field>
-            </div>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar Configurações</Button>
-        </TabsContent>
+            <TabsContent value="geral" className="space-y-6">
+              <Section title="Dados da Empresa">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Nome do Estacionamento"><Input value={form.nome_estacionamento || ''} onChange={e => setField('nome_estacionamento', e.target.value)} className="h-12" /></Field>
+                  <Field label="CNPJ"><Input value={form.cnpj || ''} onChange={e => setField('cnpj', e.target.value)} className="h-12 font-mono" /></Field>
+                  <Field label="Endereço"><Input value={form.endereco || ''} onChange={e => setField('endereco', e.target.value)} className="h-12" /></Field>
+                  <Field label="Telefone"><Input value={form.telefone || ''} onChange={e => setField('telefone', e.target.value)} className="h-12" /></Field>
+                </div>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar Configurações</Button>
+            </TabsContent>
 
-        {/* HORÁRIOS */}
-        <TabsContent value="horarios" className="space-y-6">
-          <Section title="Horário de Funcionamento">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Horário de Abertura">
-                <Input type="time" value={form.horario_abertura || '07:00'} onChange={e => setField('horario_abertura', e.target.value)} className="h-12 font-mono" />
-              </Field>
-              <Field label="Horário de Fechamento">
-                <Input type="time" value={form.horario_fechamento || '19:00'} onChange={e => setField('horario_fechamento', e.target.value)} className="h-12 font-mono" />
-              </Field>
-              <Field label="Dias de Funcionamento">
-                <Input value={form.dias_funcionamento || 'Segunda a Sexta'} onChange={e => setField('dias_funcionamento', e.target.value)} className="h-12" placeholder="Ex: Segunda a Sexta, Segunda a Sábado" />
-              </Field>
-            </div>
-            <p className="text-xs text-muted-foreground">Esses horários aparecerão no comprovante de entrada e saída.</p>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
+            <TabsContent value="horarios" className="space-y-6">
+              <Section title="Horário de Funcionamento">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Horário de Abertura">
+                    <Input type="time" value={form.horario_abertura || '07:00'} onChange={e => setField('horario_abertura', e.target.value)} className="h-12 font-mono" />
+                  </Field>
+                  <Field label="Horário de Fechamento">
+                    <Input type="time" value={form.horario_fechamento || '19:00'} onChange={e => setField('horario_fechamento', e.target.value)} className="h-12 font-mono" />
+                  </Field>
+                  <Field label="Dias de Funcionamento">
+                    <Input value={form.dias_funcionamento || 'Segunda a Sexta'} onChange={e => setField('dias_funcionamento', e.target.value)} className="h-12" placeholder="Ex: Segunda a Sexta" />
+                  </Field>
+                </div>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
 
-        {/* COBRANÇA */}
-        <TabsContent value="cobranca" className="space-y-6">
-          <Section title="Regras de Cobrança">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Valor por Hora (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
-              <Field label="Tolerância (minutos)"><Input type="number" value={form.tolerancia_minutos ?? ''} onChange={e => setField('tolerancia_minutos', Number(e.target.value))} className="h-12 font-mono" /></Field>
-              <Field label="Valor Mínimo (R$)"><Input type="number" value={form.valor_minimo ?? ''} onChange={e => setField('valor_minimo', Number(e.target.value))} className="h-12 font-mono" /></Field>
-              <Field label="Valor Máximo Diário (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" /></Field>
-            </div>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
+            <TabsContent value="cobranca" className="space-y-6">
+              <Section title="Regras de Cobrança">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Valor por Hora (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Tolerância (minutos)"><Input type="number" value={form.tolerancia_minutos ?? ''} onChange={e => setField('tolerancia_minutos', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Valor Mínimo (R$)"><Input type="number" value={form.valor_minimo ?? ''} onChange={e => setField('valor_minimo', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Valor Máximo Diário (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                </div>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
 
-        {/* PIX / QR CODE */}
-        <TabsContent value="pix" className="space-y-6">
-          <Section title="Dados PIX (QR Code no Comprovante)">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Chave PIX"><Input value={form.chave_pix || ''} onChange={e => setField('chave_pix', e.target.value)} className="h-12" /></Field>
-              <Field label="Tipo da Chave">
-                <Input value={form.tipo_chave_pix || ''} onChange={e => setField('tipo_chave_pix', e.target.value)} className="h-12" placeholder="email, cpf, telefone, aleatoria" />
-              </Field>
-              <Field label="Nome do Beneficiário"><Input value={form.nome_beneficiario || ''} onChange={e => setField('nome_beneficiario', e.target.value)} className="h-12" /></Field>
-            </div>
-            <p className="text-xs text-muted-foreground">A chave PIX será usada para gerar o QR Code no comprovante. Altere aqui para atualizar o QR Code.</p>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
+            <TabsContent value="pix" className="space-y-6">
+              <Section title="Dados PIX (QR Code no Comprovante)">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Chave PIX"><Input value={form.chave_pix || ''} onChange={e => setField('chave_pix', e.target.value)} className="h-12" /></Field>
+                  <Field label="Tipo da Chave">
+                    <Input value={form.tipo_chave_pix || ''} onChange={e => setField('tipo_chave_pix', e.target.value)} className="h-12" placeholder="email, cpf, telefone, aleatoria" />
+                  </Field>
+                  <Field label="Nome do Beneficiário"><Input value={form.nome_beneficiario || ''} onChange={e => setField('nome_beneficiario', e.target.value)} className="h-12" /></Field>
+                </div>
+                <p className="text-xs text-muted-foreground">A chave PIX será usada para gerar o QR Code no comprovante.</p>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
 
-        {/* COMPROVANTE */}
-        <TabsContent value="comprovante" className="space-y-6">
-          <Section title="Textos do Comprovante">
-            <div className="grid grid-cols-1 gap-5">
-              <Field label="Aviso / Disclaimer (exibido abaixo do cabeçalho)">
-                <Textarea 
-                  value={form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO'} 
-                  onChange={e => setField('disclaimer_comprovante', e.target.value)} 
-                  className="min-h-[80px] font-mono text-xs"
-                  placeholder="Ex: NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS..."
-                />
-              </Field>
-              <Field label="Mensagem de Rodapé">
-                <Input value={form.mensagem_comprovante || ''} onChange={e => setField('mensagem_comprovante', e.target.value)} className="h-12" placeholder="Ex: ME PARK AGRADECE A PREFERÊNCIA" />
-              </Field>
-            </div>
-            <p className="text-xs text-muted-foreground">Todos os textos serão exibidos no comprovante PDF. Altere aqui para personalizar.</p>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
+            <TabsContent value="comprovante" className="space-y-6">
+              <Section title="Textos do Comprovante">
+                <div className="grid grid-cols-1 gap-5">
+                  <Field label="Aviso / Disclaimer (exibido abaixo do cabeçalho)">
+                    <Textarea
+                      value={form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO'}
+                      onChange={e => setField('disclaimer_comprovante', e.target.value)}
+                      className="min-h-[80px] font-mono text-xs"
+                    />
+                  </Field>
+                  <Field label="Mensagem de Rodapé">
+                    <Input value={form.mensagem_comprovante || ''} onChange={e => setField('mensagem_comprovante', e.target.value)} className="h-12" placeholder="Ex: ME PARK AGRADECE A PREFERÊNCIA" />
+                  </Field>
+                </div>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
 
-        {/* IMPRESSÃO */}
-        <TabsContent value="impressao" className="space-y-6">
-          <Section title="Configuração de Impressão">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Largura do Papel"><Input value={form.largura_papel || ''} onChange={e => setField('largura_papel', e.target.value)} className="h-12" placeholder="80mm" /></Field>
+            <TabsContent value="impressao" className="space-y-6">
+              <Section title="Configuração de Impressão">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Largura do Papel"><Input value={form.largura_papel || ''} onChange={e => setField('largura_papel', e.target.value)} className="h-12" placeholder="80mm" /></Field>
+                </div>
+              </Section>
+              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right - Live Preview */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="section-title text-sm">Preview em Tempo Real</span>
             </div>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
-      </Tabs>
+            <ReceiptPreview form={form} />
+            <p className="text-[10px] text-muted-foreground text-center">As alterações são refletidas aqui em tempo real. Salve para aplicar nos comprovantes.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
