@@ -14,7 +14,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <div className="relative flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="h-16 flex items-center gap-4 border-b border-border/50 px-6 shrink-0 backdrop-blur-sm bg-background/80 sticky top-0 z-10">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
 
@@ -56,7 +56,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             <p>© 2026 ME PARK - Copyright Todos os Direitos Reservados</p>
             <p>Desenvolvimento ® OSMARJR Sistemas</p>
           </footer>
-          <div id="app-dialog-root" className="absolute inset-x-0 top-16 bottom-0 z-50" />
         </div>
       </div>
     </SidebarProvider>
