@@ -138,6 +138,7 @@ export default function Configuracoes() {
       horario_fechamento: form.horario_fechamento || '19:00',
       dias_funcionamento: form.dias_funcionamento || 'Segunda a Sexta',
       disclaimer_comprovante: form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
+      qr_code_url: form.qr_code_url || null,
     } as any;
 
     if (!form.id) {
