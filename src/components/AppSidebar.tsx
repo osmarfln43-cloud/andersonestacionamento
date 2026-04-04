@@ -57,9 +57,9 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
                     to={item.url}
                     end
                     className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'bg-primary/[0.08] text-primary'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      item.title === 'Gerenciador'
+                        ? (isActive ? 'bg-destructive/10 text-destructive' : 'text-destructive hover:bg-destructive/10')
+                        : (isActive ? 'bg-primary/[0.08] text-primary' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground')
                     }`}
                     activeClassName=""
                   >
