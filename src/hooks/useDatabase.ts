@@ -58,13 +58,64 @@ export function useMovimentacoesHoje() {
 export function useRegistrarEntrada() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (mov: { placa: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string; foto_url?: string }) => {
+    mutationFn: async (mov: { placa: string; marca?: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string; foto_url?: string }) => {
+      const placaUpper = mov.placa.toUpperCase();
+      const marcaInformada = mov.marca?.trim() || '';
+      const modeloInformado = mov.modelo?.trim() || 'N/I';
+      const corInformada = mov.cor?.trim() || '';
+
+      const { data: veiculoExistente, error: veiculoFetchError } = await supabase
+        .from('veiculos')
+        .select('id, marca, modelo, cor')
+        .eq('placa', placaUpper)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (veiculoFetchError) throw veiculoFetchError;
+
+      const marcaFinal = marcaInformada || veiculoExistente?.marca || '';
+      const modeloFinal = modeloInformado !== 'N/I' ? modeloInformado : veiculoExistente?.modelo || 'N/I';
+      const corFinal = corInformada || veiculoExistente?.cor || '';
+
+      let veiculoId = veiculoExistente?.id || null;
+
+      if (veiculoExistente) {
+        const { error: veiculoUpdateError } = await supabase
+          .from('veiculos')
+          .update({
+            marca: marcaFinal || null,
+            modelo: modeloFinal,
+            cor: corFinal || null,
+          })
+          .eq('id', veiculoExistente.id);
+        if (veiculoUpdateError) throw veiculoUpdateError;
+      } else if (marcaFinal || modeloFinal !== 'N/I' || corFinal) {
+        const { data: veiculoCriado, error: veiculoInsertError } = await supabase
+          .from('veiculos')
+          .insert({
+            placa: placaUpper,
+            marca: marcaFinal || null,
+            modelo: modeloFinal,
+            cor: corFinal || null,
+          })
+          .select('id')
+          .single();
+        if (veiculoInsertError) throw veiculoInsertError;
+        veiculoId = veiculoCriado.id;
+      }
+
+      const modeloMovimentacao = [marcaFinal, modeloFinal !== 'N/I' ? modeloFinal : '']
+        .filter(Boolean)
+        .join(' ')
+        .trim() || 'N/I';
+
       const { data, error } = await supabase
         .from('movimentacoes')
         .insert({
-          placa: mov.placa.toUpperCase(),
-          modelo: mov.modelo,
-          cor: mov.cor,
+          placa: placaUpper,
+          veiculo_id: veiculoId,
+          modelo: modeloMovimentacao,
+          cor: corFinal || null,
           tipo_cliente: mov.tipo_cliente,
           observacao: mov.observacao,
           valor_hora: 12,
@@ -77,6 +128,7 @@ export function useRegistrarEntrada() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['veiculos'] });
     },
   });
 }
