@@ -192,10 +192,9 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     y += 6;
 
     // ========== QR CODE ==========
-    if (data.chavePix && qrCanvas) {
-      const qrData = qrCanvas.toDataURL("image/png");
+    if (qrImageData) {
       const qrSize = 28;
-      doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
+      doc.addImage(qrImageData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
       y += qrSize + 3;
     }
 
