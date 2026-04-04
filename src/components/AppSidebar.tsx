@@ -4,6 +4,7 @@ import {
   ChevronRight, ParkingCircle, Sparkles, ShieldCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
