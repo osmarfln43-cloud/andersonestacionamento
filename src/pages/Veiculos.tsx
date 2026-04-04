@@ -1,20 +1,84 @@
-import { CarFront, Search, Plus, Eye } from "lucide-react";
+import { CarFront, Search, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { useVeiculos, useClientes } from "@/hooks/useDatabase";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
-const demoVeiculos = [
-  { id: '1', placa: 'ABC1D23', modelo: 'Honda Civic', cor: 'Preto', marca: 'Honda', cliente: 'Carlos Silva', entradas: 45 },
-  { id: '2', placa: 'XYZ4E56', modelo: 'Toyota Corolla', cor: 'Branco', marca: 'Toyota', cliente: 'Maria Santos', entradas: 12 },
-  { id: '3', placa: 'MNO7F89', modelo: 'VW Golf', cor: 'Prata', marca: 'VW', cliente: 'João Oliveira', entradas: 38 },
-  { id: '4', placa: 'JKL2G34', modelo: 'Fiat Argo', cor: 'Vermelho', marca: 'Fiat', cliente: 'Ana Costa', entradas: 5 },
-  { id: '5', placa: 'DEF5H67', modelo: 'Hyundai HB20', cor: 'Azul', marca: 'Hyundai', cliente: 'Pedro Lima', entradas: 67 },
-  { id: '6', placa: 'GHI8I90', modelo: 'Chevrolet Onix', cor: 'Cinza', marca: 'Chevrolet', cliente: 'Fernanda Rocha', entradas: 8 },
-];
+type VeiculoForm = {
+  placa: string;
+  modelo: string;
+  marca: string;
+  cor: string;
+  categoria: string;
+  cliente_id: string;
+  observacao: string;
+};
+
+const emptyForm: VeiculoForm = { placa: '', modelo: '', marca: '', cor: '', categoria: '', cliente_id: '', observacao: '' };
 
 export default function Veiculos() {
   const [busca, setBusca] = useState("");
-  const filtered = demoVeiculos.filter(v => v.placa.includes(busca.toUpperCase()) || v.modelo.toLowerCase().includes(busca.toLowerCase()) || v.cliente.toLowerCase().includes(busca.toLowerCase()));
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<VeiculoForm>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [viewVeiculo, setViewVeiculo] = useState<any>(null);
+
+  const { data: veiculos = [], isLoading } = useVeiculos();
+  const { data: clientes = [] } = useClientes();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const filtered = veiculos.filter((v: any) =>
+    v.placa.includes(busca.toUpperCase()) ||
+    v.modelo.toLowerCase().includes(busca.toLowerCase()) ||
+    (v.clientes?.nome || '').toLowerCase().includes(busca.toLowerCase())
+  );
+
+  const openNew = () => { setForm(emptyForm); setEditId(null); setDialogOpen(true); };
+  const openEdit = (v: any) => {
+    setForm({ placa: v.placa, modelo: v.modelo, marca: v.marca || '', cor: v.cor || '', categoria: v.categoria || '', cliente_id: v.cliente_id || '', observacao: v.observacao || '' });
+    setEditId(v.id);
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.placa.trim() || !form.modelo.trim()) { toast({ title: "Placa e modelo são obrigatórios", variant: "destructive" }); return; }
+    setSaving(true);
+    try {
+      const payload = { ...form, placa: form.placa.toUpperCase(), cliente_id: form.cliente_id || null };
+      if (editId) {
+        const { error } = await supabase.from('veiculos').update(payload).eq('id', editId);
+        if (error) throw error;
+        toast({ title: "Veículo atualizado!" });
+      } else {
+        const { error } = await supabase.from('veiculos').insert(payload);
+        if (error) throw error;
+        toast({ title: "Veículo cadastrado!" });
+      }
+      queryClient.invalidateQueries({ queryKey: ['veiculos'] });
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
+    const { error } = await supabase.from('veiculos').delete().eq('id', id);
+    if (error) { toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Veículo excluído" });
+    queryClient.invalidateQueries({ queryKey: ['veiculos'] });
+  };
+
+  const setField = (k: keyof VeiculoForm, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
     <div className="space-y-8">
@@ -26,9 +90,9 @@ export default function Veiculos() {
             </div>
             Veículos
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">{demoVeiculos.length} veículos cadastrados</p>
+          <p className="text-sm text-muted-foreground mt-2">{veiculos.length} veículos cadastrados</p>
         </div>
-        <Button className="gap-2 h-11 px-6 rounded-xl">
+        <Button className="gap-2 h-11 px-6 rounded-xl" onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo Veículo
         </Button>
       </div>
@@ -36,7 +100,7 @@ export default function Veiculos() {
       <div className="glass-card p-3">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por placa, modelo ou cliente..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-11 h-12 text-base border-0 bg-transparent" />
+          <Input placeholder="Buscar por placa, modelo ou proprietário..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-11 h-12 text-base border-0 bg-transparent" />
         </div>
       </div>
 
@@ -49,32 +113,34 @@ export default function Veiculos() {
                 <th className="text-left p-4 stat-label">Veículo</th>
                 <th className="text-left p-4 stat-label hidden md:table-cell">Cor</th>
                 <th className="text-left p-4 stat-label hidden lg:table-cell">Proprietário</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Entradas</th>
-                <th className="text-right p-4 stat-label">Ação</th>
+                <th className="text-right p-4 stat-label">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((v) => (
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum veículo encontrado</td></tr>
+              ) : filtered.map((v: any) => (
                 <tr key={v.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
                   <td className="p-4">
                     <span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span>
                   </td>
                   <td className="p-4">
-                    <p className="text-sm text-foreground">{v.marca} {v.modelo}</p>
+                    <p className="text-sm text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</p>
                   </td>
                   <td className="p-4 hidden md:table-cell">
-                    <span className="text-sm text-muted-foreground">{v.cor}</span>
+                    <span className="text-sm text-muted-foreground">{v.cor || '—'}</span>
                   </td>
                   <td className="p-4 hidden lg:table-cell">
-                    <span className="text-sm text-muted-foreground">{v.cliente}</span>
-                  </td>
-                  <td className="p-4 hidden md:table-cell">
-                    <span className="font-mono text-sm text-foreground">{v.entradas}</span>
+                    <span className="text-sm text-muted-foreground">{v.clientes?.nome || '—'}</span>
                   </td>
                   <td className="p-4 text-right">
-                    <button className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
-                      <Eye className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => setViewVeiculo(v)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Eye className="h-4 w-4" /></button>
+                      <button onClick={() => openEdit(v)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
+                      <button onClick={() => handleDelete(v.id)} className="p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -82,6 +148,94 @@ export default function Veiculos() {
           </table>
         </div>
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editId ? 'Editar Veículo' : 'Novo Veículo'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="stat-label">Placa *</Label>
+                <Input value={form.placa} onChange={e => setField('placa', e.target.value.toUpperCase())} placeholder="ABC1D23" maxLength={7} className="font-mono uppercase" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Modelo *</Label>
+                <Input value={form.modelo} onChange={e => setField('modelo', e.target.value)} placeholder="Ex: Civic" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Marca</Label>
+                <Input value={form.marca} onChange={e => setField('marca', e.target.value)} placeholder="Ex: Honda" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Cor</Label>
+                <Input value={form.cor} onChange={e => setField('cor', e.target.value)} placeholder="Ex: Preto" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Categoria</Label>
+                <Select value={form.categoria} onValueChange={v => setField('categoria', v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="carro">Carro</SelectItem>
+                    <SelectItem value="moto">Moto</SelectItem>
+                    <SelectItem value="caminhonete">Caminhonete</SelectItem>
+                    <SelectItem value="van">Van</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Proprietário</Label>
+                <Select value={form.cliente_id} onValueChange={v => setField('cliente_id', v)}>
+                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum</SelectItem>
+                    {clientes.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="stat-label">Observação</Label>
+                <Textarea value={form.observacao} onChange={e => setField('observacao', e.target.value)} placeholder="Observações..." rows={2} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : editId ? 'Atualizar' : 'Cadastrar'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={!!viewVeiculo} onOpenChange={() => setViewVeiculo(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Veículo</DialogTitle>
+          </DialogHeader>
+          {viewVeiculo && (
+            <div className="space-y-3 pt-2">
+              {[
+                ['Placa', viewVeiculo.placa],
+                ['Modelo', viewVeiculo.modelo],
+                ['Marca', viewVeiculo.marca],
+                ['Cor', viewVeiculo.cor],
+                ['Categoria', viewVeiculo.categoria],
+                ['Proprietário', viewVeiculo.clientes?.nome],
+                ['Observação', viewVeiculo.observacao],
+              ].map(([label, value]) => (
+                <div key={label as string} className="flex justify-between py-2 border-b border-border/30">
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                  <span className="text-sm text-foreground font-medium">{(value as string) || '—'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
