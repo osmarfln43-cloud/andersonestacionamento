@@ -1,10 +1,11 @@
-import { Printer, Search, Eye, X } from "lucide-react";
+import { Printer, Search, Eye, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useConfiguracoes } from "@/hooks/useDatabase";
+import { useToast } from "@/hooks/use-toast";
 import ReceiptPDF, { type ReceiptData } from "@/components/ReceiptPDF";
 import { QRCodeSVG } from "qrcode.react";
 
