@@ -233,7 +233,7 @@ export default function Veiculos() {
 
       {/* View Dialog */}
       <Dialog open={!!viewVeiculo} onOpenChange={() => setViewVeiculo(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" style={{ top: '5%', transform: 'translateX(-50%)' }}>
           <DialogHeader>
             <DialogTitle>Detalhes do Veículo</DialogTitle>
           </DialogHeader>
