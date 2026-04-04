@@ -44,10 +44,10 @@ export default function Configuracoes() {
     );
 
     if (!form.id) {
-      const { error } = await supabase.from('configuracoes').insert(payload);
+      const { error } = await (supabase.from('configuracoes') as any).insert(payload);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     } else {
-      const { error } = await supabase.from('configuracoes').update(payload).eq('id', form.id);
+      const { error } = await (supabase.from('configuracoes') as any).update(payload).eq('id', form.id);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     }
     queryClient.invalidateQueries({ queryKey: ['configuracoes'] });
