@@ -104,8 +104,24 @@ export default function Entrada() {
     registrarEntrada.mutate(
       { placa: placa.toUpperCase(), modelo: `${marca} ${modelo}`.trim() || 'N/I', cor, tipo_cliente: tipo, observacao },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           toast({ title: "✓ Entrada registrada", description: `${placa.toUpperCase()} – ${marca} ${modelo}` });
+          // Trigger receipt PDF
+          setReceiptData({
+            placa: placa.toUpperCase(),
+            modelo: `${marca} ${modelo}`.trim() || 'N/I',
+            cor,
+            tipo_cliente: tipo,
+            entrada: result.entrada,
+            nomeEstacionamento: config?.nome_estacionamento,
+            endereco: config?.endereco,
+            telefone: config?.telefone,
+            chavePix: config?.chave_pix,
+            tipoChavePix: config?.tipo_chave_pix,
+            nomeBeneficiario: config?.nome_beneficiario,
+            mensagemComprovante: config?.mensagem_comprovante,
+            valorHora: result.valor_hora,
+          });
           setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null);
         },
         onError: (err: any) => {
