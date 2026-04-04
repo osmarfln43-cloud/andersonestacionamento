@@ -325,15 +325,15 @@ export default function Entrada() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-display flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
             <LogIn className="h-5 w-5 text-accent" />
           </div>
           Entrada de Veículo
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">Registre a entrada com reconhecimento inteligente</p>
+        <p className="text-xs md:text-sm text-muted-foreground mt-2">Registre a entrada com reconhecimento inteligente</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
