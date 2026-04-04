@@ -150,7 +150,7 @@ export default function Comprovantes() {
                   <div className="text-center space-y-1">
                     <p className="text-sm font-bold tracking-wide">{config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
-                    <p className="text-[10px] leading-snug">NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS. HORARIO DE FUNCIONAMENTO DE SEGUNDA A SEXTA DAS 08:00 ATE AS 20:00</p>
+                    <p className="text-[10px] leading-snug">{(config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO'}. HORARIO DE FUNCIONAMENTO {((config as any)?.dias_funcionamento || 'SEGUNDA A SEXTA').toUpperCase()} DAS {(config as any)?.horario_abertura || '07:00'} ATE AS {(config as any)?.horario_fechamento || '19:00'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
                   </div>
 
