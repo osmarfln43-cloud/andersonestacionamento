@@ -317,7 +317,7 @@ export default function Entrada() {
         </div>
       </div>
 
-      <EntradaReceipt data={receiptData} onDone={() => setReceiptData(null)} />
+      <ReceiptPDF data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
   );
 }

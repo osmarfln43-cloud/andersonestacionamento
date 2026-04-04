@@ -2,9 +2,10 @@ import { useState } from "react";
 import { LogOut, Search, QrCode, Banknote, Printer, Clock, ArrowLeft, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMovimentacoesAtivas, useRegistrarSaida } from "@/hooks/useDatabase";
+import { useMovimentacoesAtivas, useRegistrarSaida, useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import ReceiptPDF, { type ReceiptData } from "@/components/ReceiptPDF";
 
 type MovData = {
   id: string;
@@ -28,7 +29,9 @@ export default function Saida() {
   const [finalizado, setFinalizado] = useState(false);
   const [finalizadoData, setFinalizadoData] = useState<MovData | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
+  const { data: config } = useConfiguracoes();
   const registrarSaida = useRegistrarSaida();
   const { toast } = useToast();
 
@@ -44,6 +47,29 @@ export default function Saida() {
     return { hours: Math.floor(diffH), mins: Math.round((diffH % 1) * 60), total: Math.max(Math.ceil(diffH), 1) * Number(mov.valor_hora) };
   };
 
+  const triggerReceiptPDF = (data: MovData) => {
+    setReceiptData({
+      placa: data.placa,
+      modelo: data.modelo || "N/I",
+      cor: data.cor || "",
+      tipo_cliente: data.tipo_cliente,
+      entrada: data.entrada,
+      saida: data.saida || undefined,
+      tempoTotal: data.tempo_total || undefined,
+      valorTotal: data.valor_total ?? undefined,
+      formaPagamento: data.forma_pagamento || undefined,
+      valorHora: data.valor_hora,
+      nomeEstacionamento: config?.nome_estacionamento,
+      endereco: config?.endereco,
+      telefone: config?.telefone,
+      chavePix: config?.chave_pix,
+      tipoChavePix: config?.tipo_chave_pix,
+      nomeBeneficiario: config?.nome_beneficiario,
+      mensagemComprovante: config?.mensagem_comprovante,
+      tipo: "saida",
+    });
+  };
+
   const handlePagamento = (tipo: 'pix' | 'dinheiro') => {
     if (!selectedId) return;
     registrarSaida.mutate(
@@ -54,6 +80,8 @@ export default function Saida() {
           setFinalizado(true);
           if (tipo === 'pix') setShowPix(true);
           toast({ title: "✓ Saída registrada", description: `${(selected as any)?.placa} — ${tipo.toUpperCase()}` });
+          // Auto-generate PDF receipt
+          triggerReceiptPDF(data as any);
         },
         onError: (err: any) => {
           toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -62,7 +90,7 @@ export default function Saida() {
     );
   };
 
-  const pixCode = `00020126580014br.gov.bcb.pix0136mepark@estacionamento.com.br5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5913ME PARK AI6008SAOPAULO`;
+  const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'mepark@estacionamento.com.br'}5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5913ME PARK AI6008SAOPAULO`;
 
   if (!selected) {
     return (
@@ -187,8 +215,8 @@ export default function Saida() {
 
             {finalizado && (
               <div className="flex gap-3 mt-6">
-                <Button onClick={() => setShowReceipt(!showReceipt)} variant="outline" className="flex-1 h-12 gap-2 rounded-xl">
-                  <Printer className="h-4 w-4" /> {showReceipt ? 'Ocultar' : 'Ver'} Comprovante
+                <Button onClick={() => triggerReceiptPDF(displayData as any)} variant="outline" className="flex-1 h-12 gap-2 rounded-xl">
+                  <Printer className="h-4 w-4" /> Reimprimir Comprovante
                 </Button>
               </div>
             )}
@@ -211,43 +239,6 @@ export default function Saida() {
             </div>
           )}
 
-          {finalizado && showReceipt && (
-            <div className="animate-in stagger-2" style={{ opacity: 0 }}>
-              <div className="receipt-paper w-full max-w-[300px] mx-auto text-xs leading-relaxed">
-                <div className="p-5 space-y-3">
-                  <div className="text-center space-y-1">
-                    <p className="text-sm font-bold">ME PARK ESTACIONAMENTO</p>
-                    <p className="text-[10px]">Rua Principal, 100 - Centro</p>
-                    <div className="border-b border-dashed border-gray-400 my-3" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between"><span>Placa:</span><span className="font-bold">{(displayData as any).placa}</span></div>
-                    <div className="flex justify-between"><span>Veículo:</span><span>{(displayData as any).modelo}</span></div>
-                    <div className="flex justify-between"><span>Cor:</span><span>{(displayData as any).cor}</span></div>
-                    <div className="border-b border-dashed border-gray-400 my-3" />
-                    <div className="flex justify-between"><span>Entrada:</span><span>{new Date((displayData as any).entrada).toLocaleString('pt-BR')}</span></div>
-                    <div className="flex justify-between"><span>Saída:</span><span>{(displayData as any).saida ? new Date((displayData as any).saida).toLocaleString('pt-BR') : '—'}</span></div>
-                    <div className="flex justify-between"><span>Tempo:</span><span className="font-bold">{(displayData as any).tempo_total}</span></div>
-                    <div className="border-b border-dashed border-gray-400 my-3" />
-                    <div className="flex justify-between text-sm font-bold"><span>TOTAL:</span><span>R$ {Number((displayData as any).valor_total)}</span></div>
-                    <div className="flex justify-between"><span>Pagamento:</span><span className="font-bold uppercase">{(displayData as any).forma_pagamento}</span></div>
-                  </div>
-                  {(displayData as any).forma_pagamento === 'pix' && (
-                    <div className="text-center pt-2">
-                      <div className="border-b border-dashed border-gray-400 mb-3" />
-                      <p className="text-[10px] mb-2">Escaneie para pagar via PIX:</p>
-                      <div className="flex justify-center"><QRCodeSVG value={pixCode} size={120} level="M" /></div>
-                    </div>
-                  )}
-                  <div className="text-center pt-3">
-                    <div className="border-b border-dashed border-gray-400 mb-3" />
-                    <p className="text-[10px]">Obrigado pela preferência!</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {finalizado && !showPix && (
             <div className="glass-card p-8 text-center animate-in stagger-1" style={{ opacity: 0 }}>
               <div className="h-16 w-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
@@ -263,6 +254,8 @@ export default function Saida() {
           )}
         </div>
       </div>
+
+      <ReceiptPDF data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
   );
 }
