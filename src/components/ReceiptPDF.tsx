@@ -88,10 +88,9 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     dashed(y); y += 4;
 
     // Disclaimer
-    y = centerWrap(
-      "NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS. HORARIO DE FUNCIONAMENTO DE SEGUNDA A SEXTA DAS 08:00 ATE AS 20:00",
-      y, 6, "normal"
-    );
+    const disclaimer = data.disclaimerComprovante || "NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO";
+    const horarios = `HORARIO DE FUNCIONAMENTO ${(data.diasFuncionamento || "SEGUNDA A SEXTA").toUpperCase()} DAS ${data.horarioAbertura || "07:00"} ATE AS ${data.horarioFechamento || "19:00"}`;
+    y = centerWrap(`${disclaimer}. ${horarios}`, y, 6, "normal");
     y += 3;
     dashed(y); y += 5;
 
