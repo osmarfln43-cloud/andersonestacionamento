@@ -1,27 +1,7 @@
 import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useMovimentacoesAtivas, useMovimentacoesHoje } from "@/hooks/useDatabase";
-
-const hourlyData = [
-  { hora: '06h', faturamento: 24, entradas: 2, saidas: 1 },
-  { hora: '07h', faturamento: 60, entradas: 5, saidas: 3 },
-  { hora: '08h', faturamento: 108, entradas: 9, saidas: 6 },
-  { hora: '09h', faturamento: 144, entradas: 12, saidas: 10 },
-  { hora: '10h', faturamento: 132, entradas: 11, saidas: 9 },
-  { hora: '11h', faturamento: 96, entradas: 8, saidas: 7 },
-  { hora: '12h', faturamento: 156, entradas: 13, saidas: 11 },
-  { hora: '13h', faturamento: 120, entradas: 10, saidas: 9 },
-  { hora: '14h', faturamento: 84, entradas: 7, saidas: 6 },
-  { hora: '15h', faturamento: 72, entradas: 6, saidas: 5 },
-  { hora: '16h', faturamento: 108, entradas: 9, saidas: 8 },
-  { hora: '17h', faturamento: 168, entradas: 14, saidas: 12 },
-  { hora: '18h', faturamento: 180, entradas: 15, saidas: 13 },
-];
-
-const paymentData = [
-  { name: 'PIX', value: 65, color: 'hsl(217, 91%, 60%)' },
-  { name: 'Dinheiro', value: 35, color: 'hsl(160, 65%, 48%)' },
-];
+import { useMovimentacoesAtivas, useMovimentacoesHoje, useMensalistas } from "@/hooks/useDatabase";
+import { useMemo } from "react";
 
 const tooltipStyle = {
   background: 'hsl(225, 22%, 9%)',
@@ -59,21 +39,70 @@ function StatCard({ icon: Icon, label, value, trend, trendUp, color, delay }: {
 export default function Dashboard() {
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
+  const { data: mensalistas = [] } = useMensalistas();
 
   const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
   const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = saidasHoje.length > 0 ? (faturamentoHoje / saidasHoje.length).toFixed(0) : '0';
   const ocupacao = Math.min(Math.round((veiculosAtivos.length / 50) * 100), 100);
+  const mensalistasAtivos = mensalistas.filter((m: any) => m.status === 'ativo').length;
+
+  // Build hourly data from real movements
+  const hourlyData = useMemo(() => {
+    const hours: Record<string, { hora: string; faturamento: number; entradas: number; saidas: number }> = {};
+    for (let h = 6; h <= 22; h++) {
+      const key = `${h.toString().padStart(2, '0')}h`;
+      hours[key] = { hora: key, faturamento: 0, entradas: 0, saidas: 0 };
+    }
+    movimentacoesHoje.forEach(m => {
+      const h = new Date(m.entrada).getHours();
+      const key = `${h.toString().padStart(2, '0')}h`;
+      if (hours[key]) {
+        hours[key].entradas++;
+        if (m.status_movimentacao === 'finalizado') {
+          hours[key].faturamento += Number(m.valor_total) || 0;
+        }
+      }
+      if (m.saida) {
+        const sh = new Date(m.saida).getHours();
+        const skey = `${sh.toString().padStart(2, '0')}h`;
+        if (hours[skey]) hours[skey].saidas++;
+      }
+    });
+    return Object.values(hours);
+  }, [movimentacoesHoje]);
+
+  // Payment distribution from real data
+  const paymentData = useMemo(() => {
+    const pix = saidasHoje.filter(m => m.forma_pagamento === 'pix').length;
+    const din = saidasHoje.filter(m => m.forma_pagamento === 'dinheiro').length;
+    const total = pix + din || 1;
+    return [
+      { name: 'PIX', value: Math.round((pix / total) * 100), color: 'hsl(217, 91%, 60%)' },
+      { name: 'Dinheiro', value: Math.round((din / total) * 100), color: 'hsl(160, 65%, 48%)' },
+    ];
+  }, [saidasHoje]);
+
+  // Average time
+  const tempoMedio = useMemo(() => {
+    if (saidasHoje.length === 0) return '—';
+    const totalMs = saidasHoje.reduce((sum, m) => {
+      if (m.entrada && m.saida) return sum + (new Date(m.saida).getTime() - new Date(m.entrada).getTime());
+      return sum;
+    }, 0);
+    const avgH = totalMs / saidasHoje.length / 3600000;
+    return `${Math.floor(avgH)}h ${Math.round((avgH % 1) * 60)}m`;
+  }, [saidasHoje]);
 
   const stats = [
     { icon: Car, label: "Veículos no Pátio", value: veiculosAtivos.length, trend: "agora", trendUp: true, color: "hsl(217,91%,60%)", delay: 1 },
     { icon: LogIn, label: "Entradas Hoje", value: movimentacoesHoje.length, color: "hsl(160,65%,48%)", delay: 2 },
     { icon: LogOut, label: "Saídas Hoje", value: saidasHoje.length, color: "hsl(38,92%,55%)", delay: 3 },
-    { icon: DollarSign, label: "Faturamento Hoje", value: `R$ ${faturamentoHoje.toLocaleString()}`, trend: "+12%", trendUp: true, color: "hsl(160,65%,48%)", delay: 4 },
+    { icon: DollarSign, label: "Faturamento Hoje", value: `R$ ${faturamentoHoje.toLocaleString()}`, color: "hsl(160,65%,48%)", delay: 4 },
     { icon: DollarSign, label: "Ticket Médio", value: `R$ ${ticketMedio}`, color: "hsl(280,65%,62%)", delay: 5 },
-    { icon: Clock, label: "Tempo Médio", value: "—", color: "hsl(217,91%,60%)", delay: 6 },
+    { icon: Clock, label: "Tempo Médio", value: tempoMedio, color: "hsl(217,91%,60%)", delay: 6 },
     { icon: Percent, label: "Taxa de Ocupação", value: `${ocupacao}%`, color: "hsl(38,92%,55%)", delay: 7 },
-    { icon: Users, label: "Mensalistas", value: "—", color: "hsl(280,65%,62%)", delay: 8 },
+    { icon: Users, label: "Mensalistas", value: mensalistasAtivos, color: "hsl(280,65%,62%)", delay: 8 },
   ];
 
   return (
@@ -112,14 +141,18 @@ export default function Dashboard() {
         <div className="glass-card p-6 flex flex-col">
           <h3 className="section-title mb-6">Formas de Pagamento</h3>
           <div className="flex-1 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={paymentData} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={3} strokeWidth={0}>
-                  {paymentData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            {saidasHoje.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={paymentData} dataKey="value" cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={3} strokeWidth={0}>
+                    {paymentData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem dados ainda</p>
+            )}
           </div>
           <div className="flex justify-center gap-6 mt-4">
             {paymentData.map((p) => (

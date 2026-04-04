@@ -4,6 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useConfiguracoes } from "@/hooks/useDatabase";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -25,7 +29,30 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function Configuracoes() {
   const { toast } = useToast();
-  const save = () => toast({ title: "✓ Configurações salvas" });
+  const { data: config, isLoading } = useConfiguracoes();
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<any>({});
+
+  useEffect(() => {
+    if (config) setForm(config);
+  }, [config]);
+
+  const save = async () => {
+    if (!form.id) {
+      // Insert new config
+      const { error } = await supabase.from('configuracoes').insert(form);
+      if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    } else {
+      const { error } = await supabase.from('configuracoes').update(form).eq('id', form.id);
+      if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
+    }
+    queryClient.invalidateQueries({ queryKey: ['configuracoes'] });
+    toast({ title: "✓ Configurações salvas" });
+  };
+
+  const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
+
+  if (isLoading) return <p className="text-center py-12 text-muted-foreground">Carregando...</p>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -41,7 +68,7 @@ export default function Configuracoes() {
 
       <Tabs defaultValue="geral" className="space-y-6">
         <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
-          {['Geral', 'Cobrança', 'PIX', 'Impressão', 'Clientes', 'Mensalistas'].map((t) => (
+          {['Geral', 'Cobrança', 'PIX', 'Impressão'].map((t) => (
             <TabsTrigger
               key={t}
               value={t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}
@@ -55,16 +82,10 @@ export default function Configuracoes() {
         <TabsContent value="geral" className="space-y-6">
           <Section title="Dados da Empresa">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Nome do Estacionamento"><Input defaultValue="ME PARK AI" className="h-12" /></Field>
-              <Field label="CNPJ"><Input defaultValue="12.345.678/0001-00" className="h-12 font-mono" /></Field>
-              <Field label="Endereço"><Input defaultValue="Rua Principal, 100 - Centro" className="h-12" /></Field>
-              <Field label="Telefone"><Input defaultValue="(11) 3000-0000" className="h-12" /></Field>
-            </div>
-          </Section>
-          <Section title="Logo">
-            <div className="flex items-center gap-4">
-              <div className="h-20 w-20 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground text-xs">Logo</div>
-              <Button variant="outline" className="rounded-xl">Upload</Button>
+              <Field label="Nome do Estacionamento"><Input value={form.nome_estacionamento || ''} onChange={e => setField('nome_estacionamento', e.target.value)} className="h-12" /></Field>
+              <Field label="CNPJ"><Input value={form.cnpj || ''} onChange={e => setField('cnpj', e.target.value)} className="h-12 font-mono" /></Field>
+              <Field label="Endereço"><Input value={form.endereco || ''} onChange={e => setField('endereco', e.target.value)} className="h-12" /></Field>
+              <Field label="Telefone"><Input value={form.telefone || ''} onChange={e => setField('telefone', e.target.value)} className="h-12" /></Field>
             </div>
           </Section>
           <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar Configurações</Button>
@@ -73,19 +94,10 @@ export default function Configuracoes() {
         <TabsContent value="cobranca" className="space-y-6">
           <Section title="Regras de Cobrança">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Valor por Hora (R$)"><Input type="number" defaultValue="12" className="h-12 font-mono" /></Field>
-              <Field label="Tolerância Gratuita (minutos)"><Input type="number" defaultValue="15" className="h-12 font-mono" /></Field>
-              <Field label="Valor Mínimo (R$)"><Input type="number" defaultValue="6" className="h-12 font-mono" /></Field>
-              <Field label="Valor Máximo Diário (R$)"><Input type="number" defaultValue="60" className="h-12 font-mono" /></Field>
-            </div>
-          </Section>
-          <Section title="Arredondamento">
-            <div className="grid grid-cols-2 gap-3">
-              {['Por minuto', 'Bloco 15 min', 'Bloco 30 min', 'Hora cheia'].map((r) => (
-                <button key={r} className="h-12 rounded-xl border-2 border-border text-sm font-medium hover:border-primary/30 transition-colors first:border-primary first:bg-primary/[0.06] first:text-primary">
-                  {r}
-                </button>
-              ))}
+              <Field label="Valor por Hora (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
+              <Field label="Tolerância (minutos)"><Input type="number" value={form.tolerancia_minutos ?? ''} onChange={e => setField('tolerancia_minutos', Number(e.target.value))} className="h-12 font-mono" /></Field>
+              <Field label="Valor Mínimo (R$)"><Input type="number" value={form.valor_minimo ?? ''} onChange={e => setField('valor_minimo', Number(e.target.value))} className="h-12 font-mono" /></Field>
+              <Field label="Valor Máximo Diário (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" /></Field>
             </div>
           </Section>
           <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
@@ -94,18 +106,9 @@ export default function Configuracoes() {
         <TabsContent value="pix" className="space-y-6">
           <Section title="Dados PIX">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Chave PIX"><Input defaultValue="mepark@estacionamento.com.br" className="h-12" /></Field>
-              <Field label="Tipo da Chave">
-                <div className="grid grid-cols-4 gap-2">
-                  {['E-mail', 'CPF/CNPJ', 'Telefone', 'Aleatória'].map((t) => (
-                    <button key={t} className="py-2.5 rounded-xl border-2 border-border text-xs font-medium hover:border-primary/30 transition-colors first:border-primary first:bg-primary/[0.06] first:text-primary">
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="Nome do Beneficiário"><Input defaultValue="ME PARK ESTACIONAMENTO LTDA" className="h-12" /></Field>
-              <Field label="Cidade"><Input defaultValue="São Paulo" className="h-12" /></Field>
+              <Field label="Chave PIX"><Input value={form.chave_pix || ''} onChange={e => setField('chave_pix', e.target.value)} className="h-12" /></Field>
+              <Field label="Tipo da Chave"><Input value={form.tipo_chave_pix || ''} onChange={e => setField('tipo_chave_pix', e.target.value)} className="h-12" placeholder="email, cpf, telefone, aleatoria" /></Field>
+              <Field label="Nome do Beneficiário"><Input value={form.nome_beneficiario || ''} onChange={e => setField('nome_beneficiario', e.target.value)} className="h-12" /></Field>
             </div>
           </Section>
           <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
@@ -114,67 +117,8 @@ export default function Configuracoes() {
         <TabsContent value="impressao" className="space-y-6">
           <Section title="Configuração de Impressão">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Largura do Papel">
-                <div className="grid grid-cols-2 gap-3">
-                  {['58mm', '80mm'].map((w) => (
-                    <button key={w} className="h-12 rounded-xl border-2 border-border text-sm font-medium hover:border-primary/30 transition-colors first:border-primary first:bg-primary/[0.06] first:text-primary">
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="Mensagem do Rodapé"><Input defaultValue="Obrigado pela preferência!" className="h-12" /></Field>
-            </div>
-          </Section>
-          <Section title="Dados no Comprovante">
-            <div className="space-y-3">
-              {['Placa', 'Modelo', 'Cor', 'Horário Entrada/Saída', 'Tempo Total', 'Valor', 'QR Code PIX', 'Nome da Unidade'].map((item) => (
-                <label key={item} className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
-                  <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-border bg-secondary accent-primary" />
-                  {item}
-                </label>
-              ))}
-            </div>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
-
-        <TabsContent value="clientes" className="space-y-6">
-          <Section title="Campos Obrigatórios no Cadastro">
-            <div className="space-y-3">
-              {['Nome Completo', 'CPF/CNPJ', 'Telefone', 'E-mail', 'Endereço'].map((item, i) => (
-                <label key={item} className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
-                  <input type="checkbox" defaultChecked={i < 3} className="h-4 w-4 rounded border-border bg-secondary accent-primary" />
-                  {item}
-                </label>
-              ))}
-            </div>
-          </Section>
-          <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
-        </TabsContent>
-
-        <TabsContent value="mensalistas" className="space-y-6">
-          <Section title="Regras de Mensalistas">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Field label="Planos Disponíveis">
-                <div className="space-y-2">
-                  {['Mensal Integral', 'Mensal Noturno', 'Mensal VIP', 'Quinzenal'].map((p) => (
-                    <div key={p} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/40">
-                      <span className="text-sm text-foreground flex-1">{p}</span>
-                      <span className="text-xs text-muted-foreground">Ativo</span>
-                    </div>
-                  ))}
-                </div>
-              </Field>
-              <div className="space-y-5">
-                <Field label="Saída sem Cobrança">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button className="py-2.5 rounded-xl border-2 border-primary bg-primary/[0.06] text-primary text-xs font-medium">Sim</button>
-                    <button className="py-2.5 rounded-xl border-2 border-border text-xs font-medium text-muted-foreground">Não</button>
-                  </div>
-                </Field>
-                <Field label="Dias de Tolerância Após Vencimento"><Input type="number" defaultValue="5" className="h-12 font-mono" /></Field>
-              </div>
+              <Field label="Largura do Papel"><Input value={form.largura_papel || ''} onChange={e => setField('largura_papel', e.target.value)} className="h-12" placeholder="80mm" /></Field>
+              <Field label="Mensagem do Rodapé"><Input value={form.mensagem_comprovante || ''} onChange={e => setField('mensagem_comprovante', e.target.value)} className="h-12" /></Field>
             </div>
           </Section>
           <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
