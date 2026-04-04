@@ -19,8 +19,10 @@ export default function Entrada() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const registrarEntrada = useRegistrarEntrada();
+  const { data: config } = useConfiguracoes();
   const { toast } = useToast();
 
   const identifyByPhoto = async (base64: string) => {
