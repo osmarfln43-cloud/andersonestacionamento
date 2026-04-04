@@ -1,5 +1,6 @@
 import { ParkingCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import meparkLogo from "@/assets/mepark-logo.png";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
