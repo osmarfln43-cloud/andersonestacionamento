@@ -21,6 +21,10 @@ export interface ReceiptData {
   mensagemComprovante?: string;
   valorHora?: number;
   tipo: "entrada" | "saida";
+  horarioAbertura?: string;
+  horarioFechamento?: string;
+  diasFuncionamento?: string;
+  disclaimerComprovante?: string;
 }
 
 interface Props {
