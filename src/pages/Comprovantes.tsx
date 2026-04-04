@@ -183,21 +183,24 @@ export default function Comprovantes() {
                     </>
                   )}
 
-                  {/* QR Code */}
+                  {/* Payment highlight + QR Code */}
+                  <div className="text-center py-1">
+                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                  </div>
                   {pixCode && (
-                    <>
-                      <div className="flex justify-center py-3">
-                        <QRCodeSVG value={pixCode} size={120} level="M" />
-                      </div>
-                      <div className="border-b border-dashed border-gray-400" />
-                    </>
+                    <div className="flex justify-center py-3">
+                      <QRCodeSVG value={pixCode} size={120} level="M" />
+                    </div>
                   )}
+                  <div className="text-center py-1">
+                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                  </div>
+                  <div className="border-b border-dashed border-gray-400" />
 
                   {/* Footer */}
                   <div className="text-center space-y-1 pt-1">
                     <p className="font-bold text-[10px]">{config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERENCIA'}</p>
                     {config?.endereco && <p className="text-[10px]">{config.endereco.toUpperCase()}</p>}
-                    {config?.telefone && <p className="text-[10px]">TEL: {config.telefone}</p>}
                   </div>
                 </div>
               </div>
