@@ -91,8 +91,7 @@ export default function Clientes() {
             }).select().single();
             veiculoId = veiculo?.id || null;
           }
-          const vencimento = new Date();
-          vencimento.setMonth(vencimento.getMonth() + 1);
+          const vencimento = form.vencimento || new Date(Date.now() + 30 * 86400000);
           await supabase.from('mensalistas').insert({
             cliente_id: newCliente.id,
             veiculo_id: veiculoId,
