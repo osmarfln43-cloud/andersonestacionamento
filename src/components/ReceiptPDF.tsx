@@ -182,20 +182,9 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     // Resize
     doc.internal.pageSize.height = y + 3;
 
-    // Print or download
-    const pdfBlob = doc.output("blob");
-    const url = URL.createObjectURL(pdfBlob);
-
-    try {
-      const printWindow = window.open(url, "_blank");
-      if (printWindow) {
-        printWindow.addEventListener("load", () => printWindow.print());
-      } else {
-        doc.save(`${data.tipo}-${data.placa}-${Date.now()}.pdf`);
-      }
-    } catch {
-      doc.save(`${data.tipo}-${data.placa}-${Date.now()}.pdf`);
-    }
+    // Download PDF directly
+    const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
+    doc.save(filename);
 
     onDone();
   };
