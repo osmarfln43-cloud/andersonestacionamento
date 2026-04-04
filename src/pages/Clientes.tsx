@@ -1,20 +1,90 @@
-import { Users, Search, Plus, Phone, Mail, ChevronRight, Eye } from "lucide-react";
+import { Users, Search, Plus, Phone, Mail, Eye, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { useClientes } from "@/hooks/useDatabase";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
-const demoClientes = [
-  { id: '1', nome: 'Carlos Silva', cpf: '123.456.789-00', telefone: '(11) 99999-0001', email: 'carlos@email.com', tipo: 'mensalista', status: 'ativo', veiculos: 2, movimentacoes: 45 },
-  { id: '2', nome: 'Maria Santos', cpf: '987.654.321-00', telefone: '(11) 99999-0002', email: 'maria@email.com', tipo: 'eventual', status: 'ativo', veiculos: 1, movimentacoes: 12 },
-  { id: '3', nome: 'João Oliveira', cpf: '456.789.123-00', telefone: '(11) 99999-0003', email: 'joao@email.com', tipo: 'mensalista', status: 'ativo', veiculos: 1, movimentacoes: 38 },
-  { id: '4', nome: 'Ana Costa', cpf: '321.654.987-00', telefone: '(11) 99999-0004', email: 'ana@email.com', tipo: 'eventual', status: 'inativo', veiculos: 1, movimentacoes: 5 },
-  { id: '5', nome: 'Pedro Lima', cpf: '654.987.321-00', telefone: '(11) 99999-0005', email: 'pedro@email.com', tipo: 'mensalista', status: 'ativo', veiculos: 3, movimentacoes: 67 },
-  { id: '6', nome: 'Fernanda Rocha', cpf: '789.123.456-00', telefone: '(11) 99999-0006', email: 'fernanda@email.com', tipo: 'eventual', status: 'ativo', veiculos: 1, movimentacoes: 8 },
-];
+type ClienteForm = {
+  nome: string;
+  cpf_cnpj: string;
+  telefone: string;
+  email: string;
+  tipo: string;
+  status: string;
+  endereco: string;
+  observacao: string;
+};
+
+const emptyForm: ClienteForm = { nome: '', cpf_cnpj: '', telefone: '', email: '', tipo: 'eventual', status: 'ativo', endereco: '', observacao: '' };
 
 export default function Clientes() {
   const [busca, setBusca] = useState("");
-  const filtered = demoClientes.filter(c => c.nome.toLowerCase().includes(busca.toLowerCase()) || c.cpf.includes(busca) || c.telefone.includes(busca));
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState<ClienteForm>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [viewCliente, setViewCliente] = useState<any>(null);
+
+  const { data: clientes = [], isLoading } = useClientes();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const filtered = clientes.filter((c: any) =>
+    c.nome.toLowerCase().includes(busca.toLowerCase()) ||
+    (c.cpf_cnpj || '').includes(busca) ||
+    (c.telefone || '').includes(busca)
+  );
+
+  const stats = {
+    total: clientes.length,
+    ativos: clientes.filter((c: any) => c.status === 'ativo').length,
+    mensalistas: clientes.filter((c: any) => c.tipo === 'mensalista').length,
+    eventuais: clientes.filter((c: any) => c.tipo === 'eventual').length,
+  };
+
+  const openNew = () => { setForm(emptyForm); setEditId(null); setDialogOpen(true); };
+  const openEdit = (c: any) => {
+    setForm({ nome: c.nome, cpf_cnpj: c.cpf_cnpj || '', telefone: c.telefone || '', email: c.email || '', tipo: c.tipo, status: c.status, endereco: c.endereco || '', observacao: c.observacao || '' });
+    setEditId(c.id);
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.nome.trim()) { toast({ title: "Nome é obrigatório", variant: "destructive" }); return; }
+    setSaving(true);
+    try {
+      if (editId) {
+        const { error } = await supabase.from('clientes').update({ ...form }).eq('id', editId);
+        if (error) throw error;
+        toast({ title: "Cliente atualizado!" });
+      } else {
+        const { error } = await supabase.from('clientes').insert({ ...form });
+        if (error) throw error;
+        toast({ title: "Cliente cadastrado!" });
+      }
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+    const { error } = await supabase.from('clientes').delete().eq('id', id);
+    if (error) { toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Cliente excluído" });
+    queryClient.invalidateQueries({ queryKey: ['clientes'] });
+  };
+
+  const setField = (k: keyof ClienteForm, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
     <div className="space-y-8">
@@ -26,20 +96,19 @@ export default function Clientes() {
             </div>
             Clientes
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">{demoClientes.length} clientes cadastrados</p>
+          <p className="text-sm text-muted-foreground mt-2">{stats.total} clientes cadastrados</p>
         </div>
-        <Button className="gap-2 h-11 px-6 rounded-xl">
+        <Button className="gap-2 h-11 px-6 rounded-xl" onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo Cliente
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: demoClientes.length, color: 'text-foreground' },
-          { label: 'Ativos', value: demoClientes.filter(c => c.status === 'ativo').length, color: 'text-accent' },
-          { label: 'Mensalistas', value: demoClientes.filter(c => c.tipo === 'mensalista').length, color: 'text-primary' },
-          { label: 'Eventuais', value: demoClientes.filter(c => c.tipo === 'eventual').length, color: 'text-muted-foreground' },
+          { label: 'Total', value: stats.total, color: 'text-foreground' },
+          { label: 'Ativos', value: stats.ativos, color: 'text-accent' },
+          { label: 'Mensalistas', value: stats.mensalistas, color: 'text-primary' },
+          { label: 'Eventuais', value: stats.eventuais, color: 'text-muted-foreground' },
         ].map((s) => (
           <div key={s.label} className="glass-card p-5">
             <p className="stat-label">{s.label}</p>
@@ -48,7 +117,6 @@ export default function Clientes() {
         ))}
       </div>
 
-      {/* Search */}
       <div className="glass-card p-3">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -56,7 +124,6 @@ export default function Clientes() {
         </div>
       </div>
 
-      {/* Client Table */}
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -65,52 +132,46 @@ export default function Clientes() {
                 <th className="text-left p-4 stat-label">Cliente</th>
                 <th className="text-left p-4 stat-label hidden lg:table-cell">Contato</th>
                 <th className="text-left p-4 stat-label">Tipo</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Veículos</th>
-                <th className="text-left p-4 stat-label hidden md:table-cell">Movimentações</th>
                 <th className="text-left p-4 stat-label">Status</th>
-                <th className="text-right p-4 stat-label">Ação</th>
+                <th className="text-right p-4 stat-label">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
+              {isLoading ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum cliente encontrado</td></tr>
+              ) : filtered.map((c: any) => (
                 <tr key={c.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                        {c.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        {c.nome.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                       </div>
                       <div>
                         <p className="font-medium text-foreground text-sm">{c.nome}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{c.cpf}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{c.cpf_cnpj || '—'}</p>
                       </div>
                     </div>
                   </td>
                   <td className="p-4 hidden lg:table-cell">
                     <div className="space-y-1 text-xs text-muted-foreground">
-                      <p className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.telefone}</p>
-                      <p className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</p>
+                      {c.telefone && <p className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.telefone}</p>}
+                      {c.email && <p className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</p>}
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${
-                      c.tipo === 'mensalista' ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
-                    }`}>{c.tipo}</span>
-                  </td>
-                  <td className="p-4 hidden md:table-cell">
-                    <span className="font-mono text-sm text-foreground">{c.veiculos}</span>
-                  </td>
-                  <td className="p-4 hidden md:table-cell">
-                    <span className="font-mono text-sm text-foreground">{c.movimentacoes}</span>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${c.tipo === 'mensalista' ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'}`}>{c.tipo}</span>
                   </td>
                   <td className="p-4">
-                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg ${
-                      c.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'
-                    }`}>{c.status}</span>
+                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg ${c.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>{c.status}</span>
                   </td>
                   <td className="p-4 text-right">
-                    <button className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
-                      <Eye className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => setViewCliente(c)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Eye className="h-4 w-4" /></button>
+                      <button onClick={() => openEdit(c)} className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>
+                      <button onClick={() => handleDelete(c.id)} className="p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -118,6 +179,95 @@ export default function Clientes() {
           </table>
         </div>
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="stat-label">Nome *</Label>
+                <Input value={form.nome} onChange={e => setField('nome', e.target.value)} placeholder="Nome completo" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">CPF/CNPJ</Label>
+                <Input value={form.cpf_cnpj} onChange={e => setField('cpf_cnpj', e.target.value)} placeholder="000.000.000-00" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Telefone</Label>
+                <Input value={form.telefone} onChange={e => setField('telefone', e.target.value)} placeholder="(00) 00000-0000" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">E-mail</Label>
+                <Input value={form.email} onChange={e => setField('email', e.target.value)} placeholder="email@exemplo.com" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Tipo</Label>
+                <Select value={form.tipo} onValueChange={v => setField('tipo', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="eventual">Eventual</SelectItem>
+                    <SelectItem value="mensalista">Mensalista</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label">Status</Label>
+                <Select value={form.status} onValueChange={v => setField('status', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="stat-label">Endereço</Label>
+                <Input value={form.endereco} onChange={e => setField('endereco', e.target.value)} placeholder="Endereço completo" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="stat-label">Observação</Label>
+                <Textarea value={form.observacao} onChange={e => setField('observacao', e.target.value)} placeholder="Observações..." rows={2} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : editId ? 'Atualizar' : 'Cadastrar'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={!!viewCliente} onOpenChange={() => setViewCliente(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+          </DialogHeader>
+          {viewCliente && (
+            <div className="space-y-3 pt-2">
+              {[
+                ['Nome', viewCliente.nome],
+                ['CPF/CNPJ', viewCliente.cpf_cnpj],
+                ['Telefone', viewCliente.telefone],
+                ['E-mail', viewCliente.email],
+                ['Tipo', viewCliente.tipo],
+                ['Status', viewCliente.status],
+                ['Endereço', viewCliente.endereco],
+                ['Observação', viewCliente.observacao],
+              ].map(([label, value]) => (
+                <div key={label as string} className="flex justify-between py-2 border-b border-border/30">
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                  <span className="text-sm text-foreground font-medium">{(value as string) || '—'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
