@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,33 @@ export default function Entrada() {
   const [receiptData, setReceiptData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const lastSearchedPlateRef = useRef("");
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
   const { toast } = useToast();
+
+  const applyVehicleData = (
+    data: { marca?: string | null; modelo?: string | null; cor?: string | null },
+    options?: { splitCombinedModel?: boolean }
+  ) => {
+    const rawMarca = data.marca?.trim() || "";
+    const rawModelo = data.modelo?.trim() || "";
+
+    if (rawMarca) {
+      setMarca(rawMarca);
+      setModelo(rawModelo);
+    } else if (options?.splitCombinedModel && rawModelo.includes(" ")) {
+      const [possibleMarca, ...rest] = rawModelo.split(" ");
+      setMarca(possibleMarca || "");
+      setModelo(rest.join(" ") || rawModelo);
+    } else {
+      setMarca("");
+      setModelo(rawModelo);
+    }
+
+    setCor(data.cor?.trim() || "");
+  };
 
   const identifyByPhoto = async (base64: string) => {
     setAiLoading(true);
@@ -53,75 +76,129 @@ export default function Entrada() {
     if (placa.length < 7) return;
     setAiLoading(true);
     setAiResult(null);
+
     try {
       const placaUpper = placa.toUpperCase();
+      const [ativoResult, veiculoResult, historicoResult, visitasResult] = await Promise.all([
+        supabase
+          .from('movimentacoes')
+          .select('*')
+          .eq('placa', placaUpper)
+          .eq('status_movimentacao', 'ativo')
+          .order('entrada', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('veiculos')
+          .select('*, clientes(nome, tipo)')
+          .eq('placa', placaUpper)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('movimentacoes')
+          .select('placa, modelo, cor, tipo_cliente')
+          .eq('placa', placaUpper)
+          .eq('status_movimentacao', 'finalizado')
+          .order('saida', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('movimentacoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('placa', placaUpper),
+      ]);
 
-      // Check if vehicle is already in patio (active movement)
-      const { data: ativo } = await supabase
-        .from('movimentacoes')
-        .select('*')
-        .eq('placa', placaUpper)
-        .eq('status_movimentacao', 'ativo')
-        .limit(1)
-        .maybeSingle();
+      if (ativoResult.error) throw ativoResult.error;
+      if (veiculoResult.error) throw veiculoResult.error;
+      if (historicoResult.error) throw historicoResult.error;
+      if (visitasResult.error) throw visitasResult.error;
 
-      // Check previous visits (finalized)
-      const { data: historico } = await supabase
-        .from('movimentacoes')
-        .select('placa, modelo, cor')
-        .eq('placa', placaUpper)
-        .eq('status_movimentacao', 'finalizado')
-        .order('saida', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const ativo = ativoResult.data;
+      const veiculoCadastrado = veiculoResult.data;
+      const historico = historicoResult.data;
+      const proximaVisita = (visitasResult.count ?? 0) + 1;
 
       if (ativo) {
-        toast({ title: "⚠️ Veículo já está no pátio!", description: `${placaUpper} entrou em ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
-        if (ativo.modelo) setModelo(ativo.modelo.replace(ativo.cor || '', '').trim());
-        if (ativo.cor) setCor(ativo.cor);
-        setAiResult({ marca: '', modelo: ativo.modelo, cor: ativo.cor, confianca: 'alta', source: 'patio' });
-        setAiLoading(false);
+        applyVehicleData({ modelo: ativo.modelo, cor: ativo.cor }, { splitCombinedModel: true });
+        setAiResult({
+          marca: '',
+          modelo: ativo.modelo,
+          cor: ativo.cor,
+          confianca: 'alta',
+          source: 'patio',
+          visitCount: visitasResult.count ?? 1,
+        });
+        toast({
+          title: "⚠️ Veículo já está no pátio!",
+          description: `${placaUpper} entrou em ${new Date(ativo.entrada).toLocaleString('pt-BR')}`,
+          variant: "destructive",
+        });
         return;
       }
 
-      // Check veiculos table (mensalista etc)
-      const { data: veiculoMensalista } = await supabase
-        .from('veiculos')
-        .select('*, clientes(nome, tipo)')
-        .eq('placa', placaUpper)
-        .limit(1)
-        .maybeSingle();
+      if (veiculoCadastrado) {
+        applyVehicleData({
+          marca: veiculoCadastrado.marca,
+          modelo: veiculoCadastrado.modelo,
+          cor: veiculoCadastrado.cor,
+        });
 
-      if (veiculoMensalista) {
-        setMarca(veiculoMensalista.marca || '');
-        setModelo(veiculoMensalista.modelo);
-        setCor(veiculoMensalista.cor || '');
-        const cliente = veiculoMensalista.clientes as any;
-        if (cliente?.tipo === 'mensalista') {
-          setTipo('mensalista');
-          setAiResult({ marca: veiculoMensalista.marca, modelo: veiculoMensalista.modelo, cor: veiculoMensalista.cor, confianca: 'alta', source: 'mensalista', clienteNome: cliente.nome });
-          toast({ title: "📋 Mensalista identificado!", description: `${cliente.nome} — ${veiculoMensalista.marca || ''} ${veiculoMensalista.modelo}` });
+        const cliente = veiculoCadastrado.clientes as any;
+        const isMensalista = cliente?.tipo === 'mensalista';
+        setTipo(isMensalista ? 'mensalista' : 'avulso');
+
+        if (isMensalista) {
+          setAiResult({
+            marca: veiculoCadastrado.marca,
+            modelo: veiculoCadastrado.modelo,
+            cor: veiculoCadastrado.cor,
+            confianca: 'alta',
+            source: 'mensalista',
+            clienteNome: cliente.nome,
+            visitCount: proximaVisita,
+          });
+          toast({
+            title: proximaVisita > 1 ? "📋 Mensalista retornou!" : "📋 Mensalista identificado!",
+            description: `${cliente.nome} — ${proximaVisita}ª vez no sistema`,
+          });
         } else {
-          setAiResult({ marca: veiculoMensalista.marca, modelo: veiculoMensalista.modelo, cor: veiculoMensalista.cor, confianca: 'alta', source: 'database' });
-          toast({ title: "✓ Veículo encontrado no sistema", description: `${veiculoMensalista.marca || ''} ${veiculoMensalista.modelo}` });
+          setAiResult({
+            marca: veiculoCadastrado.marca,
+            modelo: veiculoCadastrado.modelo,
+            cor: veiculoCadastrado.cor,
+            confianca: 'alta',
+            source: proximaVisita > 1 ? 'retorno' : 'database',
+            visitCount: proximaVisita,
+          });
+          toast({
+            title: proximaVisita > 1 ? "🔄 Cliente retornou!" : "✓ Veículo encontrado no sistema",
+            description: proximaVisita > 1
+              ? `${proximaVisita}ª vez no sistema — ${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim()
+              : `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim(),
+          });
         }
-        setAiLoading(false);
         return;
       }
 
-      // Check previous visit history - auto-fill
       if (historico) {
-        const parts = (historico.modelo || '').split(' ');
-        setMarca(parts[0] || '');
-        setModelo(parts.slice(1).join(' ') || parts[0] || '');
-        setCor(historico.cor || '');
-        setAiResult({ marca: parts[0], modelo: historico.modelo, cor: historico.cor, confianca: 'alta', source: 'retorno' });
-        toast({ title: "🔄 Cliente retornou!", description: `2ª vez ou mais — ${historico.modelo} ${historico.cor || ''}` });
-        setAiLoading(false);
+        applyVehicleData({ modelo: historico.modelo, cor: historico.cor }, { splitCombinedModel: true });
+        setTipo(historico.tipo_cliente === 'mensalista' ? 'mensalista' : 'avulso');
+        setAiResult({
+          marca: '',
+          modelo: historico.modelo,
+          cor: historico.cor,
+          confianca: 'alta',
+          source: 'retorno',
+          visitCount: proximaVisita,
+        });
+        toast({
+          title: "🔄 Cliente retornou!",
+          description: `${proximaVisita}ª vez no sistema — ${historico.modelo}${historico.cor ? ` • ${historico.cor}` : ''}`,
+        });
         return;
       }
 
-      // If not found, use AI
       const { data, error } = await supabase.functions.invoke('identify-vehicle', {
         body: { placa: placaUpper },
       });
@@ -131,6 +208,7 @@ export default function Entrada() {
         if (data.marca) setMarca(data.marca);
         if (data.modelo) setModelo(data.modelo);
         if (data.cor) setCor(data.cor);
+        setTipo('avulso');
         toast({ title: "🤖 IA sugeriu modelo", description: `${data.marca} ${data.modelo} (confiança: ${data.confianca})` });
       }
     } catch (err: any) {
@@ -139,6 +217,18 @@ export default function Entrada() {
       setAiLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (placa.length === 7 && placa !== lastSearchedPlateRef.current) {
+      lastSearchedPlateRef.current = placa;
+      void identifyByPlaca();
+    }
+
+    if (placa.length < 7) {
+      lastSearchedPlateRef.current = "";
+      setAiResult(null);
+    }
+  }, [placa]);
 
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -173,17 +263,28 @@ export default function Entrada() {
       toast({ title: "Preencha a placa", variant: "destructive" });
       return;
     }
+
     const doSubmit = async () => {
       const placaUpper = placa.toUpperCase();
       const fotoUrl = await uploadVehiclePhoto(placaUpper);
+      const modeloCompleto = [marca.trim(), modelo.trim()].filter(Boolean).join(' ').trim() || 'N/I';
+
       registrarEntrada.mutate(
-        { placa: placaUpper, modelo: `${marca} ${modelo}`.trim() || 'N/I', cor, tipo_cliente: tipo, observacao, foto_url: fotoUrl || undefined },
+        {
+          placa: placaUpper,
+          marca: marca.trim() || undefined,
+          modelo: modelo.trim() || 'N/I',
+          cor,
+          tipo_cliente: tipo,
+          observacao,
+          foto_url: fotoUrl || undefined,
+        },
         {
           onSuccess: (result) => {
-            toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${marca} ${modelo}` });
+            toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${modeloCompleto}` });
             setReceiptData({
               placa: placaUpper,
-              modelo: `${marca} ${modelo}`.trim() || 'N/I',
+              modelo: modeloCompleto,
               cor,
               tipo_cliente: tipo,
               entrada: result.entrada,
@@ -202,7 +303,16 @@ export default function Entrada() {
               disclaimerComprovante: (config as any)?.disclaimer_comprovante,
               qrCodeUrl: (config as any)?.qr_code_url || undefined,
             });
-            setPlaca(""); setModelo(""); setMarca(""); setCor(""); setObservacao(""); setImagePreview(null); setAiResult(null); setCapturedFile(null);
+            lastSearchedPlateRef.current = "";
+            setPlaca("");
+            setModelo("");
+            setMarca("");
+            setCor("");
+            setObservacao("");
+            setTipo('avulso');
+            setImagePreview(null);
+            setAiResult(null);
+            setCapturedFile(null);
           },
           onError: (err: any) => {
             toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
@@ -210,6 +320,7 @@ export default function Entrada() {
         }
       );
     };
+
     doSubmit();
   };
 
