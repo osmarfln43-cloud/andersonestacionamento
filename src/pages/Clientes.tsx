@@ -59,18 +59,35 @@ export default function Clientes() {
 
   const handleSave = async () => {
     if (!form.nome.trim()) { toast({ title: "Nome é obrigatório", variant: "destructive" }); return; }
+    if (form.tipo === 'mensalista' && !editId && (!form.valor_mensal || Number(form.valor_mensal) <= 0)) {
+      toast({ title: "Informe o valor mensal", variant: "destructive" }); return;
+    }
     setSaving(true);
     try {
+      const payload = { nome: form.nome, cpf_cnpj: form.cpf_cnpj || null, telefone: form.telefone || null, email: form.email || null, tipo: form.tipo, status: form.status, endereco: form.endereco || null, observacao: form.observacao || null };
       if (editId) {
-        const { error } = await supabase.from('clientes').update({ ...form }).eq('id', editId);
+        const { error } = await supabase.from('clientes').update(payload).eq('id', editId);
         if (error) throw error;
         toast({ title: "Cliente atualizado!" });
       } else {
-        const { error } = await supabase.from('clientes').insert({ ...form });
+        const { data: newCliente, error } = await supabase.from('clientes').insert(payload).select().single();
         if (error) throw error;
+        // If mensalista, create mensalista record
+        if (form.tipo === 'mensalista' && newCliente) {
+          const vencimento = new Date();
+          vencimento.setMonth(vencimento.getMonth() + 1);
+          await supabase.from('mensalistas').insert({
+            cliente_id: newCliente.id,
+            valor_mensal: Number(form.valor_mensal),
+            vencimento: vencimento.toISOString().split('T')[0],
+            plano: 'Mensal Integral',
+            status: 'ativo',
+          });
+        }
         toast({ title: "Cliente cadastrado!" });
       }
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: ['mensalistas'] });
       setDialogOpen(false);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
