@@ -52,6 +52,10 @@ export function AppLayout({ children }: AppLayoutProps) {
               {children}
             </div>
           </main>
+          <footer className="shrink-0 border-t border-border/50 py-4 px-6 text-center text-[11px] text-muted-foreground space-y-0.5">
+            <p>© 2026 ME PARK - Copyright Todos os Direitos Reservados</p>
+            <p>Desenvolvimento ® OSMARJR Sistemas</p>
+          </footer>
         </div>
       </div>
     </SidebarProvider>
