@@ -167,14 +167,11 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     y += 6;
 
     // ========== QR CODE ==========
-    if (data.chavePix) {
-      const qrCanvas = qrRef.current?.querySelector("canvas");
-      if (qrCanvas) {
-        const qrData = (qrCanvas as HTMLCanvasElement).toDataURL("image/png");
-        const qrSize = 28;
-        doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
-        y += qrSize + 3;
-      }
+    if (data.chavePix && qrCanvas) {
+      const qrData = qrCanvas.toDataURL("image/png");
+      const qrSize = 28;
+      doc.addImage(qrData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
+      y += qrSize + 3;
     }
 
     // ========== PAYMENT HIGHLIGHT (below QR) ==========
@@ -192,15 +189,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     }
 
     y += 3;
-
-    // Resize
-    doc.internal.pageSize.height = y + 3;
-
-    // Download PDF directly
-    const filename = `${data.tipo}-${data.placa}-${Date.now()}.pdf`;
-    doc.save(filename);
-
-    onDone();
+    return y;
   };
 
   if (!data) return null;
