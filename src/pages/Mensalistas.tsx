@@ -193,10 +193,10 @@ export default function Mensalistas() {
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Veículo</Label>
-                <Select value={form.veiculo_id} onValueChange={v => setForm(p => ({ ...p, veiculo_id: v }))}>
+                <Select value={form.veiculo_id || undefined} onValueChange={v => setForm(p => ({ ...p, veiculo_id: v === '__none__' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {veiculos.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} - {v.modelo}</SelectItem>)}
                   </SelectContent>
                 </Select>
