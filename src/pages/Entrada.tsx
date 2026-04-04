@@ -381,8 +381,8 @@ export default function Entrada() {
                 }`}>
                   {aiResult.source === 'patio' ? '⚠️ JÁ ESTÁ NO PÁTIO' :
                    aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
-                   aiResult.source === 'retorno' ? '🔄 CLIENTE RETORNOU (2ª vez+)' :
-                   aiResult.source === 'database' ? '✓ Encontrado no sistema' :
+                   aiResult.source === 'retorno' ? `🔄 ${aiResult.visitCount || 2}ª VEZ NO SISTEMA` :
+                   aiResult.source === 'database' ? '✓ ENCONTRADO NO SISTEMA' :
                    `🤖 IA: ${aiResult.confianca}`}
                   {' — '}{aiResult.marca} {aiResult.modelo}
                 </span>
