@@ -73,6 +73,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AppRoutes />
+          <InstallPWA />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
