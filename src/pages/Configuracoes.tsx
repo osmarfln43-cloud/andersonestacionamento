@@ -39,11 +39,15 @@ export default function Configuracoes() {
   }, [config]);
 
   const save = async () => {
+    const payload = Object.fromEntries(
+      Object.entries(form).filter(([, value]) => value !== undefined)
+    );
+
     if (!form.id) {
-      const { error } = await supabase.from('configuracoes').insert(form);
+      const { error } = await supabase.from('configuracoes').insert(payload);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     } else {
-      const { error } = await supabase.from('configuracoes').update(form).eq('id', form.id);
+      const { error } = await supabase.from('configuracoes').update(payload).eq('id', form.id);
       if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     }
     queryClient.invalidateQueries({ queryKey: ['configuracoes'] });
