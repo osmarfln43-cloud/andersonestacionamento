@@ -196,7 +196,7 @@ export default function Veiculos() {
               </div>
               <div className="space-y-2">
                 <Label className="stat-label">Categoria</Label>
-                <Select value={form.categoria} onValueChange={v => setField('categoria', v)}>
+                <Select value={form.categoria || undefined} onValueChange={v => setField('categoria', v)}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="carro">Carro</SelectItem>
