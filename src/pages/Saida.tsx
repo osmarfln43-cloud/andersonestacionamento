@@ -178,7 +178,7 @@ export default function Saida() {
 
   // List view with tabs
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center">
