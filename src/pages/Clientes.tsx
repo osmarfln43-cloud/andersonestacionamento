@@ -246,16 +246,28 @@ export default function Clientes() {
                 </Select>
               </div>
               {form.tipo === 'mensalista' && !editId && (
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="stat-label">Valor Mensal (R$) *</Label>
-                  <Input
-                    type="number"
-                    value={form.valor_mensal}
-                    onChange={e => setField('valor_mensal', e.target.value)}
-                    placeholder="Ex: 350.00"
-                    className="h-12 font-mono text-lg"
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label className="stat-label">Valor Mensal (R$) *</Label>
+                    <Input
+                      type="number"
+                      value={form.valor_mensal}
+                      onChange={e => setField('valor_mensal', e.target.value)}
+                      placeholder="Ex: 350.00"
+                      className="h-12 font-mono text-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="stat-label">Placa do Veículo</Label>
+                    <Input
+                      value={form.placa_veiculo}
+                      onChange={e => setField('placa_veiculo', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
+                      placeholder="ABC1D23"
+                      className="h-12 font-mono text-lg tracking-widest uppercase"
+                      maxLength={7}
+                    />
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label className="stat-label">Status</Label>
