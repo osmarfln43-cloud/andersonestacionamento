@@ -39,7 +39,7 @@ export function useMovimentacoesHoje() {
 export function useRegistrarEntrada() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (mov: { placa: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string }) => {
+    mutationFn: async (mov: { placa: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string; foto_url?: string }) => {
       const { data, error } = await supabase
         .from('movimentacoes')
         .insert({
@@ -49,6 +49,7 @@ export function useRegistrarEntrada() {
           tipo_cliente: mov.tipo_cliente,
           observacao: mov.observacao,
           valor_hora: 12,
+          foto_url: mov.foto_url || null,
         })
         .select()
         .single();
