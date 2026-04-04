@@ -64,6 +64,10 @@ export default function Comprovantes() {
     nomeBeneficiario: config?.nome_beneficiario,
     mensagemComprovante: config?.mensagem_comprovante,
     tipo: m.saida ? "saida" : "entrada",
+    horarioAbertura: (config as any)?.horario_abertura,
+    horarioFechamento: (config as any)?.horario_fechamento,
+    diasFuncionamento: (config as any)?.dias_funcionamento,
+    disclaimerComprovante: (config as any)?.disclaimer_comprovante,
   });
 
   const pixCode = config?.chave_pix
@@ -150,7 +154,7 @@ export default function Comprovantes() {
                   <div className="text-center space-y-1">
                     <p className="text-sm font-bold tracking-wide">{config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
-                    <p className="text-[10px] leading-snug">NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS. HORARIO DE FUNCIONAMENTO DE SEGUNDA A SEXTA DAS 08:00 ATE AS 20:00</p>
+                    <p className="text-[10px] leading-snug">{(config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO'}. HORARIO DE FUNCIONAMENTO {((config as any)?.dias_funcionamento || 'SEGUNDA A SEXTA').toUpperCase()} DAS {(config as any)?.horario_abertura || '07:00'} ATE AS {(config as any)?.horario_fechamento || '19:00'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
                   </div>
 
@@ -183,21 +187,24 @@ export default function Comprovantes() {
                     </>
                   )}
 
-                  {/* QR Code */}
+                  {/* Payment highlight + QR Code */}
+                  <div className="text-center py-1">
+                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                  </div>
                   {pixCode && (
-                    <>
-                      <div className="flex justify-center py-3">
-                        <QRCodeSVG value={pixCode} size={120} level="M" />
-                      </div>
-                      <div className="border-b border-dashed border-gray-400" />
-                    </>
+                    <div className="flex justify-center py-3">
+                      <QRCodeSVG value={pixCode} size={120} level="M" />
+                    </div>
                   )}
+                  <div className="text-center py-1">
+                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                  </div>
+                  <div className="border-b border-dashed border-gray-400" />
 
                   {/* Footer */}
                   <div className="text-center space-y-1 pt-1">
                     <p className="font-bold text-[10px]">{config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERENCIA'}</p>
                     {config?.endereco && <p className="text-[10px]">{config.endereco.toUpperCase()}</p>}
-                    {config?.telefone && <p className="text-[10px]">TEL: {config.telefone}</p>}
                   </div>
                 </div>
               </div>
