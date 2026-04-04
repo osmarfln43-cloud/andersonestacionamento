@@ -83,7 +83,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     onDone();
   };
 
-  const renderContent = (doc: jsPDF, data: ReceiptData, qrCanvas: HTMLCanvasElement | null): number => {
+  const renderContent = (doc: jsPDF, data: ReceiptData, qrImageData: string | null): number => {
     const w = 80;
     let y = 6;
 
