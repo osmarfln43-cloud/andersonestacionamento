@@ -1,6 +1,21 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Bell, Search, ChevronDown } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+
+const roleLabels: Record<string, string> = {
+  admin: 'Admin',
+  gerente: 'Gerente',
+  operador: 'Operador',
+  financeiro: 'Financeiro',
+};
+
+const roleColors: Record<string, string> = {
+  admin: 'text-destructive font-bold',
+  gerente: 'text-primary font-medium',
+  operador: 'text-accent font-medium',
+  financeiro: 'text-warning font-medium',
+};
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -9,6 +24,13 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
+  const { profile } = useAuth();
+
+  const role = profile?.perfil || 'operador';
+  const roleLabel = roleLabels[role] || role;
+  const roleColor = roleColors[role] || 'text-foreground font-medium';
+  const userName = profile?.nome || roleLabel;
+  const initials = userName.slice(0, 2).toUpperCase();
 
   return (
     <SidebarProvider>
@@ -20,7 +42,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
             <div className="hidden md:flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">{greeting},</span>
-              <span className="text-foreground font-medium">Operador</span>
+              <span className={roleColor}>{roleLabel}</span>
             </div>
 
             <div className="hidden lg:flex items-center gap-2 ml-4 px-3 py-1.5 rounded-xl bg-secondary border border-border/50 text-xs text-muted-foreground cursor-pointer hover:border-primary/30 transition-colors">
@@ -42,7 +64,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-accent" />
                 </button>
                 <div className="ml-1 h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-border/50 flex items-center justify-center cursor-pointer hover:border-primary/30 transition-colors">
-                  <span className="text-xs font-bold font-display text-foreground">OP</span>
+                  <span className="text-xs font-bold font-display text-foreground">{initials}</span>
                 </div>
               </div>
             </div>
