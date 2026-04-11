@@ -111,6 +111,41 @@ export default function Admin() {
     }
   };
 
+  const inviteUser = async () => {
+    if (!inviteEmail || !inviteNome) return;
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-user', {
+        body: { email: inviteEmail, nome: inviteNome, perfil: invitePerfil },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      setInviteResult({ email: data.email, tempPassword: data.tempPassword });
+      toast({ title: "✓ Usuário convidado!", description: `${inviteNome} (${inviteEmail})` });
+    } catch (err: any) {
+      toast({ title: "Erro ao convidar", description: err.message, variant: "destructive" });
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const copyCredentials = () => {
+    if (!inviteResult) return;
+    navigator.clipboard.writeText(`Email: ${inviteResult.email}\nSenha temporária: ${inviteResult.tempPassword}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const closeInvite = () => {
+    setInviteOpen(false);
+    setInviteEmail("");
+    setInviteNome("");
+    setInvitePerfil("operador");
+    setInviteResult(null);
+    setCopied(false);
+  };
+
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
