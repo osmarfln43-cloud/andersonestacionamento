@@ -1,7 +1,5 @@
 import { useRef, useEffect } from "react";
-import { jsPDF } from "jspdf";
 import { QRCodeCanvas } from "qrcode.react";
-import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 
 export interface ReceiptData {
   placa: string;
@@ -35,230 +33,212 @@ interface Props {
 }
 
 export default function ReceiptPDF({ data, onDone }: Props) {
-  const qrRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!data) return;
-    const timeout = setTimeout(() => generatePDF(), 800);
+    const timeout = setTimeout(() => printReceipt(), 600);
     return () => clearTimeout(timeout);
   }, [data]);
 
-  const generatePDF = async () => {
-    if (!data) return;
+  const printReceipt = () => {
+    if (!data || !printRef.current) return;
 
-    let qrImageData: string | null = null;
+    const printContent = printRef.current.innerHTML;
 
-    // 1) Try uploaded QR image
-    if (data.qrCodeUrl) {
-      try {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load QR image'));
-          img.src = data.qrCodeUrl!;
-        });
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d')!.drawImage(img, 0, 0);
-        qrImageData = canvas.toDataURL('image/png');
-      } catch {
-        // fallback below
+    const printWindow = window.open('', '_blank', 'width=320,height=600');
+    if (!printWindow) {
+      // Fallback: use iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '-9999px';
+      iframe.style.width = '80mm';
+      document.body.appendChild(iframe);
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(buildPrintHTML(printContent));
+        doc.close();
+        iframe.contentWindow?.focus();
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            onDone();
+          }, 1000);
+        }, 400);
       }
+      return;
     }
 
-    // 2) Try generated QR canvas (from chavePix)
-    if (!qrImageData && data.chavePix) {
-      const qrCanvas = qrRef.current?.querySelector("canvas");
-      if (qrCanvas) {
-        qrImageData = (qrCanvas as HTMLCanvasElement).toDataURL('image/png');
-      }
-    }
-
-    // 3) Fallback: load the bundled fallback image
-    if (!qrImageData) {
-      try {
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load fallback QR'));
-          img.src = pixQrFallback;
-        });
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d')!.drawImage(img, 0, 0);
-        qrImageData = canvas.toDataURL('image/png');
-      } catch {
-        // no QR at all
-      }
-    }
-
-    // First pass: calculate height
-    const calcDoc = new jsPDF({ unit: "mm", format: [80, 500] });
-    const finalHeight = renderContent(calcDoc, data, qrImageData);
-
-    // Second pass: create with exact height
-    const doc = new jsPDF({ unit: "mm", format: [80, finalHeight + 5] });
-    renderContent(doc, data, qrImageData);
-
-    const tipoLabel = data.saida ? 'saida' : 'entrada';
-    const filename = `comprovante-${data.placa}-${tipoLabel}-${Date.now()}.pdf`;
-    doc.save(filename);
-    onDone();
+    printWindow.document.open();
+    printWindow.document.write(buildPrintHTML(printContent));
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      setTimeout(() => {
+        printWindow.close();
+        onDone();
+      }, 1000);
+    }, 400);
   };
 
-  const renderContent = (doc: jsPDF, data: ReceiptData, qrImageData: string | null): number => {
-    const w = 80;
-    let y = 6;
-
-    const center = (text: string, yPos: number, size = 10, style: "normal" | "bold" = "normal") => {
-      doc.setFontSize(size);
-      doc.setFont("courier", style);
-      const tw = doc.getTextWidth(text);
-      doc.text(text, (w - tw) / 2, yPos);
-    };
-
-    const centerWrap = (text: string, yPos: number, size = 8, style: "normal" | "bold" = "normal") => {
-      doc.setFontSize(size);
-      doc.setFont("courier", style);
-      const maxW = w - 10;
-      const lines = doc.splitTextToSize(text, maxW);
-      for (const l of lines) {
-        const tw = doc.getTextWidth(l);
-        doc.text(l, (w - tw) / 2, yPos);
-        yPos += size * 0.45;
-      }
-      return yPos;
-    };
-
-    const leftRight = (left: string, right: string, yPos: number, size = 8, style: "normal" | "bold" = "normal") => {
-      doc.setFontSize(size);
-      doc.setFont("courier", style);
-      doc.text(left, 5, yPos);
-      const rw = doc.getTextWidth(right);
-      doc.text(right, w - 5 - rw, yPos);
-    };
-
-    const dashed = (yPos: number) => {
-      doc.setDrawColor(0);
-      doc.setLineDashPattern([1, 1], 0);
-      doc.line(3, yPos, w - 3, yPos);
-    };
-
-    // ========== HEADER ==========
-    center(data.nomeEstacionamento || "ME PARK ESTACIONAMENTO", y, 11, "bold");
-    y += 6;
-    dashed(y); y += 4;
-
-    // Disclaimer
-    const disclaimer = data.disclaimerComprovante || "NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO";
-    const horarios = `HORARIO DE FUNCIONAMENTO ${(data.diasFuncionamento || "SEGUNDA A SEXTA").toUpperCase()} DAS ${data.horarioAbertura || "07:00"} ATE AS ${data.horarioFechamento || "19:00"}`;
-    y = centerWrap(`${disclaimer}. ${horarios}`, y, 6, "normal");
-    y += 3;
-    dashed(y); y += 5;
-
-    // ========== PLATE (big) ==========
-    center(data.placa, y, 20, "bold");
-    y += 6;
-
-    // Vehicle info below plate
-    const veiculoLine = `(${(data.modelo || "N/I").toUpperCase()} ${(data.cor || "").toUpperCase()})`.trim();
-    center(veiculoLine, y, 9, "bold");
-    y += 6;
-    dashed(y); y += 5;
-
-    // ========== DETAILS ==========
-    const entradaDt = new Date(data.entrada);
-    const entradaDate = entradaDt.toLocaleDateString("pt-BR");
-    const entradaTime = entradaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-
-    leftRight("Entrada:", `${entradaDate} as ${entradaTime}`, y, 8);
-    y += 5;
-
-    if (data.saida) {
-      const saidaDt = new Date(data.saida);
-      const saidaDate = saidaDt.toLocaleDateString("pt-BR");
-      const saidaTime = saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      leftRight("Saida:", `${saidaDate} as ${saidaTime}`, y, 8);
-      y += 5;
-    }
-
-    if (data.tempoTotal) {
-      leftRight("Permanencia:", data.tempoTotal, y, 8);
-      y += 5;
-    }
-
-    leftRight("Tabela:", data.tipo_cliente === "mensalista" ? "Mensalista" : "Avulso", y, 8);
-    y += 5;
-
-    // Payment method
-    if (data.formaPagamento) {
-      leftRight("Pagamento:", data.formaPagamento.toUpperCase(), y, 8, "bold");
-      y += 5;
-    }
-
-    leftRight("Valor/hora:", `R$ ${Number(data.valorHora || 10).toFixed(2)}`, y, 8);
-    y += 5;
-
-    dashed(y); y += 5;
-
-    // ========== TOTAL ==========
-    if (data.saida && data.valorTotal != null) {
-      center("Total", y, 12, "bold");
-      y += 6;
-      center(`R$ ${Number(data.valorTotal).toFixed(2)}`, y, 16, "bold");
-      y += 7;
-      dashed(y); y += 5;
-    }
-
-    // ========== PAYMENT HIGHLIGHT (above QR) ==========
-    center("PAGAMENTO DINHEIRO OU PIX", y, 12, "bold");
-    y += 6;
-
-    // ========== QR CODE ==========
-    if (qrImageData) {
-      const qrSize = 28;
-      doc.addImage(qrImageData, "PNG", (w - qrSize) / 2, y, qrSize, qrSize);
-      y += qrSize + 3;
-    }
-
-    // ========== PAYMENT HIGHLIGHT (below QR) ==========
-    center("PAGAMENTO DINHEIRO OU PIX", y, 12, "bold");
-    y += 6;
-    dashed(y); y += 4;
-
-    // ========== FOOTER ==========
-    center(data.mensagemComprovante || "ME PARK AGRADECE A PREFERENCIA", y, 7, "bold");
-    y += 4;
-
-    if (data.endereco) {
-      center(data.endereco.toUpperCase(), y, 6, "normal");
-      y += 3;
-    }
-
-    y += 3;
-    return y;
-  };
+  const buildPrintHTML = (content: string) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Comprovante</title>
+      <style>
+        @page {
+          size: 80mm auto;
+          margin: 0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Courier New', Courier, monospace;
+          font-size: 12px;
+          width: 80mm;
+          padding: 3mm;
+          color: #000;
+          background: #fff;
+        }
+        .receipt { width: 100%; }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .title { font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+        .plate { font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 6px 0 2px; }
+        .vehicle-info { font-size: 11px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+        .dashed { border-top: 1px dashed #000; margin: 5px 0; }
+        .row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 11px; }
+        .row-label { }
+        .row-value { font-weight: bold; }
+        .total-label { font-size: 14px; font-weight: bold; text-align: center; margin-top: 4px; }
+        .total-value { font-size: 20px; font-weight: bold; text-align: center; margin: 2px 0; }
+        .payment-highlight { font-size: 14px; font-weight: bold; text-align: center; margin: 4px 0; }
+        .disclaimer { font-size: 8px; text-align: center; line-height: 1.3; margin: 2px 0; }
+        .footer { font-size: 9px; text-align: center; font-weight: bold; margin-top: 4px; }
+        .footer-addr { font-size: 8px; text-align: center; margin-top: 2px; }
+        .qr-container { text-align: center; margin: 6px 0; }
+        .qr-container img, .qr-container canvas { width: 30mm !important; height: 30mm !important; }
+        @media print {
+          body { width: 80mm; }
+        }
+      </style>
+    </head>
+    <body>
+      ${content}
+      <script>/* auto-focus for print */</script>
+    </body>
+    </html>
+  `;
 
   if (!data) return null;
+
+  const entradaDt = new Date(data.entrada);
+  const entradaDate = entradaDt.toLocaleDateString("pt-BR");
+  const entradaTime = entradaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  const disclaimer = data.disclaimerComprovante || "NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO";
+  const horarios = `HORARIO DE FUNCIONAMENTO ${(data.diasFuncionamento || "SEGUNDA A SEXTA").toUpperCase()} DAS ${data.horarioAbertura || "07:00"} ATE AS ${data.horarioFechamento || "19:00"}`;
 
   const pixCode = data.chavePix
     ? `00020126580014br.gov.bcb.pix0136${data.chavePix}5204000053039865802BR5913ME PARK AI6008SAOPAULO`
     : "";
 
   return (
-    <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-      <div ref={qrRef}>
-        {pixCode && (
-          <QRCodeCanvas
-            value={pixCode}
-            size={256}
-            level="M"
-            includeMargin
-          />
-        )}
+    <div style={{ position: "fixed", left: "-9999px", top: "-9999px" }}>
+      <div ref={printRef}>
+        <div className="receipt">
+          {/* Header */}
+          <div className="title">{data.nomeEstacionamento || "ME PARK ESTACIONAMENTO"}</div>
+          <div className="dashed"></div>
+
+          {/* Disclaimer */}
+          <div className="disclaimer">{disclaimer}. {horarios}</div>
+          <div className="dashed"></div>
+
+          {/* Plate */}
+          <div className="plate">{data.placa}</div>
+          <div className="vehicle-info">({(data.modelo || "N/I").toUpperCase()} {(data.cor || "").toUpperCase()})</div>
+          <div className="dashed"></div>
+
+          {/* Details */}
+          <div className="row">
+            <span className="row-label">Entrada:</span>
+            <span className="row-value">{entradaDate} as {entradaTime}</span>
+          </div>
+
+          {data.saida && (() => {
+            const saidaDt = new Date(data.saida);
+            return (
+              <div className="row">
+                <span className="row-label">Saida:</span>
+                <span className="row-value">{saidaDt.toLocaleDateString("pt-BR")} as {saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+              </div>
+            );
+          })()}
+
+          {data.tempoTotal && (
+            <div className="row">
+              <span className="row-label">Permanencia:</span>
+              <span className="row-value">{data.tempoTotal}</span>
+            </div>
+          )}
+
+          <div className="row">
+            <span className="row-label">Tabela:</span>
+            <span className="row-value">{data.tipo_cliente === "mensalista" ? "Mensalista" : "Avulso"}</span>
+          </div>
+
+          {data.formaPagamento && (
+            <div className="row">
+              <span className="row-label">Pagamento:</span>
+              <span className="row-value">{data.formaPagamento.toUpperCase()}</span>
+            </div>
+          )}
+
+          <div className="row">
+            <span className="row-label">Valor/hora:</span>
+            <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2)}</span>
+          </div>
+
+          <div className="dashed"></div>
+
+          {/* Total */}
+          {data.saida && data.valorTotal != null && (
+            <>
+              <div className="total-label">Total</div>
+              <div className="total-value">R$ {Number(data.valorTotal).toFixed(2)}</div>
+              <div className="dashed"></div>
+            </>
+          )}
+
+          {/* Payment highlight */}
+          <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
+
+          {/* QR Code */}
+          {data.qrCodeUrl && (
+            <div className="qr-container">
+              <img src={data.qrCodeUrl} alt="QR Code PIX" crossOrigin="anonymous" />
+            </div>
+          )}
+
+          {!data.qrCodeUrl && pixCode && (
+            <div className="qr-container">
+              <QRCodeCanvas value={pixCode} size={120} level="M" includeMargin />
+            </div>
+          )}
+
+          <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
+          <div className="dashed"></div>
+
+          {/* Footer */}
+          <div className="footer">{data.mensagemComprovante || "ME PARK AGRADECE A PREFERENCIA"}</div>
+          {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
+        </div>
       </div>
     </div>
   );
