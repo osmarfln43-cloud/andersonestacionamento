@@ -26,7 +26,7 @@ const THERMAL_PRINTER_FILTERS = [
   { vendorId: 0x0493 }, // POS printers
 ];
 
-let connectedDevice: USBDevice | null = null;
+let connectedDevice: any = null;
 
 export function isWebUSBSupported(): boolean {
   return 'usb' in navigator;
@@ -50,7 +50,7 @@ export function clearPrinterConfig() {
   connectedDevice = null;
 }
 
-export async function requestUSBPrinter(): Promise<USBDevice | null> {
+export async function requestUSBPrinter(): Promise<any | null> {
   if (!isWebUSBSupported()) return null;
   try {
     const device = await (navigator as any).usb.requestDevice({
@@ -70,7 +70,7 @@ export async function requestUSBPrinter(): Promise<USBDevice | null> {
   }
 }
 
-export async function getConnectedUSBPrinters(): Promise<USBDevice[]> {
+export async function getConnectedUSBPrinters(): Promise<any[]> {
   if (!isWebUSBSupported()) return [];
   try {
     return await (navigator as any).usb.getDevices();
