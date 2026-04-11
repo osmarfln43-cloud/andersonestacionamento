@@ -319,12 +319,7 @@ export default function Configuracoes() {
             </TabsContent>
 
             <TabsContent value="impressao" className="space-y-6">
-              <Section title="Configuração de Impressão">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Field label="Largura do Papel"><Input value={form.largura_papel || ''} onChange={e => setField('largura_papel', e.target.value)} className="h-12" placeholder="80mm" /></Field>
-                </div>
-              </Section>
-              <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+              <PrinterSetup form={form} setField={setField} save={save} />
             </TabsContent>
           </Tabs>
         </div>
