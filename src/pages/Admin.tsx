@@ -363,6 +363,71 @@ export default function Admin() {
           )}
         </DialogContent>
       </Dialog>
+      {/* Invite User Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={(open) => !open && closeInvite()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-4 w-4" /> Convidar Usuário
+            </DialogTitle>
+          </DialogHeader>
+
+          {inviteResult ? (
+            <div className="space-y-4 pt-2">
+              <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 space-y-2">
+                <p className="text-sm font-medium text-accent flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" /> Usuário criado com sucesso!
+                </p>
+                <p className="text-xs text-muted-foreground">Envie as credenciais abaixo para o novo usuário:</p>
+              </div>
+              <div className="bg-secondary/50 rounded-xl p-4 space-y-2 font-mono text-sm">
+                <p><span className="text-muted-foreground">Email:</span> {inviteResult.email}</p>
+                <p><span className="text-muted-foreground">Senha:</span> {inviteResult.tempPassword}</p>
+              </div>
+              <Button onClick={copyCredentials} variant="outline" className="w-full h-11 gap-2 rounded-xl">
+                {copied ? <><CheckCircle className="h-4 w-4 text-accent" /> Copiado!</> : <><Copy className="h-4 w-4" /> Copiar Credenciais</>}
+              </Button>
+              <Button onClick={closeInvite} className="w-full h-11 rounded-xl">
+                Fechar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-5 pt-2">
+              <div className="space-y-2">
+                <Label className="stat-label text-[11px]">Nome</Label>
+                <Input value={inviteNome} onChange={(e) => setInviteNome(e.target.value)} placeholder="Nome do usuário" className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label text-[11px]">Email</Label>
+                <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="email@exemplo.com" className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label text-[11px]">Perfil / Cargo</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {perfis.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setInvitePerfil(p.value)}
+                      className={`h-12 rounded-xl text-xs font-semibold transition-all border-2 flex items-center justify-center gap-2 ${
+                        invitePerfil === p.value
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Shield className="h-3.5 w-3.5" />
+                      {p.nome}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button onClick={inviteUser} disabled={inviting || !inviteEmail || !inviteNome} className="w-full h-12 gap-2 rounded-xl">
+                {inviting ? 'Convidando...' : '✉ Enviar Convite'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
