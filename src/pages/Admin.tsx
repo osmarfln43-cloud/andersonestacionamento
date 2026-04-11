@@ -22,7 +22,7 @@ function useProfiles() {
 }
 
 const perfis = [
-  { nome: 'Admin', value: 'admin', descricao: 'Acesso total ao sistema', permissoes: ['dashboard', 'entrada', 'saida', 'patio', 'clientes', 'veiculos', 'mensalistas', 'financeiro', 'relatorios', 'comprovantes', 'admin', 'configuracoes', 'usuarios'], color: 'bg-destructive/10 text-destructive' },
+  { nome: 'Admin', value: 'admin', descricao: 'Acesso total ao sistema', permissoes: ['dashboard', 'entrada', 'saida', 'patio', 'clientes', 'veiculos', 'mensalistas', 'financeiro', 'relatorios', 'comprovantes', 'admin', 'configuracoes', 'usuarios', 'exportar_pdf', 'importar', 'deletar'], color: 'bg-destructive/10 text-destructive' },
   { nome: 'Gerente', value: 'gerente', descricao: 'Gerencia operação', permissoes: ['dashboard', 'entrada', 'saida', 'patio', 'clientes', 'veiculos', 'mensalistas', 'financeiro', 'relatorios', 'comprovantes'], color: 'bg-primary/10 text-primary' },
   { nome: 'Operador', value: 'operador', descricao: 'Opera entradas e saídas', permissoes: ['entrada', 'saida', 'patio', 'comprovantes'], color: 'bg-accent/10 text-accent' },
   { nome: 'Financeiro', value: 'financeiro', descricao: 'Relatórios e financeiro', permissoes: ['dashboard', 'financeiro', 'relatorios', 'mensalistas'], color: 'bg-warning/10 text-warning' },
