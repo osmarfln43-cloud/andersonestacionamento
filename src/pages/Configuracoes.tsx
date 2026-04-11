@@ -1,4 +1,4 @@
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, Printer, Usb, Wifi, Check, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,11 @@ import { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 import { Upload, ImageIcon, X } from "lucide-react";
+import {
+  isWebUSBSupported, requestUSBPrinter, getConnectedUSBPrinters,
+  getSavedPrinterConfig, savePrinterConfig, clearPrinterConfig,
+  printTestPage, type PrinterConfig,
+} from "@/lib/printer";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
