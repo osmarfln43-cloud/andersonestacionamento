@@ -59,6 +59,13 @@ export default function Admin() {
   const [editStatus, setEditStatus] = useState("");
   const [editNome, setEditNome] = useState("");
   const [saving, setSaving] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteNome, setInviteNome] = useState("");
+  const [invitePerfil, setInvitePerfil] = useState("operador");
+  const [inviting, setInviting] = useState(false);
+  const [inviteResult, setInviteResult] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const { data: usuarios = [], isLoading } = useProfiles();
   const { profile: myProfile } = useAuth();
