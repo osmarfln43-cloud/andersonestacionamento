@@ -179,11 +179,16 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="usuarios" className="space-y-6">
-          <div className="glass-card p-3 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar usuário..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 border-0 bg-transparent" />
+          <div className="flex items-center gap-3">
+            <div className="glass-card p-3 flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar usuário..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 border-0 bg-transparent" />
+              </div>
             </div>
+            <Button onClick={() => setInviteOpen(true)} className="h-11 gap-2 rounded-xl">
+              <Mail className="h-4 w-4" /> Convidar
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
