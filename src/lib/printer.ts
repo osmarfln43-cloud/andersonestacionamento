@@ -1,0 +1,286 @@
+// Thermal Printer Manager using WebUSB API + fallback to browser print
+
+export interface PrinterConfig {
+  name: string;
+  type: 'usb' | 'browser';
+  paperWidth: '58mm' | '80mm';
+  vendorId?: number;
+  productId?: number;
+}
+
+const THERMAL_PRINTER_FILTERS = [
+  { vendorId: 0x0416 }, // Winbond (many thermal printers)
+  { vendorId: 0x0483 }, // STMicroelectronics  
+  { vendorId: 0x04b8 }, // Epson
+  { vendorId: 0x0519 }, // Star Micronics
+  { vendorId: 0x0525 }, // Netchip
+  { vendorId: 0x067b }, // Prolific (USB-Serial adapters)
+  { vendorId: 0x0fe6 }, // ICS Electronics
+  { vendorId: 0x1504 }, // Many POS printers
+  { vendorId: 0x1a86 }, // QinHeng (CH340/CH341)
+  { vendorId: 0x1fc9 }, // NXP
+  { vendorId: 0x20d1 }, // Datecs
+  { vendorId: 0x28e9 }, // GD32 based printers
+  { vendorId: 0x0dd4 }, // Custom printers
+  { vendorId: 0x0456 }, // Analog Devices
+  { vendorId: 0x0493 }, // POS printers
+];
+
+let connectedDevice: any = null;
+
+export function isWebUSBSupported(): boolean {
+  return 'usb' in navigator;
+}
+
+export function getSavedPrinterConfig(): PrinterConfig | null {
+  try {
+    const saved = localStorage.getItem('printer_config');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function savePrinterConfig(config: PrinterConfig) {
+  localStorage.setItem('printer_config', JSON.stringify(config));
+}
+
+export function clearPrinterConfig() {
+  localStorage.removeItem('printer_config');
+  connectedDevice = null;
+}
+
+export async function requestUSBPrinter(): Promise<any | null> {
+  if (!isWebUSBSupported()) return null;
+  try {
+    const device = await (navigator as any).usb.requestDevice({
+      filters: THERMAL_PRINTER_FILTERS,
+    });
+    connectedDevice = device;
+    return device;
+  } catch {
+    // Also try without filters to let user pick any device
+    try {
+      const device = await (navigator as any).usb.requestDevice({ filters: [] });
+      connectedDevice = device;
+      return device;
+    } catch {
+      return null;
+    }
+  }
+}
+
+export async function getConnectedUSBPrinters(): Promise<any[]> {
+  if (!isWebUSBSupported()) return [];
+  try {
+    return await (navigator as any).usb.getDevices();
+  } catch {
+    return [];
+  }
+}
+
+// ESC/POS command builders
+const ESC = 0x1b;
+const GS = 0x1d;
+const LF = 0x0a;
+
+function escposInit(): number[] {
+  return [ESC, 0x40]; // Initialize printer
+}
+
+function escposAlign(align: 'left' | 'center' | 'right'): number[] {
+  const n = align === 'left' ? 0 : align === 'center' ? 1 : 2;
+  return [ESC, 0x61, n];
+}
+
+function escposBold(on: boolean): number[] {
+  return [ESC, 0x45, on ? 1 : 0];
+}
+
+function escposFontSize(w: number, h: number): number[] {
+  return [GS, 0x21, ((w - 1) << 4) | (h - 1)];
+}
+
+function escposCut(): number[] {
+  return [GS, 0x56, 0x00]; // Full cut
+}
+
+function escposFeed(lines: number): number[] {
+  return [ESC, 0x64, lines];
+}
+
+function textToBytes(text: string): number[] {
+  const encoder = new TextEncoder();
+  return Array.from(encoder.encode(text));
+}
+
+function dashedLine(width: number): number[] {
+  return [...textToBytes('-'.repeat(width)), LF];
+}
+
+export function buildReceiptESCPOS(data: {
+  nomeEstacionamento?: string;
+  disclaimer?: string;
+  diasFuncionamento?: string;
+  horarioAbertura?: string;
+  horarioFechamento?: string;
+  placa: string;
+  modelo?: string;
+  cor?: string;
+  entrada: string;
+  saida?: string;
+  tempoTotal?: string;
+  tipoCliente?: string;
+  formaPagamento?: string;
+  valorHora?: number;
+  valorTotal?: number;
+  mensagemComprovante?: string;
+  endereco?: string;
+}, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
+  const cols = paperWidth === '58mm' ? 32 : 48;
+  const cmds: number[] = [];
+
+  cmds.push(...escposInit());
+
+  // Header
+  cmds.push(...escposAlign('center'));
+  cmds.push(...escposBold(true));
+  cmds.push(...escposFontSize(1, 1));
+  cmds.push(...textToBytes(data.nomeEstacionamento || 'ME PARK ESTACIONAMENTO'), LF);
+  cmds.push(...escposBold(false));
+  cmds.push(...dashedLine(cols));
+
+  // Disclaimer
+  cmds.push(...escposFontSize(1, 1));
+  const disclaimer = data.disclaimer || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
+  const horarios = `FUNC. ${(data.diasFuncionamento || 'SEG A SEX').toUpperCase()} ${data.horarioAbertura || '07:00'}-${data.horarioFechamento || '19:00'}`;
+  cmds.push(...textToBytes(disclaimer), LF);
+  cmds.push(...textToBytes(horarios), LF);
+  cmds.push(...dashedLine(cols));
+
+  // Plate (big)
+  cmds.push(...escposFontSize(2, 2));
+  cmds.push(...escposBold(true));
+  cmds.push(...textToBytes(data.placa), LF);
+  cmds.push(...escposFontSize(1, 1));
+  cmds.push(...textToBytes(`(${(data.modelo || 'N/I').toUpperCase()} ${(data.cor || '').toUpperCase()})`), LF);
+  cmds.push(...escposBold(false));
+  cmds.push(...dashedLine(cols));
+
+  // Details
+  cmds.push(...escposAlign('left'));
+  const entradaDt = new Date(data.entrada);
+  const entradaStr = `${entradaDt.toLocaleDateString('pt-BR')} ${entradaDt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  cmds.push(...textToBytes(`Entrada: ${entradaStr}`), LF);
+
+  if (data.saida) {
+    const saidaDt = new Date(data.saida);
+    const saidaStr = `${saidaDt.toLocaleDateString('pt-BR')} ${saidaDt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    cmds.push(...textToBytes(`Saida:   ${saidaStr}`), LF);
+  }
+
+  if (data.tempoTotal) {
+    cmds.push(...textToBytes(`Tempo:   ${data.tempoTotal}`), LF);
+  }
+
+  cmds.push(...textToBytes(`Tabela:  ${data.tipoCliente === 'mensalista' ? 'Mensalista' : 'Avulso'}`), LF);
+
+  if (data.formaPagamento) {
+    cmds.push(...textToBytes(`Pgto:    ${data.formaPagamento.toUpperCase()}`), LF);
+  }
+
+  cmds.push(...textToBytes(`Vlr/hr:  R$ ${Number(data.valorHora || 10).toFixed(2)}`), LF);
+  cmds.push(...dashedLine(cols));
+
+  // Total
+  if (data.saida && data.valorTotal != null) {
+    cmds.push(...escposAlign('center'));
+    cmds.push(...escposBold(true));
+    cmds.push(...escposFontSize(1, 1));
+    cmds.push(...textToBytes('Total'), LF);
+    cmds.push(...escposFontSize(2, 2));
+    cmds.push(...textToBytes(`R$ ${Number(data.valorTotal).toFixed(2)}`), LF);
+    cmds.push(...escposFontSize(1, 1));
+    cmds.push(...escposBold(false));
+    cmds.push(...dashedLine(cols));
+  }
+
+  // Payment highlight
+  cmds.push(...escposAlign('center'));
+  cmds.push(...escposBold(true));
+  cmds.push(...textToBytes('PAGAMENTO DINHEIRO OU PIX'), LF);
+  cmds.push(...escposBold(false));
+  cmds.push(...dashedLine(cols));
+
+  // Footer
+  cmds.push(...escposBold(true));
+  cmds.push(...textToBytes(data.mensagemComprovante || 'ME PARK AGRADECE A PREFERENCIA'), LF);
+  cmds.push(...escposBold(false));
+  if (data.endereco) {
+    cmds.push(...textToBytes(data.endereco.toUpperCase()), LF);
+  }
+
+  cmds.push(...escposFeed(4));
+  cmds.push(...escposCut());
+
+  return new Uint8Array(cmds);
+}
+
+export async function printViaUSB(data: Uint8Array): Promise<boolean> {
+  if (!connectedDevice) {
+    const devices = await getConnectedUSBPrinters();
+    if (devices.length > 0) {
+      connectedDevice = devices[0];
+    } else {
+      return false;
+    }
+  }
+
+  try {
+    await connectedDevice.open();
+    if (connectedDevice.configuration === null) {
+      await connectedDevice.selectConfiguration(1);
+    }
+    await connectedDevice.claimInterface(0);
+
+    // Find the OUT endpoint
+    const iface = connectedDevice.configuration!.interfaces[0];
+    const alt = iface.alternates[0];
+    const endpoint = alt.endpoints.find(e => e.direction === 'out');
+
+    if (endpoint) {
+      await connectedDevice.transferOut(endpoint.endpointNumber, data);
+    } else {
+      // Try control transfer as fallback
+      await connectedDevice.controlTransferOut({
+        requestType: 'class',
+        recipient: 'interface',
+        request: 0x09,
+        value: 0x0200,
+        index: 0x00,
+      }, data);
+    }
+
+    await connectedDevice.close();
+    return true;
+  } catch (err) {
+    console.error('USB print error:', err);
+    try { await connectedDevice.close(); } catch {}
+    return false;
+  }
+}
+
+export async function printTestPage(paperWidth: '58mm' | '80mm' = '80mm'): Promise<boolean> {
+  const testData = buildReceiptESCPOS({
+    nomeEstacionamento: 'TESTE DE IMPRESSAO',
+    placa: 'TST1234',
+    modelo: 'TESTE',
+    cor: 'PRETO',
+    entrada: new Date().toISOString(),
+    tipoCliente: 'avulso',
+    valorHora: 10,
+    mensagemComprovante: 'IMPRESSORA CONFIGURADA COM SUCESSO!',
+  }, paperWidth);
+
+  return printViaUSB(testData);
+}

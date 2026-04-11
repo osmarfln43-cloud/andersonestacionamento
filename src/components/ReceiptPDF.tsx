@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
+import { getSavedPrinterConfig, buildReceiptESCPOS, printViaUSB } from "@/lib/printer";
 
 export interface ReceiptData {
   placa: string;
@@ -41,8 +42,39 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     return () => clearTimeout(timeout);
   }, [data]);
 
-  const printReceipt = () => {
+  const printReceipt = async () => {
     if (!data || !printRef.current) return;
+
+    // Try USB direct printing first
+    const printerConfig = getSavedPrinterConfig();
+    if (printerConfig?.type === 'usb') {
+      const escposData = buildReceiptESCPOS({
+        nomeEstacionamento: data.nomeEstacionamento,
+        disclaimer: data.disclaimerComprovante,
+        diasFuncionamento: data.diasFuncionamento,
+        horarioAbertura: data.horarioAbertura,
+        horarioFechamento: data.horarioFechamento,
+        placa: data.placa,
+        modelo: data.modelo,
+        cor: data.cor,
+        entrada: data.entrada,
+        saida: data.saida,
+        tempoTotal: data.tempoTotal,
+        tipoCliente: data.tipo_cliente,
+        formaPagamento: data.formaPagamento,
+        valorHora: data.valorHora,
+        valorTotal: data.valorTotal,
+        mensagemComprovante: data.mensagemComprovante,
+        endereco: data.endereco,
+      }, printerConfig.paperWidth);
+
+      const success = await printViaUSB(escposData);
+      if (success) {
+        onDone();
+        return;
+      }
+      // Fall through to browser print if USB fails
+    }
 
     const printContent = printRef.current.innerHTML;
 
