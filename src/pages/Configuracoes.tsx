@@ -112,6 +112,244 @@ function ReceiptPreview({ form }: { form: any }) {
   );
 }
 
+function PrinterSetup({ form, setField, save }: { form: any; setField: (k: string, v: any) => void; save: () => void }) {
+  const { toast } = useToast();
+  const [printerConfig, setPrinterConfig] = useState<PrinterConfig | null>(getSavedPrinterConfig());
+  const [usbDevices, setUsbDevices] = useState<any[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const webUSBAvailable = isWebUSBSupported();
+
+  const scanDevices = async () => {
+    setScanning(true);
+    try {
+      const devices = await getConnectedUSBPrinters();
+      setUsbDevices(devices);
+      if (devices.length > 0) {
+        toast({ title: `✓ ${devices.length} dispositivo(s) encontrado(s)` });
+      } else {
+        toast({ title: "Nenhum dispositivo USB encontrado", description: "Conecte a impressora e tente novamente" });
+      }
+    } catch {
+      toast({ title: "Erro ao buscar dispositivos", variant: "destructive" });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const connectUSB = async () => {
+    try {
+      const device = await requestUSBPrinter();
+      if (device) {
+        const config: PrinterConfig = {
+          name: device.productName || `USB Printer (${device.vendorId.toString(16)}:${device.productId.toString(16)})`,
+          type: 'usb',
+          paperWidth: (form.largura_papel === '58mm' ? '58mm' : '80mm') as '58mm' | '80mm',
+          vendorId: device.vendorId,
+          productId: device.productId,
+        };
+        savePrinterConfig(config);
+        setPrinterConfig(config);
+        setUsbDevices(await getConnectedUSBPrinters());
+        toast({ title: "✓ Impressora conectada!", description: config.name });
+      }
+    } catch {
+      toast({ title: "Erro ao conectar", description: "Tente novamente", variant: "destructive" });
+    }
+  };
+
+  const useBrowserPrint = () => {
+    const config: PrinterConfig = {
+      name: 'Impressão via Navegador',
+      type: 'browser',
+      paperWidth: (form.largura_papel === '58mm' ? '58mm' : '80mm') as '58mm' | '80mm',
+    };
+    savePrinterConfig(config);
+    setPrinterConfig(config);
+    toast({ title: "✓ Modo navegador ativado", description: "A impressão usará o diálogo do navegador" });
+  };
+
+  const disconnectPrinter = () => {
+    clearPrinterConfig();
+    setPrinterConfig(null);
+    toast({ title: "Impressora desconectada" });
+  };
+
+  const testPrint = async () => {
+    setTesting(true);
+    try {
+      if (printerConfig?.type === 'usb') {
+        const success = await printTestPage(printerConfig.paperWidth);
+        if (success) {
+          toast({ title: "✓ Página de teste enviada!" });
+        } else {
+          toast({ title: "Falha no teste USB", description: "Usando impressão via navegador", variant: "destructive" });
+        }
+      } else {
+        // Browser print test
+        const testWindow = window.open('', '_blank', 'width=320,height=400');
+        if (testWindow) {
+          testWindow.document.write(`
+            <!DOCTYPE html><html><head><style>
+              @page { size: ${form.largura_papel || '80mm'} auto; margin: 0; }
+              body { font-family: 'Courier New', monospace; font-size: 12px; width: ${form.largura_papel || '80mm'}; padding: 3mm; }
+              .center { text-align: center; } .bold { font-weight: bold; }
+              .dashed { border-top: 1px dashed #000; margin: 4px 0; }
+            </style></head><body>
+              <div class="center bold" style="font-size:14px">TESTE DE IMPRESSAO</div>
+              <div class="dashed"></div>
+              <div class="center bold" style="font-size:22px;letter-spacing:3px">TST1234</div>
+              <div class="center">(TESTE PRETO)</div>
+              <div class="dashed"></div>
+              <div>Papel: ${form.largura_papel || '80mm'}</div>
+              <div>Data: ${new Date().toLocaleString('pt-BR')}</div>
+              <div class="dashed"></div>
+              <div class="center bold">IMPRESSORA OK!</div>
+              <div class="center" style="font-size:10px;margin-top:8px">ME PARK AI</div>
+            </body></html>
+          `);
+          testWindow.document.close();
+          testWindow.focus();
+          setTimeout(() => { testWindow.print(); setTimeout(() => testWindow.close(), 1000); }, 400);
+        }
+        toast({ title: "✓ Teste de impressão enviado" });
+      }
+    } catch {
+      toast({ title: "Erro no teste", variant: "destructive" });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (webUSBAvailable) scanDevices();
+  }, []);
+
+  return (
+    <>
+      {/* Status da impressora */}
+      <Section title="Impressora Configurada">
+        {printerConfig ? (
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-accent/5 border border-accent/20">
+            <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              {printerConfig.type === 'usb' ? <Usb className="h-5 w-5 text-accent" /> : <Printer className="h-5 w-5 text-accent" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{printerConfig.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {printerConfig.type === 'usb' ? 'USB Direto (ESC/POS)' : 'Via Navegador'} • Papel {printerConfig.paperWidth}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
+              <span className="text-xs font-medium text-accent">Conectada</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-destructive/5 border border-destructive/20">
+            <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Nenhuma impressora configurada</p>
+              <p className="text-xs text-muted-foreground">Conecte uma impressora USB ou use o modo navegador</p>
+            </div>
+          </div>
+        )}
+      </Section>
+
+      {/* Papel */}
+      <Section title="Tamanho do Papel">
+        <div className="grid grid-cols-2 gap-3">
+          {(['80mm', '58mm'] as const).map((size) => (
+            <button
+              key={size} type="button"
+              onClick={() => {
+                setField('largura_papel', size);
+                if (printerConfig) {
+                  const updated = { ...printerConfig, paperWidth: size };
+                  savePrinterConfig(updated);
+                  setPrinterConfig(updated);
+                }
+              }}
+              className={`h-16 rounded-xl text-sm font-semibold transition-all border-2 flex flex-col items-center justify-center gap-1 ${
+                (form.largura_papel || '80mm') === size
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Printer className="h-4 w-4" />
+              {size === '80mm' ? '80mm (Padrão)' : '58mm (Compacta)'}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* Conexão USB */}
+      <Section title="Conectar Impressora">
+        <div className="space-y-3">
+          {webUSBAvailable ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button onClick={connectUSB} variant="outline" className="h-14 gap-2 rounded-xl text-sm">
+                  <Usb className="h-5 w-5" /> Conectar USB (Plug & Play)
+                </Button>
+                <Button onClick={useBrowserPrint} variant="outline" className="h-14 gap-2 rounded-xl text-sm">
+                  <Printer className="h-5 w-5" /> Usar Impressão do Navegador
+                </Button>
+              </div>
+
+              {/* Discovered devices */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Dispositivos USB detectados: {usbDevices.length}</p>
+                <Button variant="ghost" size="sm" onClick={scanDevices} disabled={scanning} className="gap-1.5 text-xs h-7">
+                  <RefreshCw className={`h-3 w-3 ${scanning ? 'animate-spin' : ''}`} /> Atualizar
+                </Button>
+              </div>
+
+              {usbDevices.length > 0 && (
+                <div className="space-y-2">
+                  {usbDevices.map((d, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border/50">
+                      <Usb className="h-4 w-4 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{d.productName || `Dispositivo ${d.vendorId?.toString(16)}:${d.productId?.toString(16)}`}</p>
+                        <p className="text-[10px] text-muted-foreground">{d.manufacturerName || 'Fabricante desconhecido'}</p>
+                      </div>
+                      <Check className="h-4 w-4 text-accent" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-warning/5 border border-warning/20">
+                <p className="text-xs text-warning font-medium">⚠️ WebUSB não disponível neste navegador</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Use Google Chrome ou Microsoft Edge para conexão USB direta. Ou use a impressão via navegador.</p>
+              </div>
+              <Button onClick={useBrowserPrint} className="h-14 gap-2 rounded-xl text-sm w-full">
+                <Printer className="h-5 w-5" /> Usar Impressão do Navegador
+              </Button>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* Actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <Button onClick={testPrint} variant="outline" disabled={testing} className="h-12 gap-2 rounded-xl">
+          <Printer className="h-4 w-4" /> {testing ? 'Imprimindo...' : 'Teste de Impressão'}
+        </Button>
+        {printerConfig && (
+          <Button onClick={disconnectPrinter} variant="outline" className="h-12 gap-2 rounded-xl text-destructive border-destructive/30 hover:bg-destructive/10">
+            <X className="h-4 w-4" /> Desconectar
+          </Button>
+        )}
+      </div>
+      <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar Configurações</Button>
+    </>
+  );
+}
+
 export default function Configuracoes() {
   const { toast } = useToast();
   const { data: config, isLoading } = useConfiguracoes();
