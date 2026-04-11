@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, Printer, FileDown, DollarSign, LogOut, Plus, Pencil } from "lucide-react";
+import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, Printer, FileDown, DollarSign, LogOut, Plus, Pencil, Mail, Copy, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
