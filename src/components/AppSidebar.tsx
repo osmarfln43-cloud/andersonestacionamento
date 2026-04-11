@@ -6,6 +6,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
+import { hasPermission } from "@/lib/permissions";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -13,31 +14,36 @@ import {
 } from "@/components/ui/sidebar";
 
 const operationalItems = [
-  { title: "Gerenciador", url: "/", icon: LayoutDashboard },
-  { title: "Entrada", url: "/entrada", icon: LogIn },
-  { title: "Saída", url: "/saida", icon: LogOut },
-  { title: "Pátio", url: "/patio", icon: Car },
+  { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard" },
+  { title: "Entrada", url: "/entrada", icon: LogIn, perm: "entrada" },
+  { title: "Saída", url: "/saida", icon: LogOut, perm: "saida" },
+  { title: "Pátio", url: "/patio", icon: Car, perm: "patio" },
 ];
 
 const managementItems = [
-  { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Veículos", url: "/veiculos", icon: CarFront },
-  { title: "Mensalistas", url: "/mensalistas", icon: CalendarCheck },
+  { title: "Clientes", url: "/clientes", icon: Users, perm: "clientes" },
+  { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos" },
+  { title: "Mensalistas", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas" },
 ];
 
 const businessItems = [
-  { title: "Financeiro", url: "/financeiro", icon: Wallet },
-  { title: "Relatórios", url: "/relatorios", icon: FileText },
-  { title: "Comprovantes", url: "/comprovantes", icon: Printer },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro" },
+  { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios" },
+  { title: "Comprovantes", url: "/comprovantes", icon: Printer, perm: "comprovantes" },
 ];
 
 const systemItems = [
-  { title: "Admin", url: "/admin", icon: ShieldCheck },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Admin", url: "/admin", icon: ShieldCheck, perm: "admin" },
+  { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes" },
 ];
 
-function MenuSection({ label, items, collapsed }: { label: string; items: typeof operationalItems; collapsed: boolean }) {
+type MenuItem = { title: string; url: string; icon: any; perm: string };
+
+function MenuSection({ label, items, collapsed, role }: { label: string; items: MenuItem[]; collapsed: boolean; role: string | null }) {
   const location = useLocation();
+  const visibleItems = items.filter(item => hasPermission(role, item.perm));
+  if (visibleItems.length === 0) return null;
+
   return (
     <SidebarGroup className="py-1">
       {!collapsed && (
@@ -48,7 +54,7 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
       {collapsed && <div className="h-3" />}
       <SidebarGroupContent>
         <SidebarMenu className="space-y-0.5 px-2">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = location.pathname === item.url;
             return (
               <SidebarMenuItem key={item.title}>
@@ -81,8 +87,9 @@ function MenuSection({ label, items, collapsed }: { label: string; items: typeof
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const collapsed = state === "collapsed";
+  const role = profile?.perfil || null;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border/50">
@@ -101,24 +108,41 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="mt-1">
-        <MenuSection label="Operacional" items={operationalItems} collapsed={collapsed} />
-        <MenuSection label="Cadastros" items={managementItems} collapsed={collapsed} />
-        <MenuSection label="Negócios" items={businessItems} collapsed={collapsed} />
-        <MenuSection label="Sistema" items={systemItems} collapsed={collapsed} />
+        <MenuSection label="Operacional" items={operationalItems} collapsed={collapsed} role={role} />
+        <MenuSection label="Cadastros" items={managementItems} collapsed={collapsed} role={role} />
+        <MenuSection label="Negócios" items={businessItems} collapsed={collapsed} role={role} />
+        <MenuSection label="Sistema" items={systemItems} collapsed={collapsed} role={role} />
       </SidebarContent>
 
       <SidebarFooter className="p-3 space-y-2">
         {!collapsed && (
-          <div className="glass-card p-3 flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
-              <Sparkles className="h-3.5 w-3.5 text-accent" />
+          <>
+            {/* Role badge */}
+            <div className="glass-card p-2.5 flex items-center gap-2">
+              <div className={`h-6 w-6 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+                role === 'admin' ? 'bg-destructive/10 text-destructive' :
+                role === 'gerente' ? 'bg-primary/10 text-primary' :
+                role === 'financeiro' ? 'bg-warning/10 text-warning' :
+                'bg-accent/10 text-accent'
+              }`}>
+                {(profile?.nome || '?').charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium text-foreground truncate">{profile?.nome || 'Usuário'}</p>
+                <p className="text-[9px] text-muted-foreground capitalize">{role || 'carregando...'}</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-medium text-foreground">IA Ativa</p>
-              <p className="text-[10px] text-muted-foreground">Monitorando operação</p>
+            <div className="glass-card p-3 flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Sparkles className="h-3.5 w-3.5 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium text-foreground">IA Ativa</p>
+                <p className="text-[10px] text-muted-foreground">Monitorando operação</p>
+              </div>
+              <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             </div>
-            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-          </div>
+          </>
         )}
         <button
           onClick={() => { signOut(); }}
