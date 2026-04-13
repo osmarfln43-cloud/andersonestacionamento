@@ -84,16 +84,16 @@ export default function Saida() {
         </button>
 
         {/* Header with clock */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center">
               <LogOut className="h-5 w-5 text-warning" />
             </div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display">Saída de Veículo</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight leading-tight font-display">Saída de Veículo</h1>
           </div>
-          <div className="glass-card px-4 py-2 text-right">
-            <p className="text-lg md:text-xl font-mono font-bold text-primary">{horaAtual}</p>
-            <p className="text-[10px] text-muted-foreground">{dataAtual}</p>
+          <div className="glass-card w-full shrink-0 px-3 py-2 text-center sm:w-auto sm:px-4 sm:text-right">
+            <p className="text-base sm:text-lg md:text-xl font-mono font-bold text-primary tabular-nums whitespace-nowrap">{horaAtual}</p>
+            <p className="text-[10px] text-muted-foreground whitespace-nowrap">{dataAtual}</p>
           </div>
         </div>
 
@@ -206,19 +206,19 @@ export default function Saida() {
   // List view
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="h-10 w-10 rounded-xl bg-warning/10 flex items-center justify-center">
             <LogOut className="h-5 w-5 text-warning" />
           </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display">Saída / Fechamento</h1>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight leading-tight font-display">Saída / Fechamento</h1>
             <p className="text-[11px] text-muted-foreground">Registre saídas de veículos e motos</p>
           </div>
         </div>
-        <div className="glass-card px-4 py-2 text-right">
-          <p className="text-lg md:text-xl font-mono font-bold text-primary">{horaAtual}</p>
-          <p className="text-[10px] text-muted-foreground">{dataAtual}</p>
+        <div className="glass-card w-full shrink-0 px-3 py-2 text-center sm:w-auto sm:px-4 sm:text-right">
+          <p className="text-base sm:text-lg md:text-xl font-mono font-bold text-primary tabular-nums whitespace-nowrap">{horaAtual}</p>
+          <p className="text-[10px] text-muted-foreground whitespace-nowrap">{dataAtual}</p>
         </div>
       </div>
 
