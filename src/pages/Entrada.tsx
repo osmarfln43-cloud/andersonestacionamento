@@ -344,7 +344,6 @@ export default function Entrada() {
               ))}
             </div>
           </div>
-          </div>
 
           {/* AI status badge */}
           {aiResult && (
