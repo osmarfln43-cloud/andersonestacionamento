@@ -85,7 +85,7 @@ export default function Comprovantes() {
           </div>
           Comprovantes
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">Histórico e visualização de comprovantes</p>
+        <p className="text-sm text-muted-foreground mt-2">2ª via, históricos e visualização de comprovantes</p>
       </div>
 
       <div className="glass-card p-3">
