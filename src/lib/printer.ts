@@ -73,8 +73,12 @@ export async function requestUSBPrinter(): Promise<any | null> {
 export async function getConnectedUSBPrinters(): Promise<any[]> {
   if (!isWebUSBSupported()) return [];
   try {
-    return await (navigator as any).usb.getDevices();
-  } catch {
+    const devices = await (navigator as any).usb.getDevices();
+    console.log('[Printer] Dispositivos pareados:', devices.length, 
+      devices.map((d: any) => d.productName || `0x${d.vendorId?.toString(16)}`));
+    return devices;
+  } catch (err) {
+    console.error('[Printer] Erro ao listar dispositivos:', err);
     return [];
   }
 }
