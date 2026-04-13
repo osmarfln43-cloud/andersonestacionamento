@@ -137,7 +137,7 @@ export default function Saida() {
             <div className="space-y-1.5">
               <Label className="stat-label text-[11px]">Saída</Label>
               <div className="h-11 rounded-lg bg-secondary/50 flex items-center px-3">
-                <span className="text-xs font-mono">{finalizado && (displayData as any).saida ? new Date((displayData as any).saida).toLocaleString('pt-BR') : now.toLocaleString('pt-BR')}</span>
+                <span className="text-xs font-mono">{finalizado && (displayData as any).saida ? new Date((displayData as any).saida).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')}</span>
               </div>
             </div>
             <div className="space-y-1.5">
