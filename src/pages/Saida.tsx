@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car } from "lucide-react";
+import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes } from "@/hooks/useDatabase";
+import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes, useExcluirMovimentacao } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type MovData = {
   id: string; placa: string; modelo: string | null; cor: string | null;
@@ -25,6 +26,7 @@ export default function Saida() {
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
   const { data: config } = useConfiguracoes();
   const registrarSaida = useRegistrarSaida();
+  const excluirMovimentacao = useExcluirMovimentacao();
   const { toast } = useToast();
 
   const filteredAtivos = busca.length > 0
@@ -276,7 +278,38 @@ export default function Saida() {
               <div key={v.id} className={`glass-card p-4 animate-in stagger-${Math.min(i + 1, 8)}`} style={{ opacity: 0 }}>
                 <div className="flex items-center justify-between mb-3">
                   <p className="font-mono text-lg font-bold tracking-wide">{v.placa}</p>
-                  <span className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[10px] font-semibold uppercase">{v.forma_pagamento}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[10px] font-semibold uppercase">{v.forma_pagamento}</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir saída?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Deseja excluir o registro de saída do veículo <strong>{v.placa}</strong>? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => {
+                              excluirMovimentacao.mutate(v.id, {
+                                onSuccess: () => toast({ title: "✓ Registro excluído", description: `${v.placa} removido` }),
+                                onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+                              });
+                            }}
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">{v.modelo} {v.cor ? `• ${v.cor}` : ''}</p>
                 <div className="mt-3 pt-3 border-t border-border/50 space-y-1">

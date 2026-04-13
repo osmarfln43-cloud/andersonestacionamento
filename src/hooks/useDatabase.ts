@@ -221,6 +221,21 @@ export function useRegistrarSaida() {
   });
 }
 
+export function useExcluirMovimentacao() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Delete related pagamentos first
+      await supabase.from('pagamentos').delete().eq('movimentacao_id', id);
+      const { error } = await supabase.from('movimentacoes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+    },
+  });
+}
+
 // Clientes
 export function useClientes() {
   return useQuery({
