@@ -385,6 +385,7 @@ export default function Configuracoes() {
       tolerancia_minutos: Number(form.tolerancia_minutos ?? 15),
       valor_minimo: form.valor_minimo === '' || form.valor_minimo == null ? null : Number(form.valor_minimo),
       valor_maximo_diario: form.valor_maximo_diario === '' || form.valor_maximo_diario == null ? null : Number(form.valor_maximo_diario),
+      valor_maximo_diario_moto: form.valor_maximo_diario_moto === '' || form.valor_maximo_diario_moto == null ? null : Number(form.valor_maximo_diario_moto),
       chave_pix: form.chave_pix || null,
       tipo_chave_pix: form.tipo_chave_pix || null,
       nome_beneficiario: form.nome_beneficiario || null,
@@ -497,13 +498,22 @@ export default function Configuracoes() {
             </TabsContent>
 
             <TabsContent value="cobranca" className="space-y-6">
-              <Section title="Regras de Cobrança">
+              <Section title="🚗 Valores — Carro">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Field label="Valor/Hora Carro (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
-                  <Field label="Valor/Hora Moto (R$)"><Input type="number" value={form.valor_hora_moto ?? ''} onChange={e => setField('valor_hora_moto', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Valor/Hora Carro (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" placeholder="10" /></Field>
+                  <Field label="Diária Máxima Carro (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" placeholder="35" /></Field>
+                </div>
+              </Section>
+              <Section title="🏍️ Valores — Moto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Valor/Hora Moto (R$)"><Input type="number" value={form.valor_hora_moto ?? ''} onChange={e => setField('valor_hora_moto', Number(e.target.value))} className="h-12 font-mono" placeholder="5" /></Field>
+                  <Field label="Diária Máxima Moto (R$)"><Input type="number" value={form.valor_maximo_diario_moto ?? ''} onChange={e => setField('valor_maximo_diario_moto', Number(e.target.value))} className="h-12 font-mono" placeholder="15" /></Field>
+                </div>
+              </Section>
+              <Section title="Geral">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <Field label="Tolerância (minutos)"><Input type="number" value={form.tolerancia_minutos ?? ''} onChange={e => setField('tolerancia_minutos', Number(e.target.value))} className="h-12 font-mono" /></Field>
                   <Field label="Valor Mínimo (R$)"><Input type="number" value={form.valor_minimo ?? ''} onChange={e => setField('valor_minimo', Number(e.target.value))} className="h-12 font-mono" /></Field>
-                  <Field label="Valor Máximo Diário (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" /></Field>
                 </div>
               </Section>
               <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
