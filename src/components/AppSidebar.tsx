@@ -54,7 +54,7 @@ function MenuSection({ label, items, collapsed, role }: { label: string; items: 
       )}
       {collapsed && <div className="h-3" />}
       <SidebarGroupContent>
-        <SidebarMenu className="space-y-0.5 px-2">
+        <SidebarMenu className="space-y-1 px-2">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.url;
             return (
@@ -63,7 +63,7 @@ function MenuSection({ label, items, collapsed, role }: { label: string; items: 
                   <NavLink
                     to={item.url}
                     end
-                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                    className={`group relative flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
                       item.title === 'Gerenciador'
                         ? (isActive ? 'bg-destructive/10 text-destructive' : 'text-destructive hover:bg-destructive/10')
                         : (isActive ? 'bg-primary/[0.08] text-primary' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground')
@@ -71,9 +71,9 @@ function MenuSection({ label, items, collapsed, role }: { label: string; items: 
                     activeClassName=""
                   >
                     {isActive && (
-                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full ${item.title === 'Gerenciador' ? 'bg-destructive' : 'bg-primary'}`} />
+                      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full ${item.title === 'Gerenciador' ? 'bg-destructive' : 'bg-primary'}`} />
                     )}
-                    <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${item.title === 'Gerenciador' ? 'text-destructive' : (isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}`} />
+                    <item.icon className={`h-5 w-5 shrink-0 transition-colors ${item.title === 'Gerenciador' ? 'text-destructive' : (isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}`} />
                     {!collapsed && <span>{item.title}</span>}
                   </NavLink>
                 </SidebarMenuButton>
