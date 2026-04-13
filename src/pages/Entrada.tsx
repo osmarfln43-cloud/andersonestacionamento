@@ -63,7 +63,9 @@ export default function Entrada() {
         if (data.marca) setMarca(data.marca);
         if (data.modelo) setModelo(data.modelo.includes(data.marca) ? data.modelo.replace(data.marca, '').trim() : data.modelo);
         if (data.cor) setCor(data.cor);
-        toast({ title: "🤖 IA identificou o veículo!", description: `${data.marca} ${data.modelo} - ${data.cor}` });
+        if (data.categoria === 'moto') setCategoria('moto');
+        else setCategoria('carro');
+        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${data.marca} ${data.modelo} - ${data.cor}` });
       }
     } catch (err: any) {
       toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
