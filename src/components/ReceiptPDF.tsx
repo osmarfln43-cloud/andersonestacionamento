@@ -167,7 +167,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
   const horarios = `HORARIO DE FUNCIONAMENTO ${(data.diasFuncionamento || "SEGUNDA A SEXTA").toUpperCase()} DAS ${data.horarioAbertura || "07:00"} ATE AS ${data.horarioFechamento || "19:00"}`;
 
   const pixCode = data.chavePix
-    ? `00020126580014br.gov.bcb.pix0136${data.chavePix}5204000053039865802BR5913ME PARK AI6008SAOPAULO`
+    ? `00020126580014br.gov.bcb.pix0136${data.chavePix}5204000053039865802BR5925ANDERSON ESTACIONAMENTO6008SAOPAULO`
     : "";
 
   return (
@@ -175,7 +175,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
       <div ref={printRef}>
         <div className="receipt">
           {/* Header */}
-          <div className="title">{data.nomeEstacionamento || "ME PARK ESTACIONAMENTO"}</div>
+          <div className="title">{data.nomeEstacionamento || "ANDERSON ESTACIONAMENTO"}</div>
           <div className="dashed"></div>
 
           {/* Disclaimer */}
@@ -258,7 +258,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           <div className="dashed"></div>
 
           {/* Footer */}
-          <div className="footer">{data.mensagemComprovante || "ME PARK AGRADECE A PREFERENCIA"}</div>
+          <div className="footer">{data.mensagemComprovante || "ANDERSON ESTACIONAMENTO AGRADECE A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
           {data.cnpj && <div className="footer-addr">CNPJ: {data.cnpj}</div>}
         </div>
