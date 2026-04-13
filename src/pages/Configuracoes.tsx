@@ -138,11 +138,19 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
   };
 
   const connectUSB = async () => {
+    if (!webUSBAvailable) {
+      toast({ 
+        title: "WebUSB não suportado", 
+        description: "Use o Chrome/Edge em HTTPS para conectar via USB", 
+        variant: "destructive" 
+      });
+      return;
+    }
     try {
       const device = await requestUSBPrinter();
       if (device) {
         const config: PrinterConfig = {
-          name: device.productName || `USB Printer (${device.vendorId.toString(16)}:${device.productId.toString(16)})`,
+          name: device.productName || `USB Printer (${device.vendorId?.toString(16)}:${device.productId?.toString(16)})`,
           type: 'usb',
           paperWidth: (form.largura_papel === '58mm' ? '58mm' : '80mm') as '58mm' | '80mm',
           vendorId: device.vendorId,
@@ -152,9 +160,12 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
         setPrinterConfig(config);
         setUsbDevices(await getConnectedUSBPrinters());
         toast({ title: "✓ Impressora conectada!", description: config.name });
+      } else {
+        toast({ title: "Nenhuma impressora selecionada", description: "Selecione um dispositivo USB na janela do navegador" });
       }
-    } catch {
-      toast({ title: "Erro ao conectar", description: "Tente novamente", variant: "destructive" });
+    } catch (err: any) {
+      console.error('[Printer] Erro ao conectar:', err);
+      toast({ title: "Erro ao conectar", description: err?.message || "Tente novamente", variant: "destructive" });
     }
   };
 
