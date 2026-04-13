@@ -89,6 +89,7 @@ export type Database = {
           unidade_id: string | null
           updated_at: string
           valor_hora: number
+          valor_hora_moto: number
           valor_maximo_diario: number | null
           valor_minimo: number | null
         }
@@ -113,6 +114,7 @@ export type Database = {
           unidade_id?: string | null
           updated_at?: string
           valor_hora?: number
+          valor_hora_moto?: number
           valor_maximo_diario?: number | null
           valor_minimo?: number | null
         }
@@ -137,6 +139,7 @@ export type Database = {
           unidade_id?: string | null
           updated_at?: string
           valor_hora?: number
+          valor_hora_moto?: number
           valor_maximo_diario?: number | null
           valor_minimo?: number | null
         }
@@ -213,6 +216,7 @@ export type Database = {
       }
       movimentacoes: {
         Row: {
+          categoria: string
           cliente_id: string | null
           cor: string | null
           created_at: string
@@ -237,6 +241,7 @@ export type Database = {
           veiculo_id: string | null
         }
         Insert: {
+          categoria?: string
           cliente_id?: string | null
           cor?: string | null
           created_at?: string
@@ -261,6 +266,7 @@ export type Database = {
           veiculo_id?: string | null
         }
         Update: {
+          categoria?: string
           cliente_id?: string | null
           cor?: string | null
           created_at?: string
