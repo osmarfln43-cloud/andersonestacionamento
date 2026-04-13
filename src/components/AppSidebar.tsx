@@ -4,7 +4,6 @@ import {
   ChevronRight, ParkingCircle, Sparkles, ShieldCheck
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
-} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
