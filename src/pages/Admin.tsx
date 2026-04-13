@@ -473,3 +473,123 @@ export default function Admin() {
     </div>
   );
 }
+
+function AuditTab() {
+  const [filtroTabela, setFiltroTabela] = useState("");
+  const [filtroAcao, setFiltroAcao] = useState("");
+  const [buscaAudit, setBuscaAudit] = useState("");
+  const { data: logs = [], isLoading } = useAuditLogs(filtroTabela, filtroAcao, buscaAudit);
+  const { data: profiles = [] } = useProfiles();
+
+  const getUsuarioNome = (userId: string | null) => {
+    if (!userId) return 'Sistema';
+    const p = profiles.find((pr: any) => pr.user_id === userId);
+    return p ? (p as any).nome || (p as any).email || 'Desconhecido' : 'Desconhecido';
+  };
+
+  const getResumo = (log: any) => {
+    const dados = log.acao === 'DELETE' ? log.dados_anteriores : log.dados_novos;
+    if (!dados) return '';
+    if (dados.placa) return `Placa: ${dados.placa}`;
+    if (dados.nome) return dados.nome;
+    if (dados.nome_estacionamento) return dados.nome_estacionamento;
+    if (dados.email) return dados.email;
+    return '';
+  };
+
+  const tabelas = ['movimentacoes', 'veiculos', 'clientes', 'mensalistas', 'pagamentos', 'configuracoes', 'profiles', 'unidades'];
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="glass-card p-2 flex-1 min-w-[200px] max-w-sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar..." value={buscaAudit} onChange={(e) => setBuscaAudit(e.target.value)} className="pl-10 h-10 border-0 bg-transparent" />
+          </div>
+        </div>
+        <select
+          value={filtroTabela}
+          onChange={(e) => setFiltroTabela(e.target.value)}
+          className="h-10 px-3 rounded-xl border border-border bg-secondary text-sm text-foreground"
+        >
+          <option value="">Todas as tabelas</option>
+          {tabelas.map(t => (
+            <option key={t} value={t}>{tabelaLabels[t] || t}</option>
+          ))}
+        </select>
+        <select
+          value={filtroAcao}
+          onChange={(e) => setFiltroAcao(e.target.value)}
+          className="h-10 px-3 rounded-xl border border-border bg-secondary text-sm text-foreground"
+        >
+          <option value="">Todas ações</option>
+          <option value="INSERT">Criado</option>
+          <option value="UPDATE">Editado</option>
+          <option value="DELETE">Excluído</option>
+        </select>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Criações', count: logs.filter((l: any) => l.acao === 'INSERT').length, color: 'text-accent' },
+          { label: 'Edições', count: logs.filter((l: any) => l.acao === 'UPDATE').length, color: 'text-primary' },
+          { label: 'Exclusões', count: logs.filter((l: any) => l.acao === 'DELETE').length, color: 'text-destructive' },
+        ].map(s => (
+          <div key={s.label} className="glass-card p-4 text-center">
+            <p className="stat-label">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Log list */}
+      <div className="glass-card overflow-hidden">
+        {isLoading ? (
+          <div className="p-8 text-center text-muted-foreground">Carregando logs...</div>
+        ) : logs.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            <History className="h-12 w-12 mx-auto mb-3 opacity-20" />
+            <p>Nenhum registro encontrado</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/30 max-h-[60vh] overflow-y-auto">
+            {logs.map((log: any) => {
+              const acao = acaoLabels[log.acao] || { label: log.acao, color: 'bg-secondary text-muted-foreground', icon: Eye };
+              const AcaoIcon = acao.icon;
+              const resumo = getResumo(log);
+              const dt = new Date(log.created_at);
+              return (
+                <div key={log.id} className="p-4 hover:bg-secondary/20 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${acao.color}`}>
+                      <AcaoIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${acao.color}`}>
+                          {acao.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {tabelaLabels[log.tabela] || log.tabela}
+                        </span>
+                      </div>
+                      {resumo && <p className="text-sm font-medium text-foreground mt-1 truncate">{resumo}</p>}
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                        <span>👤 {getUsuarioNome(log.usuario_id)}</span>
+                        <span>•</span>
+                        <span>{dt.toLocaleDateString('pt-BR')} {dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
