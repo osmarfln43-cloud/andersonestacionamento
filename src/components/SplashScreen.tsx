@@ -209,7 +209,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
           >
             <motion.img
               src={splashLogo}
-              alt="ME PARK"
+              alt="Anderson Estacionamento"
               className="w-72 sm:w-96 max-w-[85vw] drop-shadow-2xl"
               style={{
                 filter: "drop-shadow(0 0 30px hsl(142 71% 45% / 0.4)) drop-shadow(0 0 60px hsl(200 100% 50% / 0.2))",
@@ -296,7 +296,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
             transition={{ delay: 2, duration: 0.5 }}
             className="absolute bottom-6 text-[10px] text-muted-foreground/50"
           >
-            © 2026 ME PARK — OSMARJR Sistemas
+            © 2026 Anderson Estacionamento — OSMARJR Sistemas
           </motion.p>
         </motion.div>
       )}

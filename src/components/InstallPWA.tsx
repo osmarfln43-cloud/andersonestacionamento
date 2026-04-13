@@ -30,9 +30,9 @@ export default function InstallPWA() {
 
   return (
     <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm bg-card border border-primary/20 rounded-2xl shadow-2xl p-5 flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-300">
-      <img src="/icons/icon-192.png" alt="ME PARK" className="w-12 h-12 rounded-xl" />
+       <img src="/icons/icon-192.png" alt="Anderson" className="w-12 h-12 rounded-xl" />
       <div className="text-center">
-        <p className="font-bold text-base text-foreground">Instalar ME PARK</p>
+        <p className="font-bold text-base text-foreground">Instalar Anderson Estacionamento</p>
         <p className="text-xs text-muted-foreground mt-1">Acesse direto do seu celular ou desktop</p>
       </div>
       <div className="flex items-center gap-3 w-full">

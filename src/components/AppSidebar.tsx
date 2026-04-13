@@ -100,8 +100,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-[15px] font-bold text-foreground tracking-tight font-display">ME PARK AI</span>
-              <span className="text-[10px] text-muted-foreground tracking-wide">Estacionamento Inteligente</span>
+               <span className="text-[15px] font-bold text-foreground tracking-tight font-display">Anderson</span>
+              <span className="text-[10px] text-muted-foreground tracking-wide">Estacionamento</span>
             </div>
           )}
         </div>
