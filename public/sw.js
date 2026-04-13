@@ -1,5 +1,5 @@
-const CACHE_NAME = "mepark-v2";
-const PRECACHE = ["/", "/manifest.json", "/icons/pwa-icon-192.png", "/icons/pwa-icon-512.png"];
+const CACHE_NAME = "mepark-v3";
+const PRECACHE = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(PRECACHE)));
