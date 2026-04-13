@@ -48,17 +48,23 @@ export default function InstallPWA() {
   if (!deferredPrompt && !isIOS) return null;
 
   const install = async () => {
+    console.log("Install clicked, deferredPrompt:", !!deferredPrompt);
     if (deferredPrompt) {
       try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === "accepted") {
+        console.log("Calling prompt()...");
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        console.log("User choice:", choiceResult.outcome);
+        if (choiceResult.outcome === "accepted") {
           setDeferredPrompt(null);
           setDismissed(true);
         }
-      } catch {
-        // prompt() can fail if already called
+      } catch (err) {
+        console.error("PWA install prompt error:", err);
+        // If prompt fails, try opening the app URL for manual install
       }
+    } else {
+      console.warn("No deferred prompt available");
     }
   };
 
