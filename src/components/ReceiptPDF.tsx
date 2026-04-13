@@ -67,6 +67,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         valorTotal: data.valorTotal,
         mensagemComprovante: data.mensagemComprovante,
         endereco: data.endereco,
+        cnpj: data.cnpj,
       }, printerConfig.paperWidth);
 
       const success = await printViaUSB(escposData);
