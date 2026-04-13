@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 const demoUnidades = [
-  { id: '1', nome: 'ME PARK Centro', endereco: 'Rua Principal, 100 - Centro', vagas: 50, ocupacao: 72, valorHora: 12 },
-  { id: '2', nome: 'ME PARK Shopping', endereco: 'Av. Shopping, 500 - Vila Nova', vagas: 120, ocupacao: 85, valorHora: 15 },
-  { id: '3', nome: 'ME PARK Aeroporto', endereco: 'Rod. Aeroporto, km 5', vagas: 200, ocupacao: 45, valorHora: 20 },
+   { id: '1', nome: 'Anderson Centro', endereco: 'Rua Principal, 100 - Centro', vagas: 50, ocupacao: 72, valorHora: 12 },
+  { id: '2', nome: 'Anderson Shopping', endereco: 'Av. Shopping, 500 - Vila Nova', vagas: 120, ocupacao: 85, valorHora: 15 },
+  { id: '3', nome: 'Anderson Aeroporto', endereco: 'Rod. Aeroporto, km 5', vagas: 200, ocupacao: 45, valorHora: 20 },
 ];
 
 export default function Unidades() {

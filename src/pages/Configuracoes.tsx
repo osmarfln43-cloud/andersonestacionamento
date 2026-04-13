@@ -37,17 +37,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function ReceiptPreview({ form }: { form: any }) {
-  const nome = form.nome_estacionamento || 'ME PARK ESTACIONAMENTO';
+  const nome = form.nome_estacionamento || 'ANDERSON ESTACIONAMENTO';
   const disclaimer = form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
   const dias = (form.dias_funcionamento || 'Segunda a Sexta').toUpperCase();
   const abertura = form.horario_abertura || '07:00';
   const fechamento = form.horario_fechamento || '19:00';
   const endereco = (form.endereco || '').toUpperCase();
-  const mensagem = form.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA';
+  const mensagem = form.mensagem_comprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERÊNCIA';
   const valorHora = Number(form.valor_hora || 10).toFixed(2);
   const chavePix = form.chave_pix || '';
   const pixCode = chavePix
-    ? `00020126580014br.gov.bcb.pix0136${chavePix}5204000053039865802BR5913ME PARK AI6008SAOPAULO`
+    ? `00020126580014br.gov.bcb.pix0136${chavePix}5204000053039865802BR5925ANDERSON ESTACIONAMENTO6008SAOPAULO`
     : '';
 
   const now = new Date();
@@ -217,7 +217,7 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
               <div>Data: ${new Date().toLocaleString('pt-BR')}</div>
               <div class="dashed"></div>
               <div class="center bold">IMPRESSORA OK!</div>
-              <div class="center" style="font-size:10px;margin-top:8px">ME PARK AI</div>
+              <div class="center" style="font-size:10px;margin-top:8px">Anderson Estacionamento</div>
             </body></html>
           `);
           testWindow.document.close();
@@ -376,7 +376,7 @@ export default function Configuracoes() {
 
   const save = async () => {
     const payload = {
-      nome_estacionamento: form.nome_estacionamento || 'ME PARK ESTACIONAMENTO',
+      nome_estacionamento: form.nome_estacionamento || 'ANDERSON ESTACIONAMENTO',
       cnpj: form.cnpj || null,
       endereco: form.endereco || null,
       telefone: form.telefone || null,
@@ -389,7 +389,7 @@ export default function Configuracoes() {
       chave_pix: form.chave_pix || null,
       tipo_chave_pix: form.tipo_chave_pix || null,
       nome_beneficiario: form.nome_beneficiario || null,
-      mensagem_comprovante: form.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA',
+      mensagem_comprovante: form.mensagem_comprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERÊNCIA',
       largura_papel: form.largura_papel || '80mm',
       horario_abertura: form.horario_abertura || '07:00',
       horario_fechamento: form.horario_fechamento || '19:00',
@@ -573,7 +573,7 @@ export default function Configuracoes() {
                     />
                   </Field>
                   <Field label="Mensagem de Rodapé">
-                    <Input value={form.mensagem_comprovante || ''} onChange={e => setField('mensagem_comprovante', e.target.value)} className="h-12" placeholder="Ex: ME PARK AGRADECE A PREFERÊNCIA" />
+                    <Input value={form.mensagem_comprovante || ''} onChange={e => setField('mensagem_comprovante', e.target.value)} className="h-12" placeholder="Ex: ANDERSON ESTACIONAMENTO AGRADECE A PREFERÊNCIA" />
                   </Field>
                 </div>
               </Section>

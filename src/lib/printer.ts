@@ -151,7 +151,7 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposAlign('center'));
   cmds.push(...escposBold(true));
   cmds.push(...escposFontSize(1, 1));
-  cmds.push(...textToBytes(data.nomeEstacionamento || 'ME PARK ESTACIONAMENTO'), LF);
+  cmds.push(...textToBytes(data.nomeEstacionamento || 'ANDERSON ESTACIONAMENTO'), LF);
   cmds.push(...escposBold(false));
   cmds.push(...dashedLine(cols));
 
@@ -219,7 +219,7 @@ export function buildReceiptESCPOS(data: {
 
   // Footer
   cmds.push(...escposBold(true));
-  cmds.push(...textToBytes(data.mensagemComprovante || 'ME PARK AGRADECE A PREFERENCIA'), LF);
+  cmds.push(...textToBytes(data.mensagemComprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERENCIA'), LF);
   cmds.push(...escposBold(false));
   if (data.endereco) {
     cmds.push(...textToBytes(data.endereco.toUpperCase()), LF);

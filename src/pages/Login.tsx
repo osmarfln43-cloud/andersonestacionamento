@@ -92,8 +92,8 @@ export default function Login() {
             <ParkingCircle className="h-10 w-10 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold font-display gradient-text">ME PARK AI</h1>
-            <p className="text-sm text-muted-foreground mt-1">Estacionamento Inteligente</p>
+             <h1 className="text-3xl font-bold font-display gradient-text">Anderson</h1>
+            <p className="text-sm text-muted-foreground mt-1">Estacionamento</p>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export default function Login() {
         </form>
 
         <p className="text-center text-[10px] text-muted-foreground/50">
-          © 2026 ME PARK AI • Estacionamento Inteligente
+          © 2026 Anderson Estacionamento
         </p>
       </div>
     </div>

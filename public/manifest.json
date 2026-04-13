@@ -1,7 +1,7 @@
 {
   "id": "/?source=pwa",
-  "name": "ME PARK - Estacionamento Inteligente",
-  "short_name": "ME PARK",
+  "name": "Anderson Estacionamento",
+  "short_name": "Anderson",
   "description": "Sistema inteligente de gestão de estacionamento",
   "start_url": "/?source=pwa",
   "scope": "/",
