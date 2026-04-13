@@ -51,22 +51,22 @@ export function clearPrinterConfig() {
 }
 
 export async function requestUSBPrinter(): Promise<any | null> {
-  if (!isWebUSBSupported()) return null;
+  if (!isWebUSBSupported()) {
+    console.warn('[Printer] WebUSB não suportado neste navegador');
+    return null;
+  }
+  
+  // Try without filters first so the user can pick ANY USB device
   try {
-    const device = await (navigator as any).usb.requestDevice({
-      filters: THERMAL_PRINTER_FILTERS,
-    });
+    const device = await (navigator as any).usb.requestDevice({ filters: [] });
     connectedDevice = device;
+    console.log('[Printer] Dispositivo selecionado:', device.productName, 
+      `vendor:0x${device.vendorId?.toString(16)} product:0x${device.productId?.toString(16)}`);
     return device;
-  } catch {
-    // Also try without filters to let user pick any device
-    try {
-      const device = await (navigator as any).usb.requestDevice({ filters: [] });
-      connectedDevice = device;
-      return device;
-    } catch {
-      return null;
-    }
+  } catch (err: any) {
+    // User cancelled or no devices available
+    console.warn('[Printer] Seleção cancelada ou sem dispositivos:', err?.message || err);
+    return null;
   }
 }
 
