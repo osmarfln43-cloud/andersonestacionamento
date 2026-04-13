@@ -165,9 +165,8 @@ export function useRegistrarSaida() {
       const diffH = diffMs / 3600000;
       const hours = Math.floor(diffH);
       const mins = Math.round((diffH % 1) * 60);
-      let valorTotal = Math.max(Math.ceil(diffH), 1) * Number(mov.valor_hora);
 
-      // Apply daily max cap based on category
+      // Fetch daily max config
       const categoria = (mov as any).categoria || 'carro';
       const { data: configData } = await supabase
         .from('configuracoes')
@@ -179,9 +178,16 @@ export function useRegistrarSaida() {
       const maxDiario = categoria === 'moto' 
         ? Number((configData as any)?.valor_maximo_diario_moto ?? 15)
         : Number(configData?.valor_maximo_diario ?? 35);
-      
-      if (maxDiario > 0 && valorTotal > maxDiario) {
+
+      // 3+ hours = automatic daily rate
+      let valorTotal: number;
+      if (diffH >= 3 && maxDiario > 0) {
         valorTotal = maxDiario;
+      } else {
+        valorTotal = Math.max(Math.ceil(diffH), 1) * Number(mov.valor_hora);
+        if (maxDiario > 0 && valorTotal > maxDiario) {
+          valorTotal = maxDiario;
+        }
       }
 
       const { data, error } = await supabase
