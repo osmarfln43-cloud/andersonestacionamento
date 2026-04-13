@@ -288,7 +288,7 @@ export default function Entrada() {
         <div className="glass-card p-4 md:p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2 sm:col-span-1 space-y-1.5">
-              <Label className="stat-label text-[11px]">Placa *</Label>
+              <Label className="stat-label text-sm">Placa *</Label>
               <Input
                 placeholder="ABC1D23"
                 value={placa}
@@ -302,20 +302,20 @@ export default function Entrada() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="stat-label text-[11px]">Data</Label>
-              <Input value={dataAtual} readOnly className="h-12 text-sm font-mono bg-secondary/50 text-muted-foreground" />
+              <Label className="stat-label text-sm">Data</Label>
+              <Input value={dataAtual} readOnly className="h-12 text-base font-mono bg-secondary/50 text-muted-foreground" />
             </div>
             <div className="space-y-1.5">
-              <Label className="stat-label text-[11px]">Hora</Label>
-              <Input value={horaAtual} readOnly className="h-12 text-sm font-mono bg-secondary/50 text-muted-foreground" />
+              <Label className="stat-label text-sm">Hora</Label>
+              <Input value={horaAtual} readOnly className="h-12 text-base font-mono bg-secondary/50 text-muted-foreground" />
             </div>
             <div className="col-span-2 sm:col-span-1 space-y-1.5">
-              <Label className="stat-label text-[11px]">Tipo</Label>
+              <Label className="stat-label text-sm">Tipo</Label>
               <div className="grid grid-cols-2 gap-1.5 h-12">
                 {(['avulso', 'mensalista'] as const).map((t) => (
                   <button
                     key={t} type="button" onClick={() => setTipo(t)}
-                    className={`rounded-lg text-[11px] font-semibold transition-all border ${
+                    className={`rounded-lg text-sm font-semibold transition-all border ${
                       tipo === t ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary text-muted-foreground'
                     }`}
                   >
@@ -348,14 +348,14 @@ export default function Entrada() {
         {/* Row 2: Vehicle details */}
         <div className="glass-card p-4 md:p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dados do Veículo</p>
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Dados do Veículo</p>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => placa.length >= 7 ? identifyByPlaca() : setShowAiSection(!showAiSection)}
               disabled={aiLoading}
-              className="gap-1.5 text-[11px] text-primary h-7 px-2"
+              className="gap-1.5 text-sm text-primary h-7 px-2"
             >
               <Search className="h-3 w-3" />
               {aiLoading ? 'Buscando...' : placa.length >= 7 ? 'Buscar IA' : 'Identificar por foto'}
@@ -363,15 +363,15 @@ export default function Entrada() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label className="stat-label text-[11px]">Marca (opcional)</Label>
+              <Label className="stat-label text-sm">Marca (opcional)</Label>
               <Input placeholder="Ex: Honda" value={marca} onChange={(e) => setMarca(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <Label className="stat-label text-[11px]">Modelo (opcional)</Label>
+              <Label className="stat-label text-sm">Modelo (opcional)</Label>
               <Input placeholder="Ex: Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <Label className="stat-label text-[11px]">Cor (opcional)</Label>
+              <Label className="stat-label text-sm">Cor (opcional)</Label>
               <Input placeholder="Ex: Preto" value={cor} onChange={(e) => setCor(e.target.value)} className="h-11" />
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function Entrada() {
 
         {/* Row 3: Observation */}
         <div className="glass-card p-4 md:p-5">
-          <Label className="stat-label text-[11px] mb-1.5 block">Observação (opcional)</Label>
+          <Label className="stat-label text-sm mb-1.5 block">Observação (opcional)</Label>
           <Textarea placeholder="Observações sobre o veículo..." value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} className="resize-none" />
         </div>
 
@@ -389,7 +389,7 @@ export default function Entrada() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-accent" />
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reconhecimento por Foto (Opcional)</p>
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Reconhecimento por Foto (Opcional)</p>
               </div>
               <button type="button" onClick={() => { setShowAiSection(false); setImagePreview(null); }} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
