@@ -285,7 +285,7 @@ export default function Entrada() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Row 1: Placa + Data + Hora + Tipo */}
-        <div className="glass-card p-4 md:p-5">
+        <div className="glass-card p-4 md:p-5 bg-blue-50/40 dark:bg-blue-950/20">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2 sm:col-span-1 space-y-1.5">
               <Label className="stat-label text-[11px]">Placa *</Label>
