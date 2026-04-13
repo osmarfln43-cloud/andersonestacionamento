@@ -113,7 +113,7 @@ export function useRegistrarEntrada() {
       const categoriaVeiculo = mov.categoria || 'carro';
       const { data: configData } = await supabase
         .from('configuracoes')
-        .select('valor_hora, valor_hora_moto')
+        .select('valor_hora, valor_hora_moto, valor_maximo_diario, valor_maximo_diario_moto')
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
