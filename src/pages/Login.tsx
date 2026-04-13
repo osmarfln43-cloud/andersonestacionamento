@@ -1,6 +1,6 @@
 import { ParkingCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import meparkLogo from "@/assets/mepark-logo.png";
+import logoImg from "@/assets/logo.png";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -82,14 +82,14 @@ export default function Login() {
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={meparkLogo} alt="" className="w-[900px] max-w-[95vw] opacity-25 select-none scale-110" draggable={false} style={{ filter: 'brightness(1.2) contrast(1.1)' }} />
+          <img src={logoImg} alt="" className="w-[900px] max-w-[95vw] opacity-25 select-none scale-110" draggable={false} style={{ filter: 'brightness(1.2) contrast(1.1)' }} />
         </div>
       </div>
 
       <div className="w-full max-w-[420px] space-y-8 relative z-10 animate-in" style={{ opacity: 0 }}>
         <div className="text-center space-y-4">
-          <div className="h-20 w-20 rounded-3xl bg-primary glow-primary flex items-center justify-center mx-auto">
-            <ParkingCircle className="h-10 w-10 text-primary-foreground" />
+          <div className="h-20 w-20 rounded-3xl overflow-hidden flex items-center justify-center mx-auto">
+            <img src={logoImg} alt="Anderson Estacionamento" className="h-20 w-20 object-cover" />
           </div>
           <div>
              <h1 className="text-3xl font-bold font-display gradient-text">Anderson</h1>
