@@ -319,11 +319,11 @@ export default function Entrada() {
             </div>
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Data</Label>
-              <Input value={dataAtual} readOnly className="h-12 text-base font-mono bg-secondary/50 text-muted-foreground" />
+              <Input value={dataAtual} readOnly className="h-12 text-base font-mono font-bold bg-secondary/50 text-foreground" />
             </div>
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Hora</Label>
-              <Input value={horaAtual} readOnly className="h-12 text-base font-mono bg-secondary/50 text-muted-foreground" />
+              <Input value={horaAtual} readOnly className="h-12 text-base font-mono font-bold bg-secondary/50 text-foreground" />
             </div>
             <div className="col-span-2 sm:col-span-1 space-y-1.5">
               <Label className="stat-label text-sm">Tipo</Label>
