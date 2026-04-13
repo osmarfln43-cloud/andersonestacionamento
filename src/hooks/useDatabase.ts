@@ -58,7 +58,7 @@ export function useMovimentacoesHoje() {
 export function useRegistrarEntrada() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (mov: { placa: string; marca?: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string; foto_url?: string }) => {
+    mutationFn: async (mov: { placa: string; marca?: string; modelo: string; cor: string; tipo_cliente: string; observacao?: string; foto_url?: string; categoria?: string }) => {
       const placaUpper = mov.placa.toUpperCase();
       const marcaInformada = mov.marca?.trim() || '';
       const modeloInformado = mov.modelo?.trim() || 'N/I';
@@ -109,6 +109,19 @@ export function useRegistrarEntrada() {
         .join(' ')
         .trim() || 'N/I';
 
+      // Fetch config to get correct valor_hora based on category
+      const categoriaVeiculo = mov.categoria || 'carro';
+      const { data: configData } = await supabase
+        .from('configuracoes')
+        .select('valor_hora, valor_hora_moto')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      const valorHora = categoriaVeiculo === 'moto' 
+        ? Number((configData as any)?.valor_hora_moto ?? 6) 
+        : Number(configData?.valor_hora ?? 12);
+
       const { data, error } = await supabase
         .from('movimentacoes')
         .insert({
@@ -118,9 +131,10 @@ export function useRegistrarEntrada() {
           cor: corFinal || null,
           tipo_cliente: mov.tipo_cliente,
           observacao: mov.observacao,
-          valor_hora: 12,
+          valor_hora: valorHora,
           foto_url: mov.foto_url || null,
-        })
+          categoria: categoriaVeiculo,
+        } as any)
         .select()
         .single();
       if (error) throw error;

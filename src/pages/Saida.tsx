@@ -115,7 +115,11 @@ export default function Saida() {
             <div className="space-y-1.5">
               <Label className="stat-label text-[11px]">Tipo</Label>
               <div className="h-11 rounded-lg bg-secondary/50 flex items-center px-3">
-                <span className="text-xs font-medium">{(displayData as any).tipo_cliente === 'mensalista' ? '📋 Mensalista' : '🅿️ Avulso'}</span>
+                <span className="text-xs font-medium">
+                  {(displayData as any).categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'}
+                  {' • '}
+                  {(displayData as any).tipo_cliente === 'mensalista' ? '📋 Mensalista' : '🅿️ Avulso'}
+                </span>
               </div>
             </div>
           </div>
@@ -203,7 +207,7 @@ export default function Saida() {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display">Saída / Fechamento</h1>
-            <p className="text-[11px] text-muted-foreground">Registre saídas e veja finalizados</p>
+            <p className="text-[11px] text-muted-foreground">Registre saídas de veículos e motos</p>
           </div>
         </div>
         <div className="glass-card px-4 py-2 text-right">
