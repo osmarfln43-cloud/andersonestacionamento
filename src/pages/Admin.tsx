@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, Printer, FileDown, DollarSign, LogOut, Plus, Pencil, Mail, Copy, CheckCircle } from "lucide-react";
+import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, Printer, FileDown, DollarSign, LogOut, Plus, Pencil, Mail, Copy, CheckCircle, History, Trash2, Edit, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -169,12 +169,15 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="usuarios" className="space-y-6">
-        <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto">
+       <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
           <TabsTrigger value="usuarios" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 py-2.5 px-4">
             <Users className="h-4 w-4" /> Usuários
           </TabsTrigger>
           <TabsTrigger value="permissoes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 py-2.5 px-4">
             <KeyRound className="h-4 w-4" /> Permissões
+          </TabsTrigger>
+          <TabsTrigger value="auditoria" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 py-2.5 px-4">
+            <History className="h-4 w-4" /> Auditoria
           </TabsTrigger>
         </TabsList>
 
