@@ -21,6 +21,41 @@ function useProfiles() {
   });
 }
 
+function useAuditLogs(filtroTabela: string, filtroAcao: string, busca: string) {
+  return useQuery({
+    queryKey: ['audit_logs', filtroTabela, filtroAcao, busca],
+    queryFn: async () => {
+      let query = supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (filtroTabela) query = query.eq('tabela', filtroTabela);
+      if (filtroAcao) query = query.eq('acao', filtroAcao);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+const tabelaLabels: Record<string, string> = {
+  movimentacoes: '🚗 Movimentações',
+  veiculos: '🚙 Veículos',
+  clientes: '👤 Clientes',
+  mensalistas: '📋 Mensalistas',
+  pagamentos: '💰 Pagamentos',
+  configuracoes: '⚙️ Configurações',
+  profiles: '👥 Perfis',
+  unidades: '🏢 Unidades',
+};
+
+const acaoLabels: Record<string, { label: string; color: string; icon: any }> = {
+  INSERT: { label: 'Criado', color: 'bg-accent/10 text-accent', icon: PlusCircle },
+  UPDATE: { label: 'Editado', color: 'bg-primary/10 text-primary', icon: Edit },
+  DELETE: { label: 'Excluído', color: 'bg-destructive/10 text-destructive', icon: Trash2 },
+};
+
 const perfis = [
   { nome: 'Admin', value: 'admin', descricao: 'Acesso total ao sistema', permissoes: ['dashboard', 'entrada', 'saida', 'patio', 'clientes', 'veiculos', 'mensalistas', 'financeiro', 'relatorios', 'comprovantes', 'admin', 'configuracoes', 'usuarios', 'exportar_pdf', 'importar', 'deletar'], color: 'bg-destructive/10 text-destructive' },
   { nome: 'Gerente', value: 'gerente', descricao: 'Gerencia operação', permissoes: ['dashboard', 'entrada', 'saida', 'patio', 'clientes', 'veiculos', 'mensalistas', 'financeiro', 'relatorios', 'comprovantes'], color: 'bg-primary/10 text-primary' },
@@ -292,6 +327,10 @@ export default function Admin() {
               </div>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="auditoria" className="space-y-6">
+          <AuditTab />
         </TabsContent>
       </Tabs>
 
