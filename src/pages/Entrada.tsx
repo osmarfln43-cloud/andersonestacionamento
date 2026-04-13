@@ -73,7 +73,6 @@ export default function Entrada() {
         const placaInfo = data.placa ? ` | Placa: ${data.placa}` : '';
         toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${data.marca} ${data.modelo} - ${data.cor}${placaInfo}` });
       }
-      }
     } catch (err: any) {
       toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
     } finally {
