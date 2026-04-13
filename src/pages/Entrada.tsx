@@ -32,21 +32,12 @@ export default function Entrada() {
 
   const applyVehicleData = (
     data: { marca?: string | null; modelo?: string | null; cor?: string | null },
-    options?: { splitCombinedModel?: boolean }
   ) => {
     const rawMarca = data.marca?.trim() || "";
     const rawModelo = data.modelo?.trim() || "";
-    if (rawMarca) {
-      setMarca(rawMarca);
-      setModelo(rawModelo);
-    } else if (options?.splitCombinedModel && rawModelo.includes(" ")) {
-      const [possibleMarca, ...rest] = rawModelo.split(" ");
-      setMarca(possibleMarca || "");
-      setModelo(rest.join(" ") || rawModelo);
-    } else {
-      setMarca("");
-      setModelo(rawModelo);
-    }
+    // Combine marca + modelo into a single modelo field
+    const combined = [rawMarca, rawModelo].filter(Boolean).join(' ').trim();
+    setModelo(combined || rawModelo);
     setCor(data.cor?.trim() || "");
   };
 
@@ -402,14 +393,10 @@ export default function Entrada() {
               {aiLoading ? 'Buscando...' : placa.length >= 7 ? 'Buscar IA' : 'Identificar por foto'}
             </Button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Marca (opcional)</Label>
-              <Input placeholder="Ex: Honda" value={marca} onChange={(e) => setMarca(e.target.value)} className="h-11" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Modelo (opcional)</Label>
-              <Input placeholder="Ex: Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
+              <Input placeholder="Ex: Honda Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Cor (opcional)</Label>
