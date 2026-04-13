@@ -1,0 +1,1 @@
+ALTER TABLE public.configuracoes ADD COLUMN IF NOT EXISTS valor_maximo_diario_moto numeric DEFAULT 15.00;

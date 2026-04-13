@@ -91,6 +91,7 @@ export type Database = {
           valor_hora: number
           valor_hora_moto: number
           valor_maximo_diario: number | null
+          valor_maximo_diario_moto: number | null
           valor_minimo: number | null
         }
         Insert: {
@@ -116,6 +117,7 @@ export type Database = {
           valor_hora?: number
           valor_hora_moto?: number
           valor_maximo_diario?: number | null
+          valor_maximo_diario_moto?: number | null
           valor_minimo?: number | null
         }
         Update: {
@@ -141,6 +143,7 @@ export type Database = {
           valor_hora?: number
           valor_hora_moto?: number
           valor_maximo_diario?: number | null
+          valor_maximo_diario_moto?: number | null
           valor_minimo?: number | null
         }
         Relationships: [
