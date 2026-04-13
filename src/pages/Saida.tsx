@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,9 +61,15 @@ export default function Saida() {
   };
 
   const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'mepark@estacionamento.com.br'}5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5913ME PARK AI6008SAOPAULO`;
-  const now = new Date();
-  const horaAtual = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dataAtual = now.toLocaleDateString('pt-BR');
+  const [horaAtual, setHoraAtual] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const [dataAtual] = useState(() => new Date().toLocaleDateString('pt-BR'));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHoraAtual(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Detail view
   if (selected) {
