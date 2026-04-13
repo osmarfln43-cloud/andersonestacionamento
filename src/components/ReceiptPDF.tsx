@@ -39,7 +39,8 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   useEffect(() => {
     if (!data) return;
-    const timeout = setTimeout(() => printReceipt(), 600);
+    // Print immediately with minimal delay for DOM render
+    const timeout = setTimeout(() => printReceipt(), 300);
     return () => clearTimeout(timeout);
   }, [data]);
 
@@ -78,45 +79,32 @@ export default function ReceiptPDF({ data, onDone }: Props) {
       // Fall through to browser print if USB fails
     }
 
+    // Always use hidden iframe for seamless auto-print (no popups)
     const printContent = printRef.current.innerHTML;
-
-    const printWindow = window.open('', '_blank', 'width=320,height=600');
-    if (!printWindow) {
-      // Fallback: use iframe
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.left = '-9999px';
-      iframe.style.top = '-9999px';
-      iframe.style.width = '80mm';
-      document.body.appendChild(iframe);
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(buildPrintHTML(printContent));
-        doc.close();
-        iframe.contentWindow?.focus();
-        setTimeout(() => {
-          iframe.contentWindow?.print();
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            onDone();
-          }, 1000);
-        }, 400);
-      }
-      return;
-    }
-
-    printWindow.document.open();
-    printWindow.document.write(buildPrintHTML(printContent));
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '-9999px';
+    iframe.style.width = '80mm';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(buildPrintHTML(printContent));
+      doc.close();
+      iframe.contentWindow?.focus();
       setTimeout(() => {
-        printWindow.close();
-        onDone();
-      }, 1000);
-    }, 400);
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          onDone();
+        }, 800);
+      }, 300);
+    } else {
+      onDone();
+    }
   };
 
   const buildPrintHTML = (content: string) => `
