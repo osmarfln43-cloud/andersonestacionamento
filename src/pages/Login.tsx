@@ -48,8 +48,14 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      // Clear any stale session before OAuth
+      await supabase.auth.signOut();
+
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
+        extraParams: {
+          prompt: "select_account",
+        },
       });
 
       if (result.error) {
