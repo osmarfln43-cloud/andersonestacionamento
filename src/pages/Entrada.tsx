@@ -276,9 +276,15 @@ export default function Entrada() {
     doSubmit();
   };
 
-  const now = new Date();
-  const horaAtual = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dataAtual = now.toLocaleDateString('pt-BR');
+  const [horaAtual, setHoraAtual] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const [dataAtual] = useState(() => new Date().toLocaleDateString('pt-BR'));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHoraAtual(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
