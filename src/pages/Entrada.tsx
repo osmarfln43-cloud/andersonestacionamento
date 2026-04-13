@@ -336,7 +336,7 @@ export default function Entrada() {
                 <button
                   key={c} type="button" onClick={() => setCategoria(c)}
                   className={`rounded-lg text-sm font-semibold transition-all border flex items-center justify-center gap-2 ${
-                    categoria === c ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary text-muted-foreground'
+                    categoria === c ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border bg-secondary text-muted-foreground hover:bg-secondary/80'
                   }`}
                 >
                   {c === 'carro' ? '🚗 Carro' : '🏍️ Moto'}
