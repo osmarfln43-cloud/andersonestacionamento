@@ -13,7 +13,6 @@ export default function Entrada() {
   const [placa, setPlaca] = useState("");
   const [modelo, setModelo] = useState("");
   const [cor, setCor] = useState("");
-  const [cor, setCor] = useState("");
   const [observacao, setObservacao] = useState("");
   const [tipo, setTipo] = useState<'avulso' | 'mensalista'>('avulso');
   const [categoria, setCategoria] = useState<'carro' | 'moto'>('carro');
@@ -233,12 +232,12 @@ export default function Entrada() {
 
     const doSubmit = async () => {
       const placaUpper = placa.toUpperCase();
+      const fotoUrl = await uploadVehiclePhoto(placaUpper);
       const modeloCompleto = modelo.trim() || 'N/I';
 
       registrarEntrada.mutate(
         {
           placa: placaUpper,
-          marca: marca.trim() || undefined,
           modelo: modelo.trim() || 'N/I',
           cor,
           tipo_cliente: tipo,
@@ -264,7 +263,7 @@ export default function Entrada() {
               cnpj: config?.cnpj || undefined,
             });
             lastSearchedPlateRef.current = "";
-            setPlaca(""); setModelo(""); setMarca(""); setCor("");
+            setPlaca(""); setModelo(""); setCor("");
             setObservacao(""); setTipo('avulso'); setCategoria('carro'); setImagePreview(null);
             setAiResult(null); setCapturedFile(null); setShowAiSection(false);
           },
