@@ -69,6 +69,7 @@ export default function Comprovantes() {
     diasFuncionamento: (config as any)?.dias_funcionamento || 'Segunda a Sexta',
     disclaimerComprovante: (config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
     qrCodeUrl: (config as any)?.qr_code_url || undefined,
+    cnpj: config?.cnpj || undefined,
   });
 
   const pixCode = config?.chave_pix

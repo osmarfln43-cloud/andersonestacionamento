@@ -26,6 +26,7 @@ export interface ReceiptData {
   diasFuncionamento?: string;
   disclaimerComprovante?: string;
   qrCodeUrl?: string;
+  cnpj?: string;
 }
 
 interface Props {
@@ -270,6 +271,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           {/* Footer */}
           <div className="footer">{data.mensagemComprovante || "ME PARK AGRADECE A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
+          {data.cnpj && <div className="footer-addr">CNPJ: {data.cnpj}</div>}
         </div>
       </div>
     </div>

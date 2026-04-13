@@ -244,6 +244,7 @@ export default function Entrada() {
               diasFuncionamento: (config as any)?.dias_funcionamento,
               disclaimerComprovante: (config as any)?.disclaimer_comprovante,
               qrCodeUrl: (config as any)?.qr_code_url || undefined,
+              cnpj: config?.cnpj || undefined,
             });
             lastSearchedPlateRef.current = "";
             setPlaca(""); setModelo(""); setMarca(""); setCor("");
