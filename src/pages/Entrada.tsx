@@ -189,17 +189,31 @@ export default function Entrada() {
     }
   }, [placa]);
 
+  const compressImage = (file: File, maxWidth = 800, quality = 0.6): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = url;
+    });
+  };
+
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setCapturedFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      identifyByPhoto(base64);
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImage(file);
+    setImagePreview(compressed);
+    identifyByPhoto(compressed);
   };
 
   const uploadVehiclePhoto = async (placaStr: string): Promise<string | null> => {
