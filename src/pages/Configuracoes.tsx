@@ -381,6 +381,7 @@ export default function Configuracoes() {
       endereco: form.endereco || null,
       telefone: form.telefone || null,
       valor_hora: Number(form.valor_hora ?? 10),
+      valor_hora_moto: Number(form.valor_hora_moto ?? 6),
       tolerancia_minutos: Number(form.tolerancia_minutos ?? 15),
       valor_minimo: form.valor_minimo === '' || form.valor_minimo == null ? null : Number(form.valor_minimo),
       valor_maximo_diario: form.valor_maximo_diario === '' || form.valor_maximo_diario == null ? null : Number(form.valor_maximo_diario),
@@ -498,7 +499,8 @@ export default function Configuracoes() {
             <TabsContent value="cobranca" className="space-y-6">
               <Section title="Regras de Cobrança">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Field label="Valor por Hora (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Valor/Hora Carro (R$)"><Input type="number" value={form.valor_hora ?? ''} onChange={e => setField('valor_hora', Number(e.target.value))} className="h-12 font-mono" /></Field>
+                  <Field label="Valor/Hora Moto (R$)"><Input type="number" value={form.valor_hora_moto ?? ''} onChange={e => setField('valor_hora_moto', Number(e.target.value))} className="h-12 font-mono" /></Field>
                   <Field label="Tolerância (minutos)"><Input type="number" value={form.tolerancia_minutos ?? ''} onChange={e => setField('tolerancia_minutos', Number(e.target.value))} className="h-12 font-mono" /></Field>
                   <Field label="Valor Mínimo (R$)"><Input type="number" value={form.valor_minimo ?? ''} onChange={e => setField('valor_minimo', Number(e.target.value))} className="h-12 font-mono" /></Field>
                   <Field label="Valor Máximo Diário (R$)"><Input type="number" value={form.valor_maximo_diario ?? ''} onChange={e => setField('valor_maximo_diario', Number(e.target.value))} className="h-12 font-mono" /></Field>

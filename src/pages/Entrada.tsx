@@ -16,6 +16,7 @@ export default function Entrada() {
   const [cor, setCor] = useState("");
   const [observacao, setObservacao] = useState("");
   const [tipo, setTipo] = useState<'avulso' | 'mensalista'>('avulso');
+  const [categoria, setCategoria] = useState<'carro' | 'moto'>('carro');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
@@ -228,6 +229,7 @@ export default function Entrada() {
           tipo_cliente: tipo,
           observacao,
           foto_url: fotoUrl || undefined,
+          categoria,
         },
         {
           onSuccess: (result) => {
@@ -248,7 +250,7 @@ export default function Entrada() {
             });
             lastSearchedPlateRef.current = "";
             setPlaca(""); setModelo(""); setMarca(""); setCor("");
-            setObservacao(""); setTipo('avulso'); setImagePreview(null);
+            setObservacao(""); setTipo('avulso'); setCategoria('carro'); setImagePreview(null);
             setAiResult(null); setCapturedFile(null); setShowAiSection(false);
           },
           onError: (err: any) => {
@@ -273,7 +275,7 @@ export default function Entrada() {
             <LogIn className="h-5 w-5 text-accent" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display">Entrada de Veículo</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display">Entrada de Veículo / Moto</h1>
             <p className="text-[11px] text-muted-foreground">Registro manual de entrada</p>
           </div>
         </div>
@@ -324,6 +326,24 @@ export default function Entrada() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Categoria: Carro ou Moto */}
+          <div className="mt-3 space-y-1.5">
+            <Label className="stat-label text-sm">Categoria</Label>
+            <div className="grid grid-cols-2 gap-2 h-12">
+              {(['carro', 'moto'] as const).map((c) => (
+                <button
+                  key={c} type="button" onClick={() => setCategoria(c)}
+                  className={`rounded-lg text-sm font-semibold transition-all border flex items-center justify-center gap-2 ${
+                    categoria === c ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary text-muted-foreground'
+                  }`}
+                >
+                  {c === 'carro' ? '🚗 Carro' : '🏍️ Moto'}
+                </button>
+              ))}
+            </div>
+          </div>
           </div>
 
           {/* AI status badge */}
