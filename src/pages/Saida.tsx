@@ -260,6 +260,7 @@ export default function Saida() {
                     </div>
                     <span className="text-base font-display font-bold text-accent">R$ {calc.total}</span>
                   </div>
+                  <p className="text-[10px] text-muted-foreground/70 text-center mt-2 italic">clique aqui para registrar a saída</p>
                 </button>
               );
             })}
