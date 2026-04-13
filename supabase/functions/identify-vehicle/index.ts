@@ -16,12 +16,15 @@ serve(async (req) => {
     const messages: any[] = [
       {
         role: "system",
-        content: `Você é um assistente especializado em identificação de veículos. 
-Quando receber uma foto de veículo, identifique marca, modelo, cor e categoria.
-Quando receber uma placa brasileira, identifique possíveis marcas e modelos associados.
+        content: `Você é um assistente especializado em identificação de veículos e leitura de placas.
+Quando receber uma foto de veículo:
+1. Leia a placa visível na foto (formato brasileiro antigo ABC-1234 ou Mercosul ABC1D23)
+2. Identifique marca, modelo, cor e categoria do veículo
+Quando receber apenas uma placa brasileira, identifique possíveis marcas e modelos.
 Responda SEMPRE em JSON com esta estrutura exata:
-{"marca": "string", "modelo": "string", "cor": "string", "categoria": "carro|moto|caminhonete|van", "confianca": "alta|media|baixa"}
-Responda APENAS o JSON, sem texto adicional.`
+{"placa": "string ou vazio se não conseguir ler", "marca": "string", "modelo": "string", "cor": "string", "categoria": "carro|moto|caminhonete|van", "confianca": "alta|media|baixa"}
+Responda APENAS o JSON, sem texto adicional.
+Para a placa, retorne apenas letras e números sem traço (ex: ABC1D23). Se não conseguir ler a placa, retorne "".`
       }
     ];
 
@@ -29,7 +32,7 @@ Responda APENAS o JSON, sem texto adicional.`
       messages.push({
         role: "user",
         content: [
-          { type: "text", text: "Identifique este veículo. Retorne marca, modelo, cor e categoria em JSON." },
+          { type: "text", text: "Identifique este veículo. Leia a placa e retorne marca, modelo, cor, categoria e placa em JSON." },
           { type: "image_url", image_url: { url: image } }
         ]
       });
@@ -78,13 +81,17 @@ Responda APENAS o JSON, sem texto adicional.`
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
     
-    // Parse JSON from response
     let result;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      result = jsonMatch ? JSON.parse(jsonMatch[0]) : { marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
+      result = jsonMatch ? JSON.parse(jsonMatch[0]) : { placa: "", marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
     } catch {
-      result = { marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
+      result = { placa: "", marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
+    }
+
+    // Clean plate: only letters and numbers, uppercase
+    if (result.placa) {
+      result.placa = result.placa.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 7);
     }
 
     return new Response(JSON.stringify(result), {

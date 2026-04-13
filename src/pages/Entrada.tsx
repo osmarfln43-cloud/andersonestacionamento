@@ -60,12 +60,18 @@ export default function Entrada() {
       if (error) throw error;
       if (data) {
         setAiResult(data);
+        // Auto-fill plate from OCR
+        if (data.placa && data.placa.length >= 6) {
+          setPlaca(data.placa.toUpperCase());
+          lastSearchedPlateRef.current = data.placa.toUpperCase();
+        }
         if (data.marca) setMarca(data.marca);
         if (data.modelo) setModelo(data.modelo.includes(data.marca) ? data.modelo.replace(data.marca, '').trim() : data.modelo);
         if (data.cor) setCor(data.cor);
         if (data.categoria === 'moto') setCategoria('moto');
         else setCategoria('carro');
-        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${data.marca} ${data.modelo} - ${data.cor}` });
+        const placaInfo = data.placa ? ` | Placa: ${data.placa}` : '';
+        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${data.marca} ${data.modelo} - ${data.cor}${placaInfo}` });
       }
     } catch (err: any) {
       toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
