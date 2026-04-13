@@ -1,7 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, Search, ChevronDown } from "lucide-react";
+import { Bell, Search, ChevronDown, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
@@ -27,6 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile } = useAuth();
 
   const role = profile?.perfil || 'operador';
+  const { theme, toggleTheme } = useTheme();
   const roleLabel = roleLabels[role] || role;
   const roleColor = roleColors[role] || 'text-foreground font-medium';
   const userName = profile?.nome || roleLabel;
@@ -56,6 +58,13 @@ export function AppLayout({ children }: AppLayoutProps) {
               </span>
 
               <div className="flex items-center gap-1 ml-3">
+                <button
+                  onClick={toggleTheme}
+                  className="relative p-2.5 rounded-xl hover:bg-secondary transition-colors"
+                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+                </button>
                 <button className="relative p-2.5 rounded-xl hover:bg-secondary transition-colors">
                   <Search className="h-4 w-4 text-muted-foreground" />
                 </button>
