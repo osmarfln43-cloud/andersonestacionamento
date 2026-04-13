@@ -58,13 +58,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               </span>
 
               <div className="flex items-center gap-1 ml-3">
-                <button
-                  onClick={toggleTheme}
-                  className="relative p-2.5 rounded-xl hover:bg-secondary transition-colors"
-                  title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-                >
-                  {theme === 'dark' ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-                </button>
                 <button className="relative p-2.5 rounded-xl hover:bg-secondary transition-colors">
                   <Search className="h-4 w-4 text-muted-foreground" />
                 </button>
