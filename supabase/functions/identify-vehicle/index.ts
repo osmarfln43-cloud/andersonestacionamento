@@ -55,8 +55,9 @@ Para a placa, retorne apenas letras e números sem traço (ex: ABC1D23). Se não
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: image ? "google/gemini-2.5-flash-lite" : "google/gemini-2.5-flash-lite",
         messages,
+        max_tokens: 200,
       }),
     });
 
