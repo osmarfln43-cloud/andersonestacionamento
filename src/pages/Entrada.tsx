@@ -285,7 +285,7 @@ export default function Entrada() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Row 1: Placa + Data + Hora + Tipo */}
-        <div className="glass-card p-4 md:p-5 bg-blue-50/40 dark:bg-blue-950/20">
+        <div className="glass-card p-4 md:p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2 sm:col-span-1 space-y-1.5">
               <Label className="stat-label text-[11px]">Placa *</Label>
@@ -346,7 +346,7 @@ export default function Entrada() {
         </div>
 
         {/* Row 2: Vehicle details */}
-        <div className="glass-card p-4 md:p-5 bg-blue-50/40 dark:bg-blue-950/20">
+        <div className="glass-card p-4 md:p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dados do Veículo</p>
             <Button
@@ -378,7 +378,7 @@ export default function Entrada() {
         </div>
 
         {/* Row 3: Observation */}
-        <div className="glass-card p-4 md:p-5 bg-blue-50/40 dark:bg-blue-950/20">
+        <div className="glass-card p-4 md:p-5">
           <Label className="stat-label text-[11px] mb-1.5 block">Observação (opcional)</Label>
           <Textarea placeholder="Observações sobre o veículo..." value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} className="resize-none" />
         </div>
