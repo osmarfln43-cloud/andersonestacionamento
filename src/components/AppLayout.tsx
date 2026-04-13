@@ -27,7 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile } = useAuth();
 
   const role = profile?.perfil || 'operador';
-  const { theme, toggleTheme } = useTheme();
+  
   const roleLabel = roleLabels[role] || role;
   const roleColor = roleColors[role] || 'text-foreground font-medium';
   const userName = profile?.nome || roleLabel;
