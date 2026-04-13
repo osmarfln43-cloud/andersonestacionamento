@@ -106,6 +106,7 @@ function ReceiptPreview({ form }: { form: any }) {
         <div className="text-center space-y-0.5 pt-1">
           <p className="font-bold text-[9px]">{mensagem}</p>
           {endereco && <p className="text-[8px]">{endereco}</p>}
+          {form.cnpj && <p className="text-[8px]">CNPJ: {form.cnpj}</p>}
         </div>
       </div>
     </div>
