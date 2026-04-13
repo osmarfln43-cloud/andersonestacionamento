@@ -12,7 +12,6 @@ import ReceiptPDF from "@/components/ReceiptPDF";
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
   const [modelo, setModelo] = useState("");
-  const [marca, setMarca] = useState("");
   const [cor, setCor] = useState("");
   const [observacao, setObservacao] = useState("");
   const [tipo, setTipo] = useState<'avulso' | 'mensalista'>('avulso');
@@ -32,21 +31,12 @@ export default function Entrada() {
 
   const applyVehicleData = (
     data: { marca?: string | null; modelo?: string | null; cor?: string | null },
-    options?: { splitCombinedModel?: boolean }
   ) => {
     const rawMarca = data.marca?.trim() || "";
     const rawModelo = data.modelo?.trim() || "";
-    if (rawMarca) {
-      setMarca(rawMarca);
-      setModelo(rawModelo);
-    } else if (options?.splitCombinedModel && rawModelo.includes(" ")) {
-      const [possibleMarca, ...rest] = rawModelo.split(" ");
-      setMarca(possibleMarca || "");
-      setModelo(rest.join(" ") || rawModelo);
-    } else {
-      setMarca("");
-      setModelo(rawModelo);
-    }
+    // Combine marca + modelo into a single modelo field
+    const combined = [rawMarca, rawModelo].filter(Boolean).join(' ').trim();
+    setModelo(combined || rawModelo);
     setCor(data.cor?.trim() || "");
   };
 
@@ -65,13 +55,15 @@ export default function Entrada() {
           setPlaca(data.placa.toUpperCase());
           lastSearchedPlateRef.current = data.placa.toUpperCase();
         }
-        if (data.marca) setMarca(data.marca);
-        if (data.modelo) setModelo(data.modelo.includes(data.marca) ? data.modelo.replace(data.marca, '').trim() : data.modelo);
+        if (data.marca || data.modelo) {
+          const combinedModelo = [data.marca, data.modelo].filter(Boolean).join(' ').trim();
+          setModelo(combinedModelo);
+        }
         if (data.cor) setCor(data.cor);
         if (data.categoria === 'moto') setCategoria('moto');
         else setCategoria('carro');
         const placaInfo = data.placa ? ` | Placa: ${data.placa}` : '';
-        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${data.marca} ${data.modelo} - ${data.cor}${placaInfo}` });
+        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')} - ${data.cor}${placaInfo}` });
       }
     } catch (err: any) {
       toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
@@ -104,7 +96,7 @@ export default function Entrada() {
       const proximaVisita = (visitasResult.count ?? 0) + 1;
 
       if (ativo) {
-        applyVehicleData({ modelo: ativo.modelo, cor: ativo.cor }, { splitCombinedModel: true });
+        applyVehicleData({ modelo: ativo.modelo, cor: ativo.cor });
         setAiResult({ marca: '', modelo: ativo.modelo, cor: ativo.cor, confianca: 'alta', source: 'patio', visitCount: visitasResult.count ?? 1 });
         toast({ title: "⚠️ Veículo já está no pátio!", description: `${placaUpper} entrou em ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
         return;
@@ -128,7 +120,7 @@ export default function Entrada() {
       }
 
       if (historico) {
-        applyVehicleData({ modelo: historico.modelo, cor: historico.cor }, { splitCombinedModel: true });
+        applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
         setTipo(historico.tipo_cliente === 'mensalista' ? 'mensalista' : 'avulso');
         setAiResult({ marca: '', modelo: historico.modelo, cor: historico.cor, confianca: 'alta', source: 'retorno', visitCount: proximaVisita });
         toast({ title: "🔄 Cliente retornou!", description: `${proximaVisita}ª vez — ${historico.modelo}` });
@@ -140,8 +132,9 @@ export default function Entrada() {
       if (error) throw error;
       if (data) {
         setAiResult(data);
-        if (data.marca) setMarca(data.marca);
-        if (data.modelo) setModelo(data.modelo);
+        if (data.marca || data.modelo) {
+          setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
+        }
         if (data.cor) setCor(data.cor);
         setTipo('avulso');
         toast({ title: "🤖 IA sugeriu modelo", description: `${data.marca} ${data.modelo} (confiança: ${data.confianca})` });
@@ -176,7 +169,7 @@ export default function Entrada() {
             .eq('placa', placaUpper).eq('status_movimentacao', 'finalizado')
             .order('saida', { ascending: false }).limit(1).maybeSingle();
           if (historico) {
-            applyVehicleData({ modelo: historico.modelo, cor: historico.cor }, { splitCombinedModel: true });
+            applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
             toast({ title: "🔄 Dados anteriores encontrados" });
           }
         }
@@ -240,12 +233,11 @@ export default function Entrada() {
     const doSubmit = async () => {
       const placaUpper = placa.toUpperCase();
       const fotoUrl = await uploadVehiclePhoto(placaUpper);
-      const modeloCompleto = [marca.trim(), modelo.trim()].filter(Boolean).join(' ').trim() || 'N/I';
+      const modeloCompleto = modelo.trim() || 'N/I';
 
       registrarEntrada.mutate(
         {
           placa: placaUpper,
-          marca: marca.trim() || undefined,
           modelo: modelo.trim() || 'N/I',
           cor,
           tipo_cliente: tipo,
@@ -271,7 +263,7 @@ export default function Entrada() {
               cnpj: config?.cnpj || undefined,
             });
             lastSearchedPlateRef.current = "";
-            setPlaca(""); setModelo(""); setMarca(""); setCor("");
+            setPlaca(""); setModelo(""); setCor("");
             setObservacao(""); setTipo('avulso'); setCategoria('carro'); setImagePreview(null);
             setAiResult(null); setCapturedFile(null); setShowAiSection(false);
           },
@@ -402,14 +394,10 @@ export default function Entrada() {
               {aiLoading ? 'Buscando...' : placa.length >= 7 ? 'Buscar IA' : 'Identificar por foto'}
             </Button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Marca (opcional)</Label>
-              <Input placeholder="Ex: Honda" value={marca} onChange={(e) => setMarca(e.target.value)} className="h-11" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Modelo (opcional)</Label>
-              <Input placeholder="Ex: Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
+              <Input placeholder="Ex: Honda Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
               <Label className="stat-label text-sm">Cor (opcional)</Label>
