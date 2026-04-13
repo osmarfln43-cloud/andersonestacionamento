@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import splashLogo from "@/assets/mepark-splash.png";
+import splashLogo from "@/assets/logo.png";
 
 function playEngineSound() {
   try {
