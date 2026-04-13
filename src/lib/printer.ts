@@ -113,6 +113,12 @@ function escposFeed(lines: number): number[] {
   return [ESC, 0x64, lines];
 }
 
+// Set print density (0-15, higher = darker)
+function escposDensity(level: number): number[] {
+  // GS ( K - Set print density
+  return [GS, 0x7C, Math.min(15, Math.max(0, level))];
+}
+
 function textToBytes(text: string): number[] {
   const encoder = new TextEncoder();
   return Array.from(encoder.encode(text));
@@ -145,6 +151,7 @@ export function buildReceiptESCPOS(data: {
   const cols = paperWidth === '58mm' ? 32 : 48;
   const cmds: number[] = [];
 
+  cmds.push(...escposDensity(12)); // High density for darker print
   cmds.push(...escposInit());
 
   // Header
