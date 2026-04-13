@@ -1,8 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, Search, ChevronDown, Sun, Moon } from "lucide-react";
+import { Bell, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
