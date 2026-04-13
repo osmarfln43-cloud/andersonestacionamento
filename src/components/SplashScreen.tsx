@@ -1,17 +1,128 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import splashLogo from "@/assets/mepark-splash.png";
 
+function playEngineSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 2.8;
+    const now = ctx.currentTime;
+
+    // Low rumble oscillator
+    const osc1 = ctx.createOscillator();
+    osc1.type = "sawtooth";
+    osc1.frequency.setValueAtTime(45, now);
+    osc1.frequency.exponentialRampToValueAtTime(120, now + 1.2);
+    osc1.frequency.exponentialRampToValueAtTime(200, now + 2.0);
+    osc1.frequency.exponentialRampToValueAtTime(90, now + duration);
+
+    const gain1 = ctx.createGainNode();
+    gain1.gain.setValueAtTime(0, now);
+    gain1.gain.linearRampToValueAtTime(0.12, now + 0.3);
+    gain1.gain.linearRampToValueAtTime(0.18, now + 1.5);
+    gain1.gain.linearRampToValueAtTime(0, now + duration);
+
+    // Mid-range "vroom" oscillator
+    const osc2 = ctx.createOscillator();
+    osc2.type = "square";
+    osc2.frequency.setValueAtTime(80, now);
+    osc2.frequency.exponentialRampToValueAtTime(250, now + 1.5);
+    osc2.frequency.exponentialRampToValueAtTime(400, now + 2.2);
+    osc2.frequency.exponentialRampToValueAtTime(150, now + duration);
+
+    const gain2 = ctx.createGainNode();
+    gain2.gain.setValueAtTime(0, now);
+    gain2.gain.linearRampToValueAtTime(0.06, now + 0.5);
+    gain2.gain.linearRampToValueAtTime(0.1, now + 1.8);
+    gain2.gain.linearRampToValueAtTime(0, now + duration);
+
+    // Noise buffer for exhaust texture
+    const bufferSize = ctx.sampleRate * duration;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = "lowpass";
+    noiseFilter.frequency.setValueAtTime(200, now);
+    noiseFilter.frequency.exponentialRampToValueAtTime(800, now + 2.0);
+    noiseFilter.frequency.exponentialRampToValueAtTime(300, now + duration);
+
+    const noiseGain = ctx.createGainNode();
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(0.05, now + 0.4);
+    noiseGain.gain.linearRampToValueAtTime(0.08, now + 1.8);
+    noiseGain.gain.linearRampToValueAtTime(0, now + duration);
+
+    // Distortion for grit
+    const distortion = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2) / 256 - 1;
+      curve[i] = (Math.PI + 4) * x / (Math.PI + 4 * Math.abs(x));
+    }
+    distortion.curve = curve;
+
+    osc1.connect(gain1).connect(distortion).connect(ctx.destination);
+    osc2.connect(gain2).connect(distortion);
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    noise.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+    noise.stop(now + duration);
+
+    setTimeout(() => ctx.close(), (duration + 0.5) * 1000);
+  } catch {
+    // Audio not supported, fail silently
+  }
+}
+
 export function SplashScreen({ onFinish }: { onFinish: () => void }) {
   const [visible, setVisible] = useState(true);
+  const [started, setStarted] = useState(false);
+  const soundPlayed = useRef(false);
 
-  useEffect(() => {
+  const startSplash = useCallback(() => {
+    if (started) return;
+    setStarted(true);
+    if (!soundPlayed.current) {
+      soundPlayed.current = true;
+      playEngineSound();
+    }
     const timer = setTimeout(() => {
       setVisible(false);
       setTimeout(onFinish, 600);
     }, 4000);
     return () => clearTimeout(timer);
-  }, [onFinish]);
+  }, [started, onFinish]);
+
+  // Auto-start after a brief delay (sound will play on interaction)
+  useEffect(() => {
+    // Try to play immediately for standalone PWA (already has gesture context)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      startSplash();
+      return;
+    }
+    // For browser, wait for first interaction
+    const handler = () => startSplash();
+    window.addEventListener("click", handler, { once: true });
+    window.addEventListener("touchstart", handler, { once: true });
+    // Fallback: start after 1s even without interaction (sound may not play)
+    const fallback = setTimeout(() => {
+      if (!soundPlayed.current) startSplash();
+    }, 1000);
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("touchstart", handler);
+      clearTimeout(fallback);
+    };
+  }, [startSplash]);
 
   return (
     <AnimatePresence>
