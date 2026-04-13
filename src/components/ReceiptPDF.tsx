@@ -121,32 +121,35 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
           font-family: 'Courier New', Courier, monospace;
-          font-size: 12px;
+          font-size: 13px;
           width: 80mm;
           padding: 3mm;
-          color: #000;
-          background: #fff;
+          color: #000 !important;
+          background: #fff !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
-        .receipt { width: 100%; }
+        .receipt { width: 100%; color: #000 !important; }
         .center { text-align: center; }
-        .bold { font-weight: bold; }
-        .title { font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 4px; }
-        .plate { font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 6px 0 2px; }
-        .vehicle-info { font-size: 11px; font-weight: bold; text-align: center; margin-bottom: 4px; }
-        .dashed { border-top: 1px dashed #000; margin: 5px 0; }
-        .row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 11px; }
-        .row-label { }
-        .row-value { font-weight: bold; }
-        .total-label { font-size: 14px; font-weight: bold; text-align: center; margin-top: 4px; }
-        .total-value { font-size: 20px; font-weight: bold; text-align: center; margin: 2px 0; }
-        .payment-highlight { font-size: 14px; font-weight: bold; text-align: center; margin: 4px 0; }
-        .disclaimer { font-size: 8px; text-align: center; line-height: 1.3; margin: 2px 0; }
-        .footer { font-size: 9px; text-align: center; font-weight: bold; margin-top: 4px; }
-        .footer-addr { font-size: 8px; text-align: center; margin-top: 2px; }
+        .bold { font-weight: 900; }
+        .title { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 4px; color: #000 !important; }
+        .plate { font-size: 28px; font-weight: 900; text-align: center; letter-spacing: 3px; margin: 6px 0 2px; color: #000 !important; }
+        .vehicle-info { font-size: 12px; font-weight: 900; text-align: center; margin-bottom: 4px; color: #000 !important; }
+        .dashed { border-top: 2px dashed #000; margin: 5px 0; }
+        .row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; color: #000 !important; }
+        .row-label { font-weight: 700; }
+        .row-value { font-weight: 900; }
+        .total-label { font-size: 16px; font-weight: 900; text-align: center; margin-top: 4px; color: #000 !important; }
+        .total-value { font-size: 24px; font-weight: 900; text-align: center; margin: 2px 0; color: #000 !important; }
+        .payment-highlight { font-size: 16px; font-weight: 900; text-align: center; margin: 4px 0; color: #000 !important; }
+        .disclaimer { font-size: 9px; text-align: center; line-height: 1.3; margin: 2px 0; font-weight: 700; color: #000 !important; }
+        .footer { font-size: 10px; text-align: center; font-weight: 900; margin-top: 4px; color: #000 !important; }
+        .footer-addr { font-size: 9px; text-align: center; margin-top: 2px; font-weight: 700; color: #000 !important; }
         .qr-container { text-align: center; margin: 6px 0; }
-        .qr-container img, .qr-container canvas { width: 30mm !important; height: 30mm !important; }
+        .qr-container img, .qr-container canvas { width: 35mm !important; height: 35mm !important; }
         @media print {
-          body { width: 80mm; }
+          body { width: 80mm; color: #000 !important; }
+          * { color: #000 !important; }
         }
       </style>
     </head>
