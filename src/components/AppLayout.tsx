@@ -152,7 +152,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Bottom Navigation - 2 rows like PARKEE */}
       <nav className="hidden md:block shrink-0">
-        {/* Row 1 - Green buttons */}
+        {/* Row 1 */}
         <div className="flex gap-0.5 px-1 pt-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
           {visibleItems.slice(0, 6).map((item) => {
             const isActive = location.pathname === item.url;
@@ -160,20 +160,16 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 key={item.url}
                 onClick={() => navigate(item.url)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 ${
-                  isActive
-                    ? 'border-green-800 text-white'
-                    : 'border-green-700/50 text-white'
-                }`}
-                style={{ backgroundColor: isActive ? 'hsl(120 50% 32%)' : 'hsl(120 50% 38%)', borderRadius: '2px' }}
+                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
+                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
               >
                 <span>{item.title}</span>
-                <span className="text-[9px] opacity-60 mt-0.5">{item.fKey}</span>
+                <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
               </button>
             );
           })}
         </div>
-        {/* Row 2 - Yellow-green buttons */}
+        {/* Row 2 */}
         <div className="flex gap-0.5 px-1 pb-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
           {visibleItems.slice(6, 12).map((item) => {
             const isActive = location.pathname === item.url;
@@ -181,12 +177,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 key={item.url}
                 onClick={() => navigate(item.url)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 ${
-                  isActive
-                    ? 'border-yellow-700 text-black'
-                    : 'border-yellow-600/50 text-black'
-                }`}
-                style={{ backgroundColor: isActive ? 'hsl(65 65% 45%)' : 'hsl(65 70% 52%)', borderRadius: '2px' }}
+                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
+                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
               >
                 <span>{item.title}</span>
                 <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
