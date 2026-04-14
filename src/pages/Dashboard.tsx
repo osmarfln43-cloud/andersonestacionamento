@@ -3,6 +3,7 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { useMovimentacoesAtivas, useMovimentacoesHoje, useMensalistas, useMovimentacoesFinalizadasHoje } from "@/hooks/useDatabase";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const tooltipStyle = {
   background: 'hsl(225, 22%, 9%)',
@@ -42,6 +43,43 @@ export default function Dashboard() {
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
   const { data: mensalistas = [] } = useMensalistas();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
+
+  // Last 6 months of finalized movimentacoes for month comparison
+  const { data: movLast6Months = [] } = useQuery({
+    queryKey: ['movimentacoes', 'last-6-months'],
+    queryFn: async () => {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      sixMonthsAgo.setDate(1);
+      sixMonthsAgo.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('entrada, valor_total, status_movimentacao, categoria, forma_pagamento')
+        .eq('status_movimentacao', 'finalizado')
+        .gte('entrada', sixMonthsAgo.toISOString())
+        .order('entrada', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 60000,
+  });
+
+  const monthlyComparison = useMemo(() => {
+    const months: Record<string, { mes: string; faturamento: number; veiculos: number; carros: number; motos: number; pix: number; dinheiro: number }> = {};
+    movLast6Months.forEach((m: any) => {
+      const d = new Date(m.entrada);
+      const key = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      if (!months[key]) months[key] = { mes: key, faturamento: 0, veiculos: 0, carros: 0, motos: 0, pix: 0, dinheiro: 0 };
+      const val = Number(m.valor_total) || 0;
+      months[key].faturamento += val;
+      months[key].veiculos += 1;
+      if (m.categoria === 'moto') months[key].motos += 1;
+      else months[key].carros += 1;
+      if (m.forma_pagamento === 'pix') months[key].pix += val;
+      else months[key].dinheiro += val;
+    });
+    return Object.values(months);
+  }, [movLast6Months]);
 
   const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
   const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
@@ -216,6 +254,45 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Monthly Comparison */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-6">📊 Comparativo Mês a Mês — Faturamento</h3>
+          {monthlyComparison.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={monthlyComparison} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={60} tickFormatter={(v) => `R$${v}`} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number, name: string) => [`R$ ${v.toFixed(2)}`, name === 'pix' ? 'PIX' : name === 'dinheiro' ? 'Dinheiro' : name]} />
+                <Bar dataKey="pix" name="PIX" stackId="a" fill="hsl(217, 91%, 60%)" maxBarSize={36} />
+                <Bar dataKey="dinheiro" name="Dinheiro" stackId="a" fill="hsl(160, 65%, 48%)" radius={[6, 6, 0, 0]} maxBarSize={36} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-16">Sem dados nos últimos 6 meses</p>
+          )}
+        </div>
+
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-6">🚗 Veículos por Mês — Carros vs Motos</h3>
+          {monthlyComparison.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={monthlyComparison} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="carros" name="Carros" fill="hsl(217, 91%, 60%)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="motos" name="Motos" fill="hsl(45, 93%, 47%)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-16">Sem dados nos últimos 6 meses</p>
+          )}
         </div>
       </div>
     </div>
