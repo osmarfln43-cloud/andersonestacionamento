@@ -4,6 +4,7 @@ export type BillingSummary = {
   total: number;
   billableHours: number;
   pricingMode: 'hourly' | 'daily';
+  regraAplicada: string;
 };
 
 /**
@@ -32,7 +33,7 @@ export function calculateParkingBilling(params: {
 
   // 3h20m+ → diária cheia
   if (totalMinutes >= DAILY_THRESHOLD_MINUTES) {
-    return { hours, mins, total: params.valorDiaria, billableHours: 0, pricingMode: 'daily' };
+    return { hours, mins, total: params.valorDiaria, billableHours: 0, pricingMode: 'daily', regraAplicada: 'Diária' };
   }
 
   // Determinar horas cobráveis
@@ -51,5 +52,6 @@ export function calculateParkingBilling(params: {
     total: billableHours * params.valorHora,
     billableHours,
     pricingMode: 'hourly',
+    regraAplicada: `${billableHours} hora${billableHours > 1 ? 's' : ''}`,
   };
 }

@@ -27,6 +27,7 @@ export interface ReceiptData {
   disclaimerComprovante?: string;
   qrCodeUrl?: string;
   cnpj?: string;
+  regraAplicada?: string;
 }
 
 interface Props {
@@ -229,6 +230,13 @@ export default function ReceiptPDF({ data, onDone }: Props) {
             <span className="row-label">Valor/hora:</span>
             <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2)}</span>
           </div>
+
+          {data.regraAplicada && (
+            <div className="row">
+              <span className="row-label">Regra:</span>
+              <span className="row-value">{data.regraAplicada.toUpperCase()}</span>
+            </div>
+          )}
 
           <div className="dashed"></div>
 
