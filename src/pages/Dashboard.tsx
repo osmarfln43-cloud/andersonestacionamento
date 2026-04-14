@@ -91,7 +91,7 @@ export default function Dashboard() {
   const faturamentoDinheiro = saidasHoje.filter(m => m.forma_pagamento === 'dinheiro').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
 
   // Build hourly data from real movements
-  const hourlyData = useMemo(() => {
+  const { hourlyData, peakThreshold } = useMemo(() => {
     const hours: Record<string, { hora: string; faturamento: number; entradas: number; saidas: number }> = {};
     for (let h = 6; h <= 22; h++) {
       const key = `${h.toString().padStart(2, '0')}h`;
@@ -112,7 +112,10 @@ export default function Dashboard() {
         if (hours[skey]) hours[skey].saidas++;
       }
     });
-    return Object.values(hours);
+    const arr = Object.values(hours);
+    const maxEntradas = Math.max(...arr.map(h => h.entradas), 0);
+    const threshold = Math.max(Math.ceil(maxEntradas * 0.7), 2);
+    return { hourlyData: arr, peakThreshold: threshold };
   }, [movimentacoesHoje]);
 
   // Payment distribution from real data
