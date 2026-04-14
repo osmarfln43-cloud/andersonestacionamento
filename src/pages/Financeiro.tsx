@@ -174,16 +174,103 @@ export default function Financeiro() {
   // Recent transactions
   const recentTransactions = pagamentos.slice(0, 20);
 
+  const exportPDF = useCallback(async () => {
+    if (!reportRef.current) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: '#0d0f14',
+        logging: false,
+        useCORS: true,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const imgW = 210;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: imgH > 297 ? 'portrait' : 'portrait' });
+
+      // Title page
+      doc.setFillColor(13, 15, 20);
+      doc.rect(0, 0, 210, 297, 'F');
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text(config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS', 15, 25);
+      doc.setFontSize(12);
+      doc.setTextColor(160, 160, 170);
+      doc.text('RELATÓRIO FINANCEIRO COMPLETO', 15, 34);
+      const periodoText = periodo === 'custom' ? `${customDe} a ${customAte}` : periodoLabel[periodo];
+      doc.text(`Período: ${periodoText}  |  Emitido: ${new Date().toLocaleString('pt-BR')}`, 15, 42);
+
+      // Summary stats
+      doc.setFontSize(10);
+      doc.setTextColor(200, 200, 210);
+      let sy = 55;
+      const stats = [
+        `Faturamento Total: R$ ${faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        `Ticket Médio: R$ ${ticketMedio.toFixed(2)}`,
+        `PIX: R$ ${pixTotal.toFixed(2)} (${pixCount}x)  |  Dinheiro: R$ ${dinheiroTotal.toFixed(2)} (${dinheiroCount}x)`,
+        `Carros: ${carrosCount} (R$ ${carrosFat.toFixed(2)})  |  Motos: ${motosCount} (R$ ${motosFat.toFixed(2)})`,
+        `Saídas Finalizadas: ${finalizados.length}  |  Mensalistas: R$ ${receitaMensalistas.toLocaleString()}`,
+      ];
+      stats.forEach(s => { doc.text(s, 15, sy); sy += 7; });
+
+      // Charts as image pages
+      let remainH = imgH;
+      let srcY = 0;
+      const pageH = 280;
+      let pageNum = 1;
+      doc.addPage();
+      while (remainH > 0) {
+        if (pageNum > 1) doc.addPage();
+        const sliceH = Math.min(remainH, pageH);
+        const sliceCanvasH = (sliceH / imgH) * canvas.height;
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceCanvasH;
+        const ctx = sliceCanvas.getContext('2d')!;
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvasH, 0, 0, canvas.width, sliceCanvasH);
+        const sliceImg = sliceCanvas.toDataURL('image/png');
+        doc.addImage(sliceImg, 'PNG', 0, 8, imgW, sliceH);
+        srcY += sliceCanvasH;
+        remainH -= sliceH;
+        pageNum++;
+      }
+
+      // Page numbers
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 130);
+        doc.text(`Página ${i} de ${totalPages}`, 195, 290, { align: 'right' });
+      }
+
+      doc.save(`financeiro-${periodo}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast({ title: '✓ Relatório exportado', description: 'PDF financeiro gerado com sucesso' });
+    } catch (err: any) {
+      toast({ title: 'Erro ao exportar', description: err.message, variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  }, [reportRef, faturamento, ticketMedio, pixTotal, dinheiroTotal, pixCount, dinheiroCount, carrosCount, motosCount, carrosFat, motosFat, finalizados, receitaMensalistas, periodo, customDe, customAte, config, toast]);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Wallet className="h-5 w-5 text-accent" />
-          </div>
-          Financeiro
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2">Controle financeiro detalhado com gráficos</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-accent" />
+            </div>
+            Financeiro
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">Controle financeiro detalhado com gráficos</p>
+        </div>
+        <Button onClick={exportPDF} disabled={exporting} className="gap-2 rounded-xl h-12 px-6">
+          <Download className="h-4 w-4" />
+          {exporting ? 'Gerando PDF...' : 'Exportar PDF'}
+        </Button>
       </div>
 
       {/* Period Selector */}
