@@ -162,10 +162,6 @@ export function useRegistrarSaida() {
 
       const saida = new Date();
       const entrada = new Date(mov.entrada);
-      const diffMs = saida.getTime() - entrada.getTime();
-      const diffH = diffMs / 3600000;
-      const hours = Math.floor(diffH);
-      const mins = Math.round((diffH % 1) * 60);
 
       // Fetch daily max config
       const categoria = (mov as any).categoria || 'carro';
@@ -180,37 +176,20 @@ export function useRegistrarSaida() {
         ? Number((configData as any)?.valor_maximo_diario_moto ?? 15)
         : Number(configData?.valor_maximo_diario ?? 35);
 
-      // Billing logic:
-      // - Up to 1h30min = 1 hour charged
-      // - After 1h30min = 2 hours charged
-      // - 3+ hours = full daily rate
-      let valorTotal: number;
-      const valorHora = Number(mov.valor_hora);
-      
-      if (diffH >= 3 && maxDiario > 0) {
-        valorTotal = maxDiario;
-      } else {
-        // Calculate billable hours: only rounds up after 30min past the hour
-        let horasCobradasCalc: number;
-        if (diffH <= 0) {
-          horasCobradasCalc = 1;
-        } else {
-          const fullHours = Math.floor(diffH);
-          const remainingMins = (diffH - fullHours) * 60;
-          // Only counts next hour if exceeded 30min past the current hour
-          horasCobradasCalc = remainingMins > 30 ? fullHours + 1 : Math.max(fullHours, 1);
-        }
-        valorTotal = horasCobradasCalc * valorHora;
-        if (maxDiario > 0 && valorTotal > maxDiario) {
-          valorTotal = maxDiario;
-        }
-      }
+      const billing = calculateParkingBilling({
+        entrada,
+        valorHora: Number(mov.valor_hora),
+        valorDiaria: maxDiario,
+        now: saida,
+      });
+
+      const valorTotal = billing.total;
 
       const { data, error } = await supabase
         .from('movimentacoes')
         .update({
           saida: saida.toISOString(),
-          tempo_total: `${hours}h ${mins}min`,
+          tempo_total: `${billing.hours}h ${billing.mins}min`,
           valor_total: valorTotal,
           forma_pagamento,
           status_pagamento: 'pago',

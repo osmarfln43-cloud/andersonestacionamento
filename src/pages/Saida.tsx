@@ -8,12 +8,13 @@ import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSa
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { calculateParkingBilling } from "@/lib/billing";
 
 type MovData = {
   id: string; placa: string; modelo: string | null; cor: string | null;
   entrada: string; saida: string | null; tempo_total: string | null;
   valor_hora: number; valor_total: number | null; forma_pagamento: string | null;
-  tipo_cliente: string; status_movimentacao: string; foto_url?: string | null;
+  tipo_cliente: string; status_movimentacao: string; foto_url?: string | null; categoria?: string | null;
 };
 
 export default function Saida() {
@@ -39,9 +40,15 @@ export default function Saida() {
   const selected = selectedId ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData : null;
 
   const calcularValor = (mov: any) => {
-    const diffMs = Date.now() - new Date(mov.entrada).getTime();
-    const diffH = diffMs / 3600000;
-    return { hours: Math.floor(diffH), mins: Math.round((diffH % 1) * 60), total: Math.max(Math.ceil(diffH), 1) * Number(mov.valor_hora) };
+    const valorDiaria = mov?.categoria === 'moto'
+      ? Number(config?.valor_maximo_diario_moto ?? 15)
+      : Number(config?.valor_maximo_diario ?? 35);
+
+    return calculateParkingBilling({
+      entrada: mov.entrada,
+      valorHora: Number(mov.valor_hora),
+      valorDiaria,
+    });
   };
 
   const handlePagamento = (tipo: 'pix' | 'dinheiro') => {
@@ -62,7 +69,13 @@ export default function Saida() {
     );
   };
 
-  const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'anderson@estacionamento.com.br'}5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5925ANDERSON ESTACIONAMENTOS6008SAOPAULO`;
+  const valorPix = finalizado && finalizadoData?.valor_total != null
+    ? Number(finalizadoData.valor_total)
+    : selected
+      ? calcularValor(selected).total
+      : 0;
+
+  const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'anderson@estacionamento.com.br'}5204000053039865404${valorPix.toFixed(2)}5802BR5925ANDERSON ESTACIONAMENTOS6008SAOPAULO`;”}}]}qarputAnalysis to=functions.code--line_replace ＿一本道 code=not_json? Wait JSON has a curly quote at end likely parse error. Need fix. Let's see. Actually multi_tool call may fail due invalid JSON because curly quote at end. Need recover. We must reissue perhaps separate? Let's inspect results. We don't have execution result because parse maybe before sending? Actually tool call did not go? We need see response. It might have error. Let's check conversation - tool call not executed yet? Actually assistant commentary includes tool call. Need system response. Let's see no response yet because parse error maybe not. We need continue? In analysis we cannot know. We should likely resend proper tool call. But be careful maybe partial execution? No response. Let's assume none executed due parse error. Need issue valid tool call. Since time warning, we can use two separate code--line_replace perhaps parallel again. Need valid JSON. Let's do proper call. Maybe mention fixing patches. Use multi_tool_use.parallel with two valid line_replace. Ensure quotes straight. Let's craft carefully. Use regular quotes. Let's proceed.ાષ્ટ to=multi_tool_use.parallel մեկնադրված  天天中彩票派奖  大发时时彩开奖ിക  彩神争霸快三json  北京赛车投注 {
   const [horaAtual, setHoraAtual] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [dataAtual] = useState(() => new Date().toLocaleDateString('pt-BR'));
 
