@@ -32,8 +32,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-3">
-          <div className="h-10 w-10 rounded-xl bg-primary animate-pulse mx-auto" />
-          <p className="text-sm text-muted-foreground">Carregando...</p>
+          <div className="h-10 w-10 rounded-lg bg-primary animate-pulse mx-auto" />
+          <p className="text-sm text-muted-foreground font-mono">Carregando...</p>
         </div>
       </div>
     );
@@ -45,9 +45,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function RoleRoute({ children }: { children: React.ReactNode }) {
   const { profile, loading } = useAuth();
   const location = useLocation();
-
   if (loading) return null;
-
   const role = profile?.perfil;
   if (!canAccessRoute(role, location.pathname)) {
     const defaultRoute = getDefaultRoute(role);

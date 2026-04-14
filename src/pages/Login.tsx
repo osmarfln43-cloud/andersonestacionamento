@@ -1,4 +1,4 @@
-import { ParkingCircle, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo.png";
 import { Input } from "@/components/ui/input";
@@ -49,25 +49,16 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Clear any stale session before OAuth
       await supabase.auth.signOut();
-
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
-        extraParams: {
-          prompt: "select_account",
-        },
+        extraParams: { prompt: "select_account" },
       });
-
       if (result.error) {
         toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
         return;
       }
-
-      if (result.redirected) {
-        return;
-      }
-
+      if (result.redirected) return;
       navigate("/");
     } catch (err: any) {
       toast({ title: "Erro ao entrar com Google", description: err?.message || "Erro desconhecido", variant: "destructive" });
@@ -79,56 +70,53 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={logoImg} alt="" className="w-[900px] max-w-[95vw] opacity-25 select-none scale-110" draggable={false} style={{ filter: 'brightness(1.2) contrast(1.1)' }} />
+          <img src={logoImg} alt="" className="w-[600px] max-w-[90vw] opacity-10 select-none" draggable={false} />
         </div>
       </div>
 
-      <div className="w-full max-w-[420px] space-y-8 relative z-10 animate-in" style={{ opacity: 0 }}>
-        <div className="text-center space-y-4">
-          <div className="h-20 w-20 rounded-3xl overflow-hidden flex items-center justify-center mx-auto">
+      <div className="w-full max-w-[420px] space-y-6 relative z-10 animate-in" style={{ opacity: 0 }}>
+        <div className="text-center space-y-3">
+          <div className="h-20 w-20 rounded-lg overflow-hidden flex items-center justify-center mx-auto border-2 border-primary/30">
             <img src={logoImg} alt="Anderson Estacionamento" className="h-20 w-20 object-cover" />
           </div>
           <div>
-             <h1 className="text-3xl font-bold font-display gradient-text">Anderson</h1>
-            <p className="text-sm text-muted-foreground mt-1">Estacionamento</p>
+            <h1 className="text-2xl font-bold font-mono text-primary uppercase tracking-wider">Anderson</h1>
+            <p className="text-sm text-muted-foreground font-mono">Estacionamento</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-card p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="pdv-card p-6 space-y-4">
           {isSignUp && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label className="stat-label">Nome</Label>
-              <Input placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} className="h-12" />
+              <input placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} className="pdv-input w-full text-base" />
             </div>
           )}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label className="stat-label">E-mail</Label>
-            <Input type="email" placeholder="operador@mepark.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" required />
+            <input type="email" placeholder="operador@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pdv-input w-full text-base" required />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label className="stat-label">Senha</Label>
-            <Input type="password" placeholder="••••••••" value={senha} onChange={(e) => setSenha(e.target.value)} className="h-12" required minLength={6} />
+            <input type="password" placeholder="••••••••" value={senha} onChange={(e) => setSenha(e.target.value)} className="pdv-input w-full text-base" required minLength={6} />
           </div>
-          <Button type="submit" className="w-full h-13 text-base font-semibold gap-2 rounded-xl" disabled={loading}>
-            {loading ? 'Aguarde...' : isSignUp ? 'Criar Conta' : 'Entrar'} <ArrowRight className="h-4 w-4" />
-          </Button>
+          <button type="submit" className="pdv-btn-green w-full flex items-center justify-center gap-2 text-base" disabled={loading}>
+            {loading ? 'Aguarde...' : isSignUp ? 'CRIAR CONTA' : 'ENTRAR'} <ArrowRight className="h-4 w-4" />
+          </button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-card px-3 text-muted-foreground">ou</span>
+              <span className="bg-card px-3 text-muted-foreground font-mono">ou</span>
             </div>
           </div>
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="w-full h-13 text-base font-medium gap-3 rounded-xl"
+            className="pdv-btn-yellow w-full flex items-center justify-center gap-3 text-base"
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
           >
@@ -138,16 +126,16 @@ export default function Login() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
-            {googleLoading ? 'Conectando...' : 'Entrar com Google'}
-          </Button>
+            {googleLoading ? 'CONECTANDO...' : 'ENTRAR COM GOOGLE'}
+          </button>
 
-          <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors font-mono">
             {isSignUp ? 'Já tem conta? Fazer login' : 'Não tem conta? Criar conta'}
           </button>
         </form>
 
-        <p className="text-center text-[10px] text-muted-foreground/50">
-          © 2026 Anderson Estacionamento
+        <p className="text-center text-[10px] text-muted-foreground/50 font-mono">
+          © 2026 Anderson Estacionamento — OSMARJR Sistemas
         </p>
       </div>
     </div>

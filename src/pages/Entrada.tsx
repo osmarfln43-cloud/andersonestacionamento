@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useRegistrarEntrada, useConfiguracoes } from "@/hooks/useDatabase";
+import { useRegistrarEntrada, useConfiguracoes, useMovimentacoesHoje } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptPDF from "@/components/ReceiptPDF";
@@ -27,14 +24,12 @@ export default function Entrada() {
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
+  const { data: movHoje = [] } = useMovimentacoesHoje();
   const { toast } = useToast();
 
-  const applyVehicleData = (
-    data: { marca?: string | null; modelo?: string | null; cor?: string | null },
-  ) => {
+  const applyVehicleData = (data: { marca?: string | null; modelo?: string | null; cor?: string | null }) => {
     const rawMarca = data.marca?.trim() || "";
     const rawModelo = data.modelo?.trim() || "";
-    // Combine marca + modelo into a single modelo field
     const combined = [rawMarca, rawModelo].filter(Boolean).join(' ').trim();
     setModelo(combined || rawModelo);
     setCor(data.cor?.trim() || "");
@@ -44,38 +39,23 @@ export default function Entrada() {
     setAiLoading(true);
     setAiResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke('identify-vehicle', {
-        body: { image: base64 },
-      });
+      const { data, error } = await supabase.functions.invoke('identify-vehicle', { body: { image: base64 } });
       if (error) throw error;
       if (data) {
         setAiResult(data);
-        // Auto-fill plate from OCR
-        if (data.placa && data.placa.length >= 6) {
-          setPlaca(data.placa.toUpperCase());
-          lastSearchedPlateRef.current = data.placa.toUpperCase();
-        }
-        if (data.marca || data.modelo) {
-          const combinedModelo = [data.marca, data.modelo].filter(Boolean).join(' ').trim();
-          setModelo(combinedModelo);
-        }
+        if (data.placa && data.placa.length >= 6) { setPlaca(data.placa.toUpperCase()); lastSearchedPlateRef.current = data.placa.toUpperCase(); }
+        if (data.marca || data.modelo) setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
-        if (data.categoria === 'moto') setCategoria('moto');
-        else setCategoria('carro');
-        const placaInfo = data.placa ? ` | Placa: ${data.placa}` : '';
-        toast({ title: "🤖 IA identificou o veículo!", description: `${data.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')} - ${data.cor}${placaInfo}` });
+        if (data.categoria === 'moto') setCategoria('moto'); else setCategoria('carro');
+        toast({ title: "🤖 IA identificou!", description: `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}` });
       }
-    } catch (err: any) {
-      toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
-    } finally {
-      setAiLoading(false);
-    }
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+    finally { setAiLoading(false); }
   };
 
   const identifyByPlaca = async () => {
     if (placa.length < 7) return;
-    setAiLoading(true);
-    setAiResult(null);
+    setAiLoading(true); setAiResult(null);
     try {
       const placaUpper = placa.toUpperCase();
       const [ativoResult, veiculoResult, historicoResult, visitasResult] = await Promise.all([
@@ -84,12 +64,8 @@ export default function Entrada() {
         supabase.from('movimentacoes').select('placa, modelo, cor, tipo_cliente').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('movimentacoes').select('id', { count: 'exact', head: true }).eq('placa', placaUpper),
       ]);
-
       if (ativoResult.error) throw ativoResult.error;
       if (veiculoResult.error) throw veiculoResult.error;
-      if (historicoResult.error) throw historicoResult.error;
-      if (visitasResult.error) throw visitasResult.error;
-
       const ativo = ativoResult.data;
       const veiculoCadastrado = veiculoResult.data;
       const historico = historicoResult.data;
@@ -97,89 +73,57 @@ export default function Entrada() {
 
       if (ativo) {
         applyVehicleData({ modelo: ativo.modelo, cor: ativo.cor });
-        setAiResult({ marca: '', modelo: ativo.modelo, cor: ativo.cor, confianca: 'alta', source: 'patio', visitCount: visitasResult.count ?? 1 });
-        toast({ title: "⚠️ Veículo já está no pátio!", description: `${placaUpper} entrou em ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
+        setAiResult({ source: 'patio', visitCount: visitasResult.count ?? 1 });
+        toast({ title: "⚠️ Já no pátio!", description: `${placaUpper} — ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
         return;
       }
-
       if (veiculoCadastrado) {
         applyVehicleData({ marca: veiculoCadastrado.marca, modelo: veiculoCadastrado.modelo, cor: veiculoCadastrado.cor });
         const cliente = veiculoCadastrado.clientes as any;
         const isMensalista = cliente?.tipo === 'mensalista';
         setTipo(isMensalista ? 'mensalista' : 'avulso');
-        setAiResult({
-          marca: veiculoCadastrado.marca, modelo: veiculoCadastrado.modelo, cor: veiculoCadastrado.cor,
-          confianca: 'alta', source: isMensalista ? 'mensalista' : proximaVisita > 1 ? 'retorno' : 'database',
-          clienteNome: cliente?.nome, visitCount: proximaVisita,
-        });
-        toast({
-          title: isMensalista ? (proximaVisita > 1 ? "📋 Mensalista retornou!" : "📋 Mensalista identificado!") : (proximaVisita > 1 ? "🔄 Cliente retornou!" : "✓ Veículo encontrado"),
-          description: isMensalista ? `${cliente.nome} — ${proximaVisita}ª vez` : `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim(),
-        });
+        setAiResult({ source: isMensalista ? 'mensalista' : proximaVisita > 1 ? 'retorno' : 'database', clienteNome: cliente?.nome, visitCount: proximaVisita });
+        toast({ title: isMensalista ? "📋 Mensalista!" : "✓ Encontrado", description: `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim() });
         return;
       }
-
       if (historico) {
         applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
         setTipo(historico.tipo_cliente === 'mensalista' ? 'mensalista' : 'avulso');
-        setAiResult({ marca: '', modelo: historico.modelo, cor: historico.cor, confianca: 'alta', source: 'retorno', visitCount: proximaVisita });
-        toast({ title: "🔄 Cliente retornou!", description: `${proximaVisita}ª vez — ${historico.modelo}` });
+        setAiResult({ source: 'retorno', visitCount: proximaVisita });
+        toast({ title: "🔄 Retornou!", description: `${proximaVisita}ª vez` });
         return;
       }
-
-      // No local data found — call AI only if user clicked the button
       const { data, error } = await supabase.functions.invoke('identify-vehicle', { body: { placa: placaUpper } });
       if (error) throw error;
       if (data) {
         setAiResult(data);
-        if (data.marca || data.modelo) {
-          setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
-        }
+        if (data.marca || data.modelo) setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
-        setTipo('avulso');
-        toast({ title: "🤖 IA sugeriu modelo", description: `${data.marca} ${data.modelo} (confiança: ${data.confianca})` });
+        toast({ title: "🤖 IA sugeriu", description: `${data.marca} ${data.modelo}` });
       }
-    } catch (err: any) {
-      toast({ title: "Erro na identificação", description: err.message, variant: "destructive" });
-    } finally {
-      setAiLoading(false);
-    }
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+    finally { setAiLoading(false); }
   };
 
-  // Only auto-search in local database (not AI) when plate reaches 7 chars
   useEffect(() => {
     if (placa.length === 7 && placa !== lastSearchedPlateRef.current) {
       lastSearchedPlateRef.current = placa;
-      // Quick local lookup only
       const quickLookup = async () => {
         const placaUpper = placa.toUpperCase();
-        const { data: veiculoCadastrado } = await supabase
-          .from('veiculos').select('*, clientes(nome, tipo)')
-          .eq('placa', placaUpper).order('created_at', { ascending: false }).limit(1).maybeSingle();
-        
+        const { data: veiculoCadastrado } = await supabase.from('veiculos').select('*, clientes(nome, tipo)').eq('placa', placaUpper).order('created_at', { ascending: false }).limit(1).maybeSingle();
         if (veiculoCadastrado) {
           applyVehicleData({ marca: veiculoCadastrado.marca, modelo: veiculoCadastrado.modelo, cor: veiculoCadastrado.cor });
           const cliente = veiculoCadastrado.clientes as any;
           if (cliente?.tipo === 'mensalista') setTipo('mensalista');
-          toast({ title: "✓ Veículo encontrado", description: `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim() });
+          toast({ title: "✓ Encontrado", description: `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim() });
         } else {
-          // Check history
-          const { data: historico } = await supabase
-            .from('movimentacoes').select('modelo, cor, tipo_cliente')
-            .eq('placa', placaUpper).eq('status_movimentacao', 'finalizado')
-            .order('saida', { ascending: false }).limit(1).maybeSingle();
-          if (historico) {
-            applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
-            toast({ title: "🔄 Dados anteriores encontrados" });
-          }
+          const { data: historico } = await supabase.from('movimentacoes').select('modelo, cor, tipo_cliente').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle();
+          if (historico) { applyVehicleData({ modelo: historico.modelo, cor: historico.cor }); toast({ title: "🔄 Dados anteriores" }); }
         }
       };
       quickLookup();
     }
-    if (placa.length < 7) {
-      lastSearchedPlateRef.current = "";
-      setAiResult(null);
-    }
+    if (placa.length < 7) { lastSearchedPlateRef.current = ""; setAiResult(null); }
   }, [placa]);
 
   const compressImage = (file: File, maxWidth = 800, quality = 0.6): Promise<string> => {
@@ -189,8 +133,7 @@ export default function Entrada() {
       img.onload = () => {
         const scale = Math.min(1, maxWidth / img.width);
         const canvas = document.createElement('canvas');
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        canvas.width = img.width * scale; canvas.height = img.height * scale;
         const ctx = canvas.getContext('2d')!;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
@@ -218,33 +161,18 @@ export default function Entrada() {
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('vehicle-photos').getPublicUrl(filename);
       return urlData.publicUrl;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!placa.trim()) {
-      toast({ title: "Preencha a placa", variant: "destructive" });
-      return;
-    }
-
+    if (!placa.trim()) { toast({ title: "Preencha a placa", variant: "destructive" }); return; }
     const doSubmit = async () => {
       const placaUpper = placa.toUpperCase();
       const fotoUrl = await uploadVehiclePhoto(placaUpper);
       const modeloCompleto = modelo.trim() || 'N/I';
-
       registrarEntrada.mutate(
-        {
-          placa: placaUpper,
-          modelo: modelo.trim() || 'N/I',
-          cor,
-          tipo_cliente: tipo,
-          observacao,
-          foto_url: fotoUrl || undefined,
-          categoria,
-        },
+        { placa: placaUpper, modelo: modelo.trim() || 'N/I', cor, tipo_cliente: tipo, observacao, foto_url: fotoUrl || undefined, categoria },
         {
           onSuccess: (result) => {
             toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${modeloCompleto}` });
@@ -263,220 +191,172 @@ export default function Entrada() {
               cnpj: config?.cnpj || undefined,
             });
             lastSearchedPlateRef.current = "";
-            setPlaca(""); setModelo(""); setCor("");
-            setObservacao(""); setTipo('avulso'); setCategoria('carro'); setImagePreview(null);
-            setAiResult(null); setCapturedFile(null); setShowAiSection(false);
+            setPlaca(""); setModelo(""); setCor(""); setObservacao(""); setTipo('avulso'); setCategoria('carro');
+            setImagePreview(null); setAiResult(null); setCapturedFile(null); setShowAiSection(false);
           },
-          onError: (err: any) => {
-            toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
-          },
+          onError: (err: any) => { toast({ title: "Erro", description: err.message, variant: "destructive" }); },
         }
       );
     };
     doSubmit();
   };
 
-  const [horaAtual, setHoraAtual] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-  const [dataAtual] = useState(() => new Date().toLocaleDateString('pt-BR'));
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHoraAtual(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Counter for cupom
+  const cupomNum = String(movHoje.length + 1).padStart(4, '0');
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
-      {/* Header with clock */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <LogIn className="h-5 w-5 text-accent" />
+    <div className="space-y-3">
+      {/* Input bar - like PARKEE */}
+      <form onSubmit={handleSubmit} className="pdv-card p-3">
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="space-y-1 flex-1 min-w-[140px]">
+            <label className="stat-label">PLACA</label>
+            <input
+              placeholder="ABC1D23"
+              value={placa}
+              onChange={(e) => setPlaca(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
+              className="pdv-input w-full text-xl tracking-[0.15em] text-center uppercase"
+              maxLength={7}
+              autoFocus
+            />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight leading-tight font-display">Entrada de Veículo / Moto</h1>
-            <p className="text-[11px] text-muted-foreground">Registro manual de entrada</p>
-          </div>
-        </div>
-        <div className="glass-card w-full shrink-0 px-3 py-2 text-center sm:w-auto sm:px-4 sm:text-right">
-          <p className="text-base sm:text-lg md:text-xl font-mono font-bold text-primary tabular-nums whitespace-nowrap">{horaAtual}</p>
-          <p className="text-[10px] text-muted-foreground whitespace-nowrap">{dataAtual}</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Row 1: Placa + Data + Hora + Tipo */}
-        <div className="glass-card p-4 md:p-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="col-span-2 sm:col-span-1 space-y-1.5">
-              <Label className="stat-label text-sm">Placa *</Label>
-              <Input
-                placeholder="ABC1D23"
-                value={placa}
-                onChange={(e) => {
-                  const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
-                  setPlaca(v);
-                }}
-                className="h-12 text-lg font-mono font-bold tracking-[0.12em] text-center uppercase bg-secondary border-border focus:border-primary"
-                maxLength={7}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Data</Label>
-              <Input value={dataAtual} readOnly className="h-12 text-base font-mono font-bold bg-secondary/50 text-foreground" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Hora</Label>
-              <Input value={horaAtual} readOnly className="h-12 text-base font-mono font-bold bg-secondary/50 text-foreground" />
-            </div>
-            <div className="col-span-2 sm:col-span-1 space-y-1.5">
-              <Label className="stat-label text-sm">Tipo</Label>
-              <div className="grid grid-cols-2 gap-1.5 h-12">
-                {(['avulso', 'mensalista'] as const).map((t) => (
-                  <button
-                    key={t} type="button" onClick={() => setTipo(t)}
-                    className={`rounded-lg text-sm font-semibold transition-all border ${
-                      tipo === t ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-secondary text-muted-foreground'
-                    }`}
-                  >
-                    {t === 'avulso' ? 'Avulso' : 'Mensal'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Categoria: Carro ou Moto */}
-          <div className="mt-3 space-y-1.5">
-            <Label className="stat-label text-sm">Categoria</Label>
-            <div className="grid grid-cols-2 gap-2 h-12">
-              {(['carro', 'moto'] as const).map((c) => (
-                <button
-                  key={c} type="button" onClick={() => setCategoria(c)}
-                  className={`rounded-lg text-sm font-semibold transition-all border flex items-center justify-center gap-2 ${
-                    categoria === c ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border bg-secondary text-muted-foreground hover:bg-secondary/80'
-                  }`}
-                >
-                  {c === 'carro' ? '🚗 Carro' : '🏍️ Moto'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* AI status badge */}
-          {aiResult && (
-            <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold ${
-              aiResult.source === 'patio' ? 'bg-destructive/10 border-destructive/30 text-destructive' :
-              aiResult.source === 'mensalista' ? 'bg-primary/10 border-primary/30 text-primary' :
-              aiResult.source === 'retorno' ? 'bg-warning/10 border-warning/30 text-warning' :
-              'bg-accent/5 border-accent/20 text-accent'
-            }`}>
-              <Sparkles className="h-3.5 w-3.5 shrink-0" />
-              {aiResult.source === 'patio' ? '⚠️ JÁ NO PÁTIO' :
-               aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
-               aiResult.source === 'retorno' ? `🔄 ${aiResult.visitCount || 2}ª VEZ` :
-               aiResult.source === 'database' ? '✓ ENCONTRADO' :
-               `🤖 IA: ${aiResult.confianca}`}
-              {aiResult.marca || aiResult.modelo ? ` — ${aiResult.marca || ''} ${aiResult.modelo || ''}`.trim() : ''}
-            </div>
-          )}
-        </div>
-
-        {/* Row 2: Vehicle details */}
-        <div className="glass-card p-4 md:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Dados do Veículo</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => placa.length >= 7 ? identifyByPlaca() : setShowAiSection(!showAiSection)}
-              disabled={aiLoading}
-              className="gap-1.5 text-sm text-primary h-7 px-2"
+          <div className="space-y-1 w-24">
+            <label className="stat-label">TIPO</label>
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value as 'carro' | 'moto')}
+              className="pdv-input w-full text-sm h-[46px]"
             >
-              <Search className="h-3 w-3" />
-              {aiLoading ? 'Buscando...' : placa.length >= 7 ? 'Buscar IA' : 'Identificar por foto'}
-            </Button>
+              <option value="carro">🚗 Carro</option>
+              <option value="moto">🏍️ Moto</option>
+            </select>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Modelo (opcional)</Label>
-              <Input placeholder="Ex: Honda Civic" value={modelo} onChange={(e) => setModelo(e.target.value)} className="h-11" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="stat-label text-sm">Cor (opcional)</Label>
-              <Input placeholder="Ex: Preto" value={cor} onChange={(e) => setCor(e.target.value)} className="h-11" />
-            </div>
+          <div className="space-y-1 flex-1 min-w-[160px]">
+            <label className="stat-label">DESCRIÇÃO (modelo + cor)</label>
+            <input
+              placeholder="Ex: CIVIC PRETO"
+              value={[modelo, cor].filter(Boolean).join(' ')}
+              onChange={(e) => {
+                const parts = e.target.value.split(' ');
+                if (parts.length > 1) { setCor(parts.pop() || ''); setModelo(parts.join(' ')); }
+                else { setModelo(e.target.value); setCor(''); }
+              }}
+              className="pdv-input w-full text-base"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="pdv-btn-green h-[46px] px-6" disabled={registrarEntrada.isPending}>
+              {registrarEntrada.isPending ? '...' : '→'}
+            </button>
+            <button type="button" onClick={() => placa.length >= 7 ? identifyByPlaca() : setShowAiSection(!showAiSection)} className="pdv-btn-yellow h-[46px] px-3" disabled={aiLoading}>
+              <Search className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {/* Row 3: Observation */}
-        <div className="glass-card p-4 md:p-5">
-          <Label className="stat-label text-sm mb-1.5 block">Observação (opcional)</Label>
-          <Textarea placeholder="Observações sobre o veículo..." value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} className="resize-none" />
-        </div>
-
-        {/* Optional AI Photo Section */}
-        {showAiSection && (
-          <div className="glass-card p-4 md:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-accent" />
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Reconhecimento por Foto (Opcional)</p>
-              </div>
-              <button type="button" onClick={() => { setShowAiSection(false); setImagePreview(null); }} className="text-muted-foreground hover:text-foreground">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageCapture} />
-            <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageCapture} />
-
-            {imagePreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-border">
-                <img src={imagePreview} alt="Veículo" className="w-full h-40 object-cover" />
-                <button type="button" onClick={() => { setImagePreview(null); setAiResult(null); setCapturedFile(null); }} className="absolute top-2 right-2 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground">
-                  <X className="h-4 w-4" />
-                </button>
-                {aiLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border">
-                      <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm">Analisando...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <button type="button" onClick={() => fileInputRef.current?.click()}
-                  className="h-28 rounded-xl border-2 border-dashed border-border hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground">
-                  <Camera className="h-5 w-5 text-primary" />
-                  <span className="text-xs font-medium">Câmera</span>
-                </button>
-                <button type="button" onClick={() => uploadInputRef.current?.click()}
-                  className="h-28 rounded-xl border-2 border-dashed border-border hover:border-accent/40 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground">
-                  <Upload className="h-5 w-5 text-accent" />
-                  <span className="text-xs font-medium">Galeria</span>
-                </button>
-              </div>
-            )}
+        {/* AI status */}
+        {aiResult && (
+          <div className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold ${
+            aiResult.source === 'patio' ? 'bg-destructive/20 text-destructive' :
+            aiResult.source === 'mensalista' ? 'bg-info/20 text-info' :
+            aiResult.source === 'retorno' ? 'bg-warning/20 text-warning' :
+            'bg-accent/20 text-accent'
+          }`}>
+            <Sparkles className="h-3 w-3" />
+            {aiResult.source === 'patio' ? '⚠️ JÁ NO PÁTIO' :
+             aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
+             aiResult.source === 'retorno' ? `🔄 ${aiResult.visitCount || 2}ª VEZ` :
+             '✓ ENCONTRADO'}
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button type="submit" className="h-14 text-sm font-semibold gap-2 rounded-xl" disabled={registrarEntrada.isPending}>
-            <Zap className="h-5 w-5" /> {registrarEntrada.isPending ? 'Registrando...' : 'Gravar Entrada'}
-          </Button>
-          <Button type="button" variant="secondary" className="h-14 text-sm font-semibold gap-2 rounded-xl border border-border"
-            onClick={() => setShowAiSection(!showAiSection)}>
-            <Camera className="h-5 w-5" /> {showAiSection ? 'Fechar Foto' : 'Foto (Opcional)'}
-          </Button>
+        {/* Tipo cliente toggle */}
+        <div className="mt-2 flex gap-2">
+          {(['avulso', 'mensalista'] as const).map((t) => (
+            <button key={t} type="button" onClick={() => setTipo(t)}
+              className={`pdv-btn text-xs flex-1 ${tipo === t ? 'pdv-btn-green' : 'pdv-btn-yellow'}`}>
+              {t === 'avulso' ? 'AVULSO' : 'MENSALISTA'}
+            </button>
+          ))}
         </div>
       </form>
+
+      {/* Photo section */}
+      {showAiSection && (
+        <div className="pdv-card p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="stat-label flex items-center gap-1"><Camera className="h-3 w-3" /> FOTO (OPCIONAL)</span>
+            <button type="button" onClick={() => { setShowAiSection(false); setImagePreview(null); }} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageCapture} />
+          <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageCapture} />
+          {imagePreview ? (
+            <div className="relative rounded overflow-hidden border border-border">
+              <img src={imagePreview} alt="Veículo" className="w-full h-32 object-cover" />
+              {aiLoading && <div className="absolute inset-0 flex items-center justify-center bg-background/60"><span className="text-sm font-mono">Analisando...</span></div>}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-2"><Camera className="h-4 w-4" /> Câmera</button>
+              <button type="button" onClick={() => uploadInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-2"><Upload className="h-4 w-4" /> Galeria</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Table of today's entries - like PARKEE */}
+      <div className="pdv-card overflow-hidden">
+        <div className="px-3 py-2 flex items-center justify-between border-b border-border">
+          <span className="stat-label">MOVIMENTAÇÕES DE HOJE</span>
+          <span className="text-xs text-muted-foreground font-mono">{movHoje.length} registros</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="pdv-table">
+            <thead>
+              <tr>
+                <th>Cupom</th>
+                <th>Entrada</th>
+                <th>Placa</th>
+                <th>Descrição</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movHoje.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma movimentação hoje</td></tr>
+              )}
+              {movHoje.map((m, i) => (
+                <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
+                  <td className="font-bold">{String(movHoje.length - i).padStart(4, '0')}</td>
+                  <td>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td className="font-bold text-base">{m.placa}</td>
+                  <td className="font-bold">{[m.modelo, m.cor].filter(Boolean).join(' ').toUpperCase()}</td>
+                  <td>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Bottom action buttons */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <button type="button" onClick={() => setShowAiSection(!showAiSection)} className="pdv-btn-yellow text-[11px]">
+          Foto<br/><span className="text-[9px] opacity-60">IA</span>
+        </button>
+        <button type="button" onClick={() => { setPlaca(''); setModelo(''); setCor(''); setObservacao(''); setAiResult(null); }} className="pdv-btn-red text-[11px]">
+          Limpar<br/><span className="text-[9px] opacity-60">ESC</span>
+        </button>
+        <button type="button" onClick={() => placa.length >= 7 && identifyByPlaca()} className="pdv-btn-green text-[11px]" disabled={aiLoading || placa.length < 7}>
+          Buscar<br/><span className="text-[9px] opacity-60">F2</span>
+        </button>
+      </div>
 
       <ReceiptPDF data={receiptData} onDone={() => setReceiptData(null)} />
     </div>
