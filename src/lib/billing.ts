@@ -2,12 +2,20 @@ export type BillingSummary = {
   hours: number;
   mins: number;
   total: number;
-  billableHours: 1 | 2;
+  billableHours: number;
   pricingMode: 'hourly' | 'daily';
 };
 
-const SECOND_HOUR_THRESHOLD_MINUTES = 80;
-const DAILY_THRESHOLD_HOURS = 3;
+/**
+ * Regras de cobrança:
+ * - Até 1h19m  → 1 hora
+ * - 1h20m–2h09m → 2 horas
+ * - 2h10m–3h19m → 3 horas
+ * - 3h20m+      → diária cheia (valor fixo)
+ */
+const HOUR_THRESHOLD_MINUTES = 80;   // 1h20m → 2 horas
+const THREE_HOUR_THRESHOLD = 130;    // 2h10m → 3 horas
+const DAILY_THRESHOLD_MINUTES = 200; // 3h20m → diária
 
 export function calculateParkingBilling(params: {
   entrada: string | Date;
@@ -22,17 +30,20 @@ export function calculateParkingBilling(params: {
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
-  if (diffMs / 3600000 >= DAILY_THRESHOLD_HOURS) {
-    return {
-      hours,
-      mins,
-      total: params.valorDiaria,
-      billableHours: 2,
-      pricingMode: 'daily',
-    };
+  // 3h20m+ → diária cheia
+  if (totalMinutes >= DAILY_THRESHOLD_MINUTES) {
+    return { hours, mins, total: params.valorDiaria, billableHours: 0, pricingMode: 'daily' };
   }
 
-  const billableHours: 1 | 2 = totalMinutes >= SECOND_HOUR_THRESHOLD_MINUTES ? 2 : 1;
+  // Determinar horas cobráveis
+  let billableHours: number;
+  if (totalMinutes >= THREE_HOUR_THRESHOLD) {
+    billableHours = 3;
+  } else if (totalMinutes >= HOUR_THRESHOLD_MINUTES) {
+    billableHours = 2;
+  } else {
+    billableHours = 1;
+  }
 
   return {
     hours,
