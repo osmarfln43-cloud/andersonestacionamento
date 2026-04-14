@@ -115,48 +115,43 @@ export default function ReceiptPDF({ data, onDone }: Props) {
       <meta charset="utf-8">
       <title>Comprovante</title>
       <style>
-        @page {
-          size: 80mm auto;
-          margin: 0;
-        }
+        @page { size: 80mm auto; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
           font-family: 'Courier New', Courier, monospace;
-          font-size: 13px;
+          font-size: 11px;
           width: 80mm;
-          padding: 3mm;
+          padding: 2mm;
           color: #000 !important;
           background: #fff !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
         .receipt { width: 100%; color: #000 !important; }
-        .center { text-align: center; }
-        .bold { font-weight: 900; }
-        .title { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 4px; color: #000 !important; }
-        .plate { font-size: 28px; font-weight: 900; text-align: center; letter-spacing: 3px; margin: 6px 0 2px; color: #000 !important; }
-        .vehicle-info { font-size: 12px; font-weight: 900; text-align: center; margin-bottom: 4px; color: #000 !important; }
-        .dashed { border-top: 2px dashed #000; margin: 5px 0; }
-        .row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; color: #000 !important; }
+        .title { font-size: 13px; font-weight: 900; text-align: center; margin-bottom: 2px; }
+        .plate { font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 2px; margin: 3px 0 1px; }
+        .vehicle-info { font-size: 10px; font-weight: 900; text-align: center; margin-bottom: 2px; }
+        .dashed { border-top: 1px dashed #000; margin: 3px 0; }
+        .row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 10px; }
         .row-label { font-weight: 700; }
         .row-value { font-weight: 900; }
-        .total-label { font-size: 16px; font-weight: 900; text-align: center; margin-top: 4px; color: #000 !important; }
-        .total-value { font-size: 24px; font-weight: 900; text-align: center; margin: 2px 0; color: #000 !important; }
-        .payment-highlight { font-size: 16px; font-weight: 900; text-align: center; margin: 4px 0; color: #000 !important; }
-        .disclaimer { font-size: 9px; text-align: center; line-height: 1.3; margin: 2px 0; font-weight: 700; color: #000 !important; }
-        .footer { font-size: 10px; text-align: center; font-weight: 900; margin-top: 4px; color: #000 !important; }
-        .footer-addr { font-size: 9px; text-align: center; margin-top: 2px; font-weight: 700; color: #000 !important; }
-        .qr-container { text-align: center; margin: 6px 0; }
-        .qr-container img, .qr-container canvas { width: 35mm !important; height: 35mm !important; }
+        .total-label { font-size: 12px; font-weight: 900; text-align: center; margin-top: 2px; }
+        .total-value { font-size: 20px; font-weight: 900; text-align: center; margin: 1px 0; }
+        .payment-highlight { font-size: 11px; font-weight: 900; text-align: center; margin: 2px 0; }
+        .disclaimer { font-size: 8px; text-align: center; line-height: 1.2; margin: 1px 0; font-weight: 700; }
+        .footer { font-size: 9px; text-align: center; font-weight: 900; margin-top: 2px; }
+        .footer-addr { font-size: 8px; text-align: center; margin-top: 1px; font-weight: 700; }
+        .qr-container { text-align: center; margin: 3px 0; }
+        .qr-container img, .qr-container canvas { width: 28mm !important; height: 28mm !important; }
+        .regra-box { font-size: 11px; font-weight: 900; text-align: center; border: 1px solid #000; padding: 2px 4px; margin: 2px auto; display: inline-block; }
         @media print {
-          body { width: 80mm; color: #000 !important; }
+          body { width: 80mm; }
           * { color: #000 !important; }
         }
       </style>
     </head>
     <body>
       ${content}
-      <script>/* auto-focus for print */</script>
     </body>
     </html>
   `;
@@ -165,36 +160,38 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   const entradaDt = new Date(data.entrada);
   const entradaDate = entradaDt.toLocaleDateString("pt-BR");
-  const entradaTime = entradaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const entradaTime = entradaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
   const disclaimer = data.disclaimerComprovante || "NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO";
-  const horarios = `HORARIO DE FUNCIONAMENTO ${(data.diasFuncionamento || "SEGUNDA A SEXTA").toUpperCase()} DAS ${data.horarioAbertura || "07:00"} ATE AS ${data.horarioFechamento || "19:00"}`;
+  const horarios = `${(data.diasFuncionamento || "SEG-SEX").toUpperCase()} ${data.horarioAbertura || "07:00"}-${data.horarioFechamento || "19:00"}`;
 
   const pixCode = data.chavePix
     ? `00020126580014br.gov.bcb.pix0136${data.chavePix}5204000053039865802BR5925ANDERSON ESTACIONAMENTO6008SAOPAULO`
     : "";
 
+  const isSaida = data.tipo === 'saida' && data.saida;
+
   return (
     <div style={{ position: "fixed", left: "-9999px", top: "-9999px" }}>
       <div ref={printRef}>
         <div className="receipt">
-          {/* Header */}
           <div className="title">{data.nomeEstacionamento || "ANDERSON ESTACIONAMENTO"}</div>
           <div className="dashed"></div>
 
-          {/* Disclaimer */}
           <div className="disclaimer">{disclaimer}. {horarios}</div>
           <div className="dashed"></div>
 
-          {/* Plate */}
+          {isSaida && (
+            <div className="payment-highlight">COMPROVANTE DE SAIDA</div>
+          )}
+
           <div className="plate">{data.placa}</div>
           <div className="vehicle-info">({(data.modelo || "N/I").toUpperCase()} {(data.cor || "").toUpperCase()})</div>
           <div className="dashed"></div>
 
-          {/* Details */}
           <div className="row">
             <span className="row-label">Entrada:</span>
-            <span className="row-value">{entradaDate} as {entradaTime}</span>
+            <span className="row-value">{entradaDate} {entradaTime}</span>
           </div>
 
           {data.saida && (() => {
@@ -202,7 +199,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
             return (
               <div className="row">
                 <span className="row-label">Saida:</span>
-                <span className="row-value">{saidaDt.toLocaleDateString("pt-BR")} as {saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+                <span className="row-value">{saidaDt.toLocaleDateString("pt-BR")} {saidaDt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
               </div>
             );
           })()}
@@ -219,10 +216,10 @@ export default function ReceiptPDF({ data, onDone }: Props) {
             <span className="row-value">{data.tipo_cliente === "mensalista" ? "Mensalista" : "Avulso"}</span>
           </div>
 
-          {data.formaPagamento && (
+          {data.regraAplicada && (
             <div className="row">
-              <span className="row-label">Pagamento:</span>
-              <span className="row-value">{data.formaPagamento.toUpperCase()}</span>
+              <span className="row-label">Cobranca:</span>
+              <span className="row-value">{data.regraAplicada.toUpperCase()}</span>
             </div>
           )}
 
@@ -231,45 +228,45 @@ export default function ReceiptPDF({ data, onDone }: Props) {
             <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2)}</span>
           </div>
 
-          {data.regraAplicada && (
+          {data.formaPagamento && (
             <div className="row">
-              <span className="row-label">Regra:</span>
-              <span className="row-value">{data.regraAplicada.toUpperCase()}</span>
+              <span className="row-label">Pagamento:</span>
+              <span className="row-value">{data.formaPagamento.toUpperCase()}</span>
             </div>
           )}
 
           <div className="dashed"></div>
 
-          {/* Total */}
           {data.saida && data.valorTotal != null && (
             <>
-              <div className="total-label">Total</div>
+              <div className="total-label">TOTAL</div>
               <div className="total-value">R$ {Number(data.valorTotal).toFixed(2)}</div>
               <div className="dashed"></div>
             </>
           )}
 
-          {/* Payment highlight */}
-          <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
+          {!isSaida && (
+            <>
+              <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
 
-          {/* QR Code */}
-          {data.qrCodeUrl && (
-            <div className="qr-container">
-              <img src={data.qrCodeUrl} alt="QR Code PIX" crossOrigin="anonymous" />
-            </div>
+              {data.qrCodeUrl && (
+                <div className="qr-container">
+                  <img src={data.qrCodeUrl} alt="QR Code PIX" crossOrigin="anonymous" />
+                </div>
+              )}
+
+              {!data.qrCodeUrl && pixCode && (
+                <div className="qr-container">
+                  <QRCodeCanvas value={pixCode} size={100} level="M" includeMargin={false} />
+                </div>
+              )}
+
+              <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
+              <div className="dashed"></div>
+            </>
           )}
 
-          {!data.qrCodeUrl && pixCode && (
-            <div className="qr-container">
-              <QRCodeCanvas value={pixCode} size={120} level="M" includeMargin />
-            </div>
-          )}
-
-          <div className="payment-highlight">PAGAMENTO DINHEIRO OU PIX</div>
-          <div className="dashed"></div>
-
-          {/* Footer */}
-          <div className="footer">{data.mensagemComprovante || "ANDERSON ESTACIONAMENTO AGRADECE A PREFERENCIA"}</div>
+          <div className="footer">{data.mensagemComprovante || "AGRADECEMOS A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
           {data.cnpj && <div className="footer-addr">CNPJ: {data.cnpj}</div>}
         </div>

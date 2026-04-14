@@ -113,6 +113,70 @@ function ReceiptPreview({ form }: { form: any }) {
   );
 }
 
+function ExitReceiptPreview({ form }: { form: any }) {
+  const nome = form.nome_estacionamento || 'ANDERSON ESTACIONAMENTO';
+  const disclaimer = form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
+  const dias = (form.dias_funcionamento || 'Seg-Sex').toUpperCase();
+  const abertura = form.horario_abertura || '07:00';
+  const fechamento = form.horario_fechamento || '19:00';
+  const endereco = (form.endereco || '').toUpperCase();
+  const mensagem = form.mensagem_comprovante || 'AGRADECEMOS A PREFERENCIA';
+  const valorHora = Number(form.valor_hora || 10).toFixed(2);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  // Simulated exit 2h30 later
+  const exitTime = new Date(now.getTime() + 2.5 * 3600000);
+  const exitDateStr = exitTime.toLocaleDateString('pt-BR');
+  const exitTimeStr = exitTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="bg-[#f5f0e8] text-[#1a1a1a] rounded-xl shadow-xl overflow-hidden max-w-[280px] mx-auto" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      <div className="p-4 space-y-1.5 text-[9px] leading-relaxed">
+        <div className="text-center space-y-0.5">
+          <p className="text-[11px] font-bold tracking-wide">{nome}</p>
+          <div className="border-b border-dashed border-gray-400 my-1.5" />
+          <p className="text-[7px] leading-snug">{disclaimer}. {dias} {abertura}-{fechamento}</p>
+          <div className="border-b border-dashed border-gray-400 my-1.5" />
+        </div>
+
+        <p className="text-[10px] font-bold text-center">COMPROVANTE DE SAIDA</p>
+
+        <div className="text-center py-0.5">
+          <p className="text-lg font-bold tracking-widest">ABC1D23</p>
+          <p className="text-[8px] font-bold">(HONDA CIVIC PRETO)</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="space-y-0.5">
+          <div className="flex justify-between"><span>Entrada:</span><span>{dateStr} {timeStr}</span></div>
+          <div className="flex justify-between"><span>Saida:</span><span>{exitDateStr} {exitTimeStr}</span></div>
+          <div className="flex justify-between"><span>Permanencia:</span><span className="font-bold">2h 30min</span></div>
+          <div className="flex justify-between"><span>Tabela:</span><span>Avulso</span></div>
+          <div className="flex justify-between"><span>Cobranca:</span><span className="font-bold">3 HORAS</span></div>
+          <div className="flex justify-between"><span>Valor/hora:</span><span>R$ {valorHora}</span></div>
+          <div className="flex justify-between"><span>Pagamento:</span><span className="font-bold">DINHEIRO</span></div>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="text-center">
+          <p className="text-[10px] font-bold">TOTAL</p>
+          <p className="text-base font-bold">R$ 30.00</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="text-center space-y-0.5">
+          <p className="font-bold text-[8px]">{mensagem}</p>
+          {endereco && <p className="text-[7px]">{endereco}</p>}
+          {form.cnpj && <p className="text-[7px]">CNPJ: {form.cnpj}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrinterSetup({ form, setField, save }: { form: any; setField: (k: string, v: any) => void; save: () => void }) {
   const { toast } = useToast();
   const [printerConfig, setPrinterConfig] = useState<PrinterConfig | null>(getSavedPrinterConfig());
@@ -455,7 +519,8 @@ export default function Configuracoes() {
                 { label: 'Horários', value: 'horarios' },
                 { label: 'Cobrança', value: 'cobranca' },
                 { label: 'PIX / QR Code', value: 'pix' },
-                { label: 'Comprovante', value: 'comprovante' },
+                { label: 'Comprovante Entrada', value: 'comprovante' },
+                { label: 'Comprovante Saída', value: 'comprovante-saida' },
                 { label: 'Impressão', value: 'impressao' },
               ].map((t) => (
                 <TabsTrigger
@@ -578,6 +643,43 @@ export default function Configuracoes() {
                 </div>
               </Section>
               <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
+            </TabsContent>
+
+            <TabsContent value="comprovante-saida" className="space-y-6">
+              <Section title="Preview — Comprovante de Saída">
+                <p className="text-xs text-muted-foreground mb-4">
+                  O comprovante de saída é impresso automaticamente ao registrar o pagamento. Ele exibe a regra de cobrança aplicada (1h, 2h, 3h ou Diária), tempo de permanência, forma de pagamento e valor total.
+                </p>
+                <ExitReceiptPreview form={form} />
+              </Section>
+              <Section title="Informações exibidas no comprovante de saída">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Placa, modelo e cor do veículo</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Data/hora de entrada e saída</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Tempo de permanência</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Regra de cobrança (1 hora, 2 horas, 3 horas ou Diária)</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Forma de pagamento (PIX ou Dinheiro)</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Valor total pago</p></div>
+                  </div>
+                </div>
+              </Section>
             </TabsContent>
 
             <TabsContent value="impressao" className="space-y-6">
