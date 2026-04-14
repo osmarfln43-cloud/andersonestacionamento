@@ -225,10 +225,10 @@ export default function Dashboard() {
               )}
               {movimentacoesHoje.slice(0, 12).map((m, i) => (
                 <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
-                  <td className="text-base font-bold">{String(i + 1).padStart(4, '0')}</td>
-                  <td className="text-base font-bold">{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td className="text-lg font-bold">{m.placa}</td>
-                  <td className="text-base font-bold">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
+                  <td className="text-xl font-bold">{String(i + 1).padStart(4, '0')}</td>
+                  <td className="text-xl font-bold">{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td className="text-2xl font-bold">{m.placa}</td>
+                  <td className="text-xl font-bold">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
                   <td>
                     <span className={`text-xs font-bold px-2 py-1 rounded ${
                       m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
