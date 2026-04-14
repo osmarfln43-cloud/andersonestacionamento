@@ -8,6 +8,8 @@ import { useConfiguracoes } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import ReceiptPDF, { type ReceiptData } from "@/components/ReceiptPDF";
 import { QRCodeSVG } from "qrcode.react";
+import { calculateParkingBilling } from "@/lib/billing";
+import { formatBillingRuleLabel } from "@/lib/receipt";
 
 function useTodasMovimentacoes() {
   return useQuery({
@@ -33,6 +35,26 @@ export default function Comprovantes() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [viewMov, setViewMov] = useState<any>(null);
 
+  const getBillingDetails = (mov: any) => {
+    if (!mov?.saida) return null;
+
+    const valorDiaria = mov.categoria === 'moto'
+      ? Number((config as any)?.valor_maximo_diario_moto ?? 15)
+      : Number((config as any)?.valor_maximo_diario ?? 35);
+
+    const billing = calculateParkingBilling({
+      entrada: mov.entrada,
+      valorHora: Number(mov.valor_hora || 10),
+      valorDiaria,
+      now: new Date(mov.saida),
+    });
+
+    return {
+      billing,
+      label: formatBillingRuleLabel(billing.regraAplicada),
+    };
+  };
+
   const handleDelete = async (id: string, placa: string) => {
     if (!confirm(`Excluir comprovante de ${placa}?`)) return;
     const { error } = await supabase.from('movimentacoes').delete().eq('id', id);
@@ -46,35 +68,42 @@ export default function Comprovantes() {
     ? movimentacoes.filter(m => m.placa.includes(busca.toUpperCase()))
     : movimentacoes;
 
-  const buildReceipt = (m: any): ReceiptData => ({
-    placa: m.placa,
-    modelo: m.modelo || "N/I",
-    cor: m.cor || "",
-    tipo_cliente: m.tipo_cliente,
-    entrada: m.entrada,
-    saida: m.saida || undefined,
-    tempoTotal: m.tempo_total || undefined,
-    valorTotal: m.valor_total ?? undefined,
-    formaPagamento: m.forma_pagamento || undefined,
-    valorHora: m.valor_hora,
-    nomeEstacionamento: config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS',
-    endereco: config?.endereco || 'RUA ESTEVE JUNIOR - CENTRO',
-    telefone: config?.telefone || undefined,
-    chavePix: config?.chave_pix || undefined,
-    nomeBeneficiario: config?.nome_beneficiario || undefined,
-    mensagemComprovante: config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERÊNCIA',
-    tipo: "unico",
-    horarioAbertura: (config as any)?.horario_abertura || '07:00',
-    horarioFechamento: (config as any)?.horario_fechamento || '19:00',
-    diasFuncionamento: (config as any)?.dias_funcionamento || 'Segunda a Sexta',
-    disclaimerComprovante: (config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
-    qrCodeUrl: (config as any)?.qr_code_url || undefined,
-    cnpj: config?.cnpj || undefined,
-  });
+  const buildReceipt = (m: any): ReceiptData => {
+    const billingDetails = getBillingDetails(m);
+
+    return {
+      placa: m.placa,
+      modelo: m.modelo || "N/I",
+      cor: m.cor || "",
+      tipo_cliente: m.tipo_cliente,
+      entrada: m.entrada,
+      saida: m.saida || undefined,
+      tempoTotal: billingDetails?.label || m.tempo_total || undefined,
+      valorTotal: m.valor_total ?? undefined,
+      formaPagamento: m.forma_pagamento || undefined,
+      valorHora: m.valor_hora,
+      nomeEstacionamento: config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS',
+      endereco: config?.endereco || 'RUA ESTEVE JUNIOR - CENTRO',
+      telefone: config?.telefone || undefined,
+      chavePix: config?.chave_pix || undefined,
+      nomeBeneficiario: config?.nome_beneficiario || undefined,
+      mensagemComprovante: config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERÊNCIA',
+      tipo: m.saida ? "saida" : "entrada",
+      horarioAbertura: (config as any)?.horario_abertura || '07:00',
+      horarioFechamento: (config as any)?.horario_fechamento || '19:00',
+      diasFuncionamento: (config as any)?.dias_funcionamento || 'Segunda a Sexta',
+      disclaimerComprovante: (config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO',
+      qrCodeUrl: (config as any)?.qr_code_url || undefined,
+      cnpj: config?.cnpj || undefined,
+      regraAplicada: billingDetails?.billing.regraAplicada || undefined,
+    };
+  };
 
   const pixCode = config?.chave_pix
     ? `00020126580014br.gov.bcb.pix0136${config.chave_pix}5204000053039865802BR5925ANDERSON ESTACIONAMENTOS6008SAOPAULO`
     : "";
+
+  const viewBillingDetails = viewMov?.saida ? getBillingDetails(viewMov) : null;
 
   return (
     <div className="space-y-6">
@@ -96,7 +125,6 @@ export default function Comprovantes() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left - Table */}
         <div className="lg:col-span-3 glass-card overflow-hidden">
           <div className="p-5 border-b border-border/50">
             <h3 className="section-title">Comprovantes ({filtered.length})</h3>
@@ -138,7 +166,6 @@ export default function Comprovantes() {
           </div>
         </div>
 
-        {/* Right - Receipt Preview */}
         <div className="lg:col-span-2">
           {viewMov ? (
             <div className="sticky top-4 space-y-4">
@@ -149,10 +176,8 @@ export default function Comprovantes() {
                 </button>
               </div>
 
-              {/* Thermal receipt visual */}
               <div className="bg-[#f5f0e8] text-[#1a1a1a] rounded-xl shadow-xl overflow-hidden max-w-[320px] mx-auto" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
                 <div className="p-6 space-y-3 text-xs leading-relaxed">
-                  {/* Header */}
                   <div className="text-center space-y-1">
                     <p className="text-sm font-bold tracking-wide">{config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
@@ -160,12 +185,10 @@ export default function Comprovantes() {
                     <div className="border-b border-dashed border-gray-400 my-3" />
                   </div>
 
-                  {/* Plate */}
                   <div className="text-center py-2">
                     <p className="text-2xl font-bold tracking-widest">{viewMov.placa}</p>
                     <p className="text-xs font-bold mt-1">({(viewMov.modelo || 'N/I').toUpperCase()} {(viewMov.cor || '').toUpperCase()})</p>
                   </div>
-                  {/* Vehicle Photo */}
                   {viewMov.foto_url && (
                     <div className="flex justify-center py-2">
                       <img src={viewMov.foto_url} alt={`Foto ${viewMov.placa}`} className="w-full max-w-[200px] h-auto rounded-lg border border-gray-300" />
@@ -173,18 +196,17 @@ export default function Comprovantes() {
                   )}
                   <div className="border-b border-dashed border-gray-400" />
 
-                  {/* Details */}
                   <div className="space-y-1.5 py-1">
                     <div className="flex justify-between"><span>Entrada:</span><span>{new Date(viewMov.entrada).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' })}</span></div>
                     {viewMov.saida && <div className="flex justify-between"><span>Saida:</span><span>{new Date(viewMov.saida).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' })}</span></div>}
-                    {viewMov.tempo_total && <div className="flex justify-between"><span>Permanencia:</span><span>{viewMov.tempo_total}</span></div>}
+                    {(viewBillingDetails?.label || viewMov.tempo_total) && <div className="flex justify-between"><span>Permanencia:</span><span>{viewBillingDetails?.label || viewMov.tempo_total}</span></div>}
                     <div className="flex justify-between"><span>Tabela:</span><span>{viewMov.tipo_cliente === 'mensalista' ? 'Mensalista' : 'Avulso'}</span></div>
+                    {viewBillingDetails?.label && <div className="flex justify-between"><span>Cobranca:</span><span>{viewBillingDetails.label}</span></div>}
                     {viewMov.forma_pagamento && <div className="flex justify-between font-bold"><span>Pagamento:</span><span>{viewMov.forma_pagamento.toUpperCase()}</span></div>}
                     <div className="flex justify-between"><span>Valor/hora:</span><span>R$ {Number(viewMov.valor_hora || 10).toFixed(2)}</span></div>
                   </div>
                   <div className="border-b border-dashed border-gray-400" />
 
-                  {/* Total */}
                   {viewMov.valor_total != null && (
                     <>
                       <div className="text-center py-2">
@@ -195,33 +217,35 @@ export default function Comprovantes() {
                     </>
                   )}
 
-                  {/* Payment highlight + QR Code */}
-                  <div className="text-center py-1">
-                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
-                  </div>
-                  {(config as any)?.qr_code_url ? (
-                    <div className="flex justify-center py-3">
-                      <img src={(config as any).qr_code_url} alt="QR Code" className="w-[120px] h-[120px] object-contain" />
-                    </div>
-                  ) : pixCode ? (
-                    <div className="flex justify-center py-3">
-                      <QRCodeSVG value={pixCode} size={120} level="M" />
-                    </div>
-                  ) : null}
-                  <div className="text-center py-1">
-                    <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
-                  </div>
-                  <div className="border-b border-dashed border-gray-400" />
+                  {!viewMov.saida && (
+                    <>
+                      <div className="text-center py-1">
+                        <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                      </div>
+                      {(config as any)?.qr_code_url ? (
+                        <div className="flex justify-center py-3">
+                          <img src={(config as any).qr_code_url} alt="QR Code" className="w-[120px] h-[120px] object-contain" />
+                        </div>
+                      ) : pixCode ? (
+                        <div className="flex justify-center py-3">
+                          <QRCodeSVG value={pixCode} size={120} level="M" />
+                        </div>
+                      ) : null}
+                      <div className="text-center py-1">
+                        <p className="text-sm font-bold tracking-wide">PAGAMENTO DINHEIRO OU PIX</p>
+                      </div>
+                      <div className="border-b border-dashed border-gray-400" />
+                    </>
+                  )}
 
-                  {/* Footer */}
                   <div className="text-center space-y-1 pt-1">
                     <p className="font-bold text-[10px]">{config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERENCIA'}</p>
                     {config?.endereco && <p className="text-[10px]">{config.endereco.toUpperCase()}</p>}
+                    {config?.telefone && <p className="text-[10px]">MEU CONTATO: {config.telefone}</p>}
                   </div>
                 </div>
               </div>
 
-              {/* Print button */}
               <Button onClick={() => setReceiptData(buildReceipt(viewMov))} className="w-full h-12 gap-2 rounded-xl">
                 <Printer className="h-4 w-4" /> Imprimir Comprovante <span className="text-[10px] font-normal opacity-70">2ª via</span>
               </Button>

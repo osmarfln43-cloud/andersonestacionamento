@@ -156,7 +156,7 @@ function ExitReceiptPreview({ form }: { form: any }) {
         <div className="space-y-0.5">
           <div className="flex justify-between"><span>Entrada:</span><span>{dateStr} {timeStr}</span></div>
           <div className="flex justify-between"><span>Saida:</span><span>{exitDateStr} {exitTimeStr}</span></div>
-          <div className="flex justify-between"><span>Permanencia:</span><span className="font-bold">2h 30min</span></div>
+          <div className="flex justify-between"><span>Permanencia:</span><span className="font-bold">3 HORAS</span></div>
           <div className="flex justify-between"><span>Tabela:</span><span>Avulso</span></div>
           <div className="flex justify-between"><span>Cobranca:</span><span className="font-bold">3 HORAS</span></div>
           <div className="flex justify-between"><span>Valor/hora:</span><span>R$ {valorHora}</span></div>
