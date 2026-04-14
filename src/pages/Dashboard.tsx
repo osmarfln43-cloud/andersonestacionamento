@@ -255,6 +255,8 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+      </div>
+
       {/* Monthly Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-6">
