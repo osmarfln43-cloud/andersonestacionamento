@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { calculateParkingBilling } from '@/lib/billing';
 
 // Movimentacoes
 export function useMovimentacoesAtivas() {
