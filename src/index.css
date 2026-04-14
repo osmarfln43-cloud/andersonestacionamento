@@ -10,62 +10,63 @@
 
 @layer base {
   :root {
-    --background: 60 5% 18%;
-    --foreground: 60 10% 90%;
+    --background: 200 40% 92%;
+    --foreground: 0 0% 10%;
 
-    --card: 60 4% 22%;
-    --card-foreground: 60 10% 90%;
+    --card: 200 30% 96%;
+    --card-foreground: 0 0% 10%;
 
-    --popover: 60 4% 20%;
-    --popover-foreground: 60 10% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 45 90% 50%;
-    --primary-foreground: 0 0% 5%;
+    --primary: 120 40% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 60 4% 26%;
-    --secondary-foreground: 60 10% 85%;
+    --secondary: 200 25% 88%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 60 4% 28%;
-    --muted-foreground: 60 8% 55%;
+    --muted: 200 20% 90%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 120 55% 42%;
+    --accent: 120 40% 35%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 50%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 60 4% 30%;
-    --input: 60 4% 25%;
-    --ring: 45 90% 50%;
+    --border: 200 20% 82%;
+    --input: 0 0% 100%;
+    --ring: 120 40% 35%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 8%;
-    --success: 120 55% 42%;
+    --warning: 45 90% 45%;
+    --warning-foreground: 0 0% 10%;
+    --success: 120 40% 35%;
     --success-foreground: 0 0% 100%;
-    --info: 200 80% 50%;
+    --info: 200 70% 45%;
     --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 60 4% 15%;
-    --sidebar-foreground: 60 8% 55%;
-    --sidebar-primary: 45 90% 50%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 60 4% 22%;
-    --sidebar-accent-foreground: 60 10% 90%;
-    --sidebar-border: 60 4% 25%;
-    --sidebar-ring: 45 90% 50%;
+    --sidebar-background: 120 30% 22%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 45 90% 55%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 120 30% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 120 20% 30%;
+    --sidebar-ring: 45 90% 55%;
 
-    --chart-1: 200 80% 50%;
-    --chart-2: 120 55% 42%;
+    --chart-1: 200 70% 45%;
+    --chart-2: 120 40% 35%;
     --chart-3: 45 90% 50%;
     --chart-4: 280 65% 55%;
     --chart-5: 0 72% 50%;
 
-    --pdv-green: 120 55% 42%;
-    --pdv-yellow: 50 90% 55%;
-    --pdv-red: 0 72% 50%;
-    --pdv-header: 60 4% 12%;
+    --pdv-header-bg: 120 30% 22%;
+    --pdv-green: 120 50% 38%;
+    --pdv-green-dark: 120 45% 32%;
+    --pdv-yellow: 65 70% 52%;
+    --pdv-yellow-dark: 65 60% 42%;
   }
 }
 
@@ -81,94 +82,104 @@
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: hsl(60 4% 15%); }
-  ::-webkit-scrollbar-thumb { background: hsl(60 4% 30%); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(60 4% 38%); }
+  ::-webkit-scrollbar-track { background: hsl(200 30% 90%); }
+  ::-webkit-scrollbar-thumb { background: hsl(200 20% 75%); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(200 20% 65%); }
 }
 
 @layer components {
   .pdv-card {
-    @apply relative border border-border rounded-lg overflow-hidden;
-    background-color: hsl(60 4% 22%);
+    @apply relative border border-border overflow-hidden;
+    background-color: hsl(200 30% 96%);
+    border-radius: 2px;
   }
   .pdv-card-hover {
     @apply pdv-card transition-all duration-200 ease-out;
   }
   .pdv-card-hover:hover {
-    border-color: hsl(45 90% 50% / 0.4);
-    background-color: hsl(60 4% 25%);
+    border-color: hsl(120 40% 35% / 0.4);
+    background-color: hsl(200 30% 94%);
   }
 
   .pdv-header {
-    background-color: hsl(60 4% 12%);
-    @apply border-b border-border;
+    background-color: hsl(120 30% 22%);
+    color: hsl(0 0% 95%);
   }
 
   .pdv-btn {
-    @apply font-bold text-sm uppercase tracking-wider px-4 py-3 rounded-md border-2 transition-all duration-150 active:scale-95;
+    @apply font-bold text-sm uppercase tracking-wider px-4 py-3 border-2 transition-all duration-100 active:scale-95;
+    border-radius: 2px;
   }
   .pdv-btn-green {
     @apply pdv-btn;
-    background-color: hsl(120 55% 42%);
-    border-color: hsl(120 55% 35%);
+    background-color: hsl(120 50% 38%);
+    border-color: hsl(120 45% 30%);
     color: white;
   }
   .pdv-btn-green:hover {
-    background-color: hsl(120 55% 48%);
+    background-color: hsl(120 50% 44%);
   }
   .pdv-btn-yellow {
     @apply pdv-btn;
-    background-color: hsl(50 90% 55%);
-    border-color: hsl(50 90% 45%);
+    background-color: hsl(65 70% 52%);
+    border-color: hsl(65 60% 42%);
     color: hsl(0 0% 10%);
   }
   .pdv-btn-yellow:hover {
-    background-color: hsl(50 90% 62%);
+    background-color: hsl(65 70% 58%);
   }
   .pdv-btn-red {
     @apply pdv-btn;
-    background-color: hsl(0 72% 50%);
-    border-color: hsl(0 72% 40%);
+    background-color: hsl(0 72% 45%);
+    border-color: hsl(0 72% 35%);
     color: white;
   }
   .pdv-btn-red:hover {
-    background-color: hsl(0 72% 58%);
+    background-color: hsl(0 72% 52%);
   }
 
   .pdv-table {
     @apply w-full text-sm;
+    background-color: hsl(200 30% 96%);
   }
   .pdv-table thead {
-    background-color: hsl(60 4% 16%);
+    background-color: hsl(200 35% 85%);
   }
   .pdv-table th {
-    @apply px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border;
+    @apply px-4 py-2 text-left text-xs font-bold uppercase tracking-wider border-b-2 border-border;
+    color: hsl(0 0% 25%);
   }
   .pdv-table td {
-    @apply px-3 py-2 border-b border-border/50 font-mono;
+    @apply px-4 py-2 border-b border-border/50 font-mono;
   }
   .pdv-table tbody tr:hover {
-    background-color: hsl(60 4% 25%);
+    background-color: hsl(200 30% 92%);
   }
 
   .pdv-input {
-    @apply bg-card border-2 border-border text-foreground font-mono font-bold text-lg px-3 py-2 rounded-md;
+    @apply bg-white border-2 border-border font-mono font-bold text-lg px-3 py-2;
+    border-radius: 2px;
+    color: hsl(0 0% 10%);
   }
   .pdv-input:focus {
-    @apply outline-none border-primary;
+    @apply outline-none;
+    border-color: hsl(120 40% 35%);
   }
 
   /* Legacy aliases */
   .glass-card { @apply pdv-card; }
   .glass-card-hover { @apply pdv-card-hover; }
   .stat-label {
-    @apply text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground;
+    @apply text-[11px] font-bold uppercase tracking-[0.08em];
+    color: hsl(0 0% 35%);
   }
   .section-title {
-    @apply text-sm font-bold text-foreground tracking-tight uppercase;
+    @apply text-sm font-bold tracking-tight uppercase;
+    color: hsl(0 0% 20%);
   }
   .gradient-text {
-    @apply text-primary font-bold;
+    @apply font-bold;
+    color: hsl(120 40% 30%);
   }
 
   /* Thermal receipt */
@@ -176,7 +187,7 @@
     background: hsl(45 30% 96%);
     color: hsl(0 0% 10%);
     font-family: 'JetBrains Mono', 'Courier New', monospace;
-    border-radius: 4px;
+    border-radius: 2px;
     position: relative;
   }
   .receipt-paper::before,
@@ -184,13 +195,7 @@
     content: '';
     display: block;
     height: 12px;
-    background: repeating-linear-gradient(
-      135deg,
-      transparent,
-      transparent 4px,
-      hsl(45 30% 90%) 4px,
-      hsl(45 30% 90%) 8px
-    );
+    background: repeating-linear-gradient(135deg, transparent, transparent 4px, hsl(45 30% 90%) 4px, hsl(45 30% 90%) 8px);
   }
 }
 
@@ -211,6 +216,6 @@
   .stagger-7 { animation-delay: 0.21s; }
   .stagger-8 { animation-delay: 0.24s; }
 
-  .pdv-moto-row { color: hsl(0 72% 55%); }
-  .pdv-carro-row { color: hsl(60 10% 90%); }
+  .pdv-moto-row { color: hsl(0 72% 45%); }
+  .pdv-carro-row { color: hsl(0 0% 10%); }
 }
