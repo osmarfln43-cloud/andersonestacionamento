@@ -1,11 +1,14 @@
-import { Wallet, TrendingUp, Banknote, QrCode, Users, Calendar, DollarSign, Car, Bike, Search } from "lucide-react";
+import { Wallet, TrendingUp, Banknote, QrCode, Users, Calendar, DollarSign, Car, Bike, Search, Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line } from "recharts";
-import { useMensalistas } from "@/hooks/useDatabase";
-import { useMemo, useState } from "react";
+import { useMensalistas, useConfiguracoes } from "@/hooks/useDatabase";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const COLORS = [
   'hsl(217, 91%, 60%)',
@@ -107,7 +110,11 @@ export default function Financeiro() {
   const [periodo, setPeriodo] = useState<Periodo>('30dias');
   const [customDe, setCustomDe] = useState('');
   const [customAte, setCustomAte] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
   const { data: mensalistas = [] } = useMensalistas();
+  const { data: config } = useConfiguracoes();
+  const { toast } = useToast();
 
   const { data: movimentacoes = [] } = useMovimentacoesPeriodo(periodo, customDe || undefined, customAte || undefined);
   const { data: pagamentos = [] } = usePagamentosPeriodo(periodo, customDe || undefined, customAte || undefined);
