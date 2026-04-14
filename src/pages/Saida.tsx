@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { calculateParkingBilling } from "@/lib/billing";
+import ReceiptPDF, { ReceiptData } from "@/components/ReceiptPDF";
 
 type MovData = {
   id: string; placa: string; modelo: string | null; cor: string | null;
