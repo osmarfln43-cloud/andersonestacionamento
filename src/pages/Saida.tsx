@@ -25,6 +25,7 @@ export default function Saida() {
   const [finalizado, setFinalizado] = useState(false);
   const [finalizadoData, setFinalizadoData] = useState<MovData | null>(null);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const [receiptKey, setReceiptKey] = useState(0);
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
   const { data: config } = useConfiguracoes();
