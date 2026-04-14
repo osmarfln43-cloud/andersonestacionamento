@@ -150,7 +150,7 @@
     color: hsl(0 0% 25%);
   }
   .pdv-table td {
-    @apply px-4 py-2 border-b border-border/50 font-mono;
+    @apply px-4 py-3 border-b border-border/50 font-mono;
   }
   .pdv-table tbody tr:hover {
     background-color: hsl(200 30% 92%);
