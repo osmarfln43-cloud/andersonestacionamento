@@ -175,6 +175,7 @@ function ExitReceiptPreview({ form }: { form: any }) {
       </div>
     </div>
   );
+}
 
 function PrinterSetup({ form, setField, save }: { form: any; setField: (k: string, v: any) => void; save: () => void }) {
   const { toast } = useToast();
