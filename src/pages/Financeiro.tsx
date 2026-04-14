@@ -485,6 +485,7 @@ export default function Financeiro() {
           <span className="text-xl font-display font-bold text-primary">R$ {receitaMensalistas.toLocaleString()}</span>
         </div>
       </div>
+      </div>
     </div>
   );
 }
