@@ -113,6 +113,69 @@ function ReceiptPreview({ form }: { form: any }) {
   );
 }
 
+function ExitReceiptPreview({ form }: { form: any }) {
+  const nome = form.nome_estacionamento || 'ANDERSON ESTACIONAMENTO';
+  const disclaimer = form.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
+  const dias = (form.dias_funcionamento || 'Seg-Sex').toUpperCase();
+  const abertura = form.horario_abertura || '07:00';
+  const fechamento = form.horario_fechamento || '19:00';
+  const endereco = (form.endereco || '').toUpperCase();
+  const mensagem = form.mensagem_comprovante || 'AGRADECEMOS A PREFERENCIA';
+  const valorHora = Number(form.valor_hora || 10).toFixed(2);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  // Simulated exit 2h30 later
+  const exitTime = new Date(now.getTime() + 2.5 * 3600000);
+  const exitDateStr = exitTime.toLocaleDateString('pt-BR');
+  const exitTimeStr = exitTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="bg-[#f5f0e8] text-[#1a1a1a] rounded-xl shadow-xl overflow-hidden max-w-[280px] mx-auto" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+      <div className="p-4 space-y-1.5 text-[9px] leading-relaxed">
+        <div className="text-center space-y-0.5">
+          <p className="text-[11px] font-bold tracking-wide">{nome}</p>
+          <div className="border-b border-dashed border-gray-400 my-1.5" />
+          <p className="text-[7px] leading-snug">{disclaimer}. {dias} {abertura}-{fechamento}</p>
+          <div className="border-b border-dashed border-gray-400 my-1.5" />
+        </div>
+
+        <p className="text-[10px] font-bold text-center">COMPROVANTE DE SAIDA</p>
+
+        <div className="text-center py-0.5">
+          <p className="text-lg font-bold tracking-widest">ABC1D23</p>
+          <p className="text-[8px] font-bold">(HONDA CIVIC PRETO)</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="space-y-0.5">
+          <div className="flex justify-between"><span>Entrada:</span><span>{dateStr} {timeStr}</span></div>
+          <div className="flex justify-between"><span>Saida:</span><span>{exitDateStr} {exitTimeStr}</span></div>
+          <div className="flex justify-between"><span>Permanencia:</span><span className="font-bold">2h 30min</span></div>
+          <div className="flex justify-between"><span>Tabela:</span><span>Avulso</span></div>
+          <div className="flex justify-between"><span>Cobranca:</span><span className="font-bold">3 HORAS</span></div>
+          <div className="flex justify-between"><span>Valor/hora:</span><span>R$ {valorHora}</span></div>
+          <div className="flex justify-between"><span>Pagamento:</span><span className="font-bold">DINHEIRO</span></div>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="text-center">
+          <p className="text-[10px] font-bold">TOTAL</p>
+          <p className="text-base font-bold">R$ 30.00</p>
+        </div>
+        <div className="border-b border-dashed border-gray-400" />
+
+        <div className="text-center space-y-0.5">
+          <p className="font-bold text-[8px]">{mensagem}</p>
+          {endereco && <p className="text-[7px]">{endereco}</p>}
+          {form.cnpj && <p className="text-[7px]">CNPJ: {form.cnpj}</p>}
+        </div>
+      </div>
+    </div>
+  );
+
 function PrinterSetup({ form, setField, save }: { form: any; setField: (k: string, v: any) => void; save: () => void }) {
   const { toast } = useToast();
   const [printerConfig, setPrinterConfig] = useState<PrinterConfig | null>(getSavedPrinterConfig());
