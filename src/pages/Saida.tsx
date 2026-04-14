@@ -94,6 +94,7 @@ export default function Saida() {
             cnpj: config?.cnpj || undefined,
             regraAplicada: billing.regraAplicada,
           });
+          setReceiptKey(k => k + 1);
         },
         onError: (err: any) => {
           toast({ title: "Erro", description: err.message, variant: "destructive" });
