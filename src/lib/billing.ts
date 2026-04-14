@@ -4,6 +4,7 @@ export type BillingSummary = {
   total: number;
   billableHours: number;
   pricingMode: 'hourly' | 'daily';
+  regraAplicada: string;
 };
 
 /**
