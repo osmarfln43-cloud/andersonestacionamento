@@ -208,37 +208,38 @@ export default function Dashboard() {
         </div>
 
       <div className="pdv-card overflow-hidden">
-          <div className="flex items-center justify-between p-4 pb-3">
-            <h3 className="text-2xl font-black font-mono uppercase tracking-wider text-foreground">MOVIMENTAÇÕES DE HOJE</h3>
-            <span className="text-base font-mono font-bold text-muted-foreground">
+          <div className="flex items-center justify-between p-5 pb-3">
+            <h3 className="text-3xl font-black font-mono uppercase tracking-wider text-destructive">MOVIMENTAÇÕES DE HOJE</h3>
+            <span className="text-lg font-mono font-bold text-muted-foreground">
               {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })} — {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
-          <table className="pdv-table">
+          <div className="overflow-x-auto">
+          <table className="pdv-table w-full">
             <thead>
               <tr>
-                <th className="text-lg font-black uppercase">Cupom</th>
-                <th className="text-lg font-black uppercase">Entrada</th>
-                <th className="text-lg font-black uppercase">Placa</th>
-                <th className="text-lg font-black uppercase">Descrição</th>
-                <th className="text-lg font-black uppercase">Status</th>
+                <th className="text-xl font-black uppercase py-3">Cupom</th>
+                <th className="text-xl font-black uppercase py-3">Entrada</th>
+                <th className="text-xl font-black uppercase py-3">Placa</th>
+                <th className="text-xl font-black uppercase py-3">Descrição</th>
+                <th className="text-xl font-black uppercase py-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {movimentacoesHoje.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-6 text-muted-foreground text-xl">Nenhuma hoje</td></tr>
+                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground text-2xl">Nenhuma hoje</td></tr>
               )}
               {movimentacoesHoje.slice(0, 12).map((m, i) => {
                 const cupomNum = movimentacoesHoje.length - i;
                 const rowColor = m.categoria === 'moto' ? 'hsl(0,72%,50%)' : 'hsl(120,55%,42%)';
                 return (
-                  <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
-                    <td className="text-4xl font-black font-mono" style={{ color: rowColor }}>{String(cupomNum).padStart(4, '0')}</td>
-                    <td className="text-3xl font-black font-mono" style={{ color: rowColor }}>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="text-4xl font-black font-mono tracking-wider">{m.placa}</td>
-                    <td className="text-3xl font-black uppercase">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
-                    <td>
-                      <span className={`text-lg font-black px-4 py-2 rounded ${
+                  <tr key={m.id} className={`${m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'} py-2`}>
+                    <td className="text-5xl font-black font-mono py-3" style={{ color: rowColor }}>{String(cupomNum).padStart(4, '0')}</td>
+                    <td className="text-4xl font-black font-mono py-3" style={{ color: rowColor }}>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="text-5xl font-black font-mono tracking-wider py-3">{m.placa}</td>
+                    <td className="text-4xl font-black uppercase py-3">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
+                    <td className="py-3">
+                      <span className={`text-xl font-black px-5 py-2.5 rounded ${
                         m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
                       }`}>
                         {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
@@ -249,6 +250,7 @@ export default function Dashboard() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
