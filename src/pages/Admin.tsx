@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,10 +100,12 @@ const perfilColors: Record<string, string> = {
 export default function Admin() {
   const [busca, setBusca] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [deleteUserTarget, setDeleteUserTarget] = useState<any>(null);
   const [editPerfil, setEditPerfil] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [editNome, setEditNome] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteNome, setInviteNome] = useState("");
@@ -103,7 +115,7 @@ export default function Admin() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const { data: usuarios = [], isLoading } = useProfiles();
-  const { profile: myProfile } = useAuth();
+  const { profile: myProfile, user } = useAuth();
   const queryClient = useQueryClient();
 
   const isAdmin = myProfile?.perfil === 'admin';
@@ -120,11 +132,11 @@ export default function Admin() {
     operadores: usuarios.filter((u: any) => u.perfil === 'operador').length,
   };
 
-  const openEdit = (user: any) => {
-    setEditingUser(user);
-    setEditPerfil(user.perfil);
-    setEditStatus(user.status);
-    setEditNome(user.nome || '');
+  const openEdit = (userToEdit: any) => {
+    setEditingUser(userToEdit);
+    setEditPerfil(userToEdit.perfil);
+    setEditStatus(userToEdit.status);
+    setEditNome(userToEdit.nome || '');
   };
 
   const saveUser = async () => {
@@ -143,6 +155,31 @@ export default function Admin() {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteUser = async () => {
+    if (!deleteUserTarget) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deleteUserTarget.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast({
+        title: "✓ Usuário excluído",
+        description: deleteUserTarget.nome || deleteUserTarget.email || 'Usuário removido',
+      });
+      if (editingUser?.id === deleteUserTarget.id) {
+        setEditingUser(null);
+      }
+      setDeleteUserTarget(null);
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -259,36 +296,55 @@ export default function Admin() {
                     <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
                   ) : filtered.length === 0 ? (
                     <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">Nenhum usuário</td></tr>
-                  ) : filtered.map((u: any) => (
-                    <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                            {(u.nome || '?').charAt(0)}
+                  ) : filtered.map((u: any) => {
+                    const isCurrentUser = u.user_id === user?.id;
+
+                    return (
+                      <tr key={u.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                              {(u.nome || '?').charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground text-sm">{u.nome || '—'}</p>
+                              <p className="text-xs text-muted-foreground">{u.email}</p>
+                              {isCurrentUser && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Seu usuário atual</p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground text-sm">{u.nome || '—'}</p>
-                            <p className="text-xs text-muted-foreground">{u.email}</p>
+                        </td>
+                        <td className="p-4">
+                          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${perfilColors[u.perfil] || 'bg-secondary text-muted-foreground'}`}>
+                            {u.perfil}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg ${u.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>
+                            {u.status}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="gap-1.5 text-xs h-8">
+                              <Pencil className="h-3 w-3" /> Editar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteUserTarget(u)}
+                              disabled={isCurrentUser}
+                              title={isCurrentUser ? 'Você não pode excluir seu próprio usuário' : 'Excluir usuário'}
+                              className="gap-1.5 text-xs h-8 text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                            >
+                              <Trash2 className="h-3 w-3" /> Excluir
+                            </Button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg ${perfilColors[u.perfil] || 'bg-secondary text-muted-foreground'}`}>
-                          {u.perfil}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg ${u.status === 'ativo' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                          {u.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(u)} className="gap-1.5 text-xs h-8">
-                          <Pencil className="h-3 w-3" /> Editar
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -334,7 +390,6 @@ export default function Admin() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -405,7 +460,35 @@ export default function Admin() {
           )}
         </DialogContent>
       </Dialog>
-      {/* Invite User Dialog */}
+
+      <AlertDialog open={!!deleteUserTarget} onOpenChange={(open) => !open && setDeleteUserTarget(null)}>
+        <AlertDialogContent className="max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-destructive" /> Excluir usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="block">
+                Tem certeza que deseja excluir <strong className="text-foreground">{deleteUserTarget?.nome || deleteUserTarget?.email || 'este usuário'}</strong>?
+              </span>
+              <span className="block mt-2">
+                Essa ação não pode ser desfeita.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteUser}
+              disabled={deleting}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir usuário'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={inviteOpen} onOpenChange={(open) => !open && closeInvite()}>
         <DialogContent className="max-w-md">
           <DialogHeader>
