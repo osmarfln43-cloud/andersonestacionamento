@@ -206,33 +206,33 @@ export default function Entrada() {
 
   return (
     <div className="space-y-3">
-      {/* Input bar - like PARKEE */}
-      <form onSubmit={handleSubmit} className="pdv-card p-3">
-        <div className="flex flex-wrap gap-2 items-end">
-          <div className="space-y-1 flex-1 min-w-[140px]">
-            <label className="stat-label">PLACA</label>
+      {/* Input bar */}
+      <form onSubmit={handleSubmit} className="pdv-card p-4">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="space-y-1 flex-1 min-w-[160px]">
+            <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">PLACA</label>
             <input
               placeholder="ABC1D23"
               value={placa}
               onChange={(e) => setPlaca(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7))}
-              className="pdv-input w-full text-xl tracking-[0.15em] text-center uppercase"
+              className="pdv-input w-full text-4xl tracking-[0.15em] text-center uppercase font-black py-3"
               maxLength={7}
               autoFocus
             />
           </div>
-          <div className="space-y-1 w-24">
-            <label className="stat-label">TIPO</label>
+          <div className="space-y-1 w-32">
+            <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">TIPO</label>
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as 'carro' | 'moto')}
-              className="pdv-input w-full text-sm h-[46px]"
+              className="pdv-input w-full text-xl font-bold h-[60px]"
             >
               <option value="carro">🚗 Carro</option>
               <option value="moto">🏍️ Moto</option>
             </select>
           </div>
-          <div className="space-y-1 flex-1 min-w-[160px]">
-            <label className="stat-label">DESCRIÇÃO (modelo + cor)</label>
+          <div className="space-y-1 flex-1 min-w-[200px]">
+            <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">DESCRIÇÃO (modelo + cor)</label>
             <input
               placeholder="Ex: CIVIC PRETO"
               value={[modelo, cor].filter(Boolean).join(' ')}
@@ -241,15 +241,15 @@ export default function Entrada() {
                 if (parts.length > 1) { setCor(parts.pop() || ''); setModelo(parts.join(' ')); }
                 else { setModelo(e.target.value); setCor(''); }
               }}
-              className="pdv-input w-full text-base"
+              className="pdv-input w-full text-2xl font-bold uppercase py-3"
             />
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="pdv-btn-green h-[46px] px-6" disabled={registrarEntrada.isPending}>
+            <button type="submit" className="pdv-btn-green h-[60px] px-8 text-2xl font-black" disabled={registrarEntrada.isPending}>
               {registrarEntrada.isPending ? '...' : '→'}
             </button>
-            <button type="button" onClick={() => placa.length >= 7 ? identifyByPlaca() : setShowAiSection(!showAiSection)} className="pdv-btn-yellow h-[46px] px-3" disabled={aiLoading}>
-              <Search className="h-4 w-4" />
+            <button type="button" onClick={() => placa.length >= 7 ? identifyByPlaca() : setShowAiSection(!showAiSection)} className="pdv-btn-yellow h-[60px] px-4" disabled={aiLoading}>
+              <Search className="h-6 w-6" />
             </button>
           </div>
         </div>
@@ -306,40 +306,43 @@ export default function Entrada() {
 
       {/* Table of today's entries - like PARKEE */}
       <div className="pdv-card overflow-hidden">
-        <div className="px-3 py-2 flex items-center justify-between border-b border-border">
-          <span className="stat-label">MOVIMENTAÇÕES DE HOJE</span>
-          <span className="text-xs text-muted-foreground font-mono">{movHoje.length} registros</span>
+        <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+          <span className="text-2xl font-black uppercase tracking-wider text-destructive">MOVIMENTAÇÕES DE HOJE</span>
+          <span className="text-lg text-muted-foreground font-mono font-bold">{movHoje.length} registros</span>
         </div>
         <div className="overflow-x-auto">
           <table className="pdv-table">
             <thead>
               <tr>
-                <th>Cupom</th>
-                <th>Entrada</th>
-                <th>Placa</th>
-                <th>Descrição</th>
-                <th>Status</th>
+                <th className="text-xl font-black uppercase py-3">Cupom</th>
+                <th className="text-xl font-black uppercase py-3">Entrada</th>
+                <th className="text-xl font-black uppercase py-3">Placa</th>
+                <th className="text-xl font-black uppercase py-3">Descrição</th>
+                <th className="text-xl font-black uppercase py-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {movHoje.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma movimentação hoje</td></tr>
+                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground text-xl">Nenhuma movimentação hoje</td></tr>
               )}
-              {movHoje.map((m, i) => (
-                <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
-                  <td className="font-bold">{String(movHoje.length - i).padStart(4, '0')}</td>
-                  <td>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td className="font-bold text-base">{m.placa}</td>
-                  <td className="font-bold">{[m.modelo, m.cor].filter(Boolean).join(' ').toUpperCase()}</td>
-                  <td>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {movHoje.map((m, i) => {
+                const rowColor = m.categoria === 'moto' ? 'hsl(0,72%,50%)' : 'hsl(120,55%,42%)';
+                return (
+                  <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
+                    <td className="text-4xl font-black font-mono py-3" style={{ color: rowColor }}>{String(movHoje.length - i).padStart(4, '0')}</td>
+                    <td className="text-3xl font-black font-mono py-3" style={{ color: rowColor }}>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="text-4xl font-black font-mono tracking-wider py-3">{m.placa}</td>
+                    <td className="text-3xl font-black uppercase py-3">{[m.modelo, m.cor].filter(Boolean).join(' ').toUpperCase()}</td>
+                    <td className="py-3">
+                      <span className={`text-lg font-black px-4 py-2 rounded ${
+                        m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
