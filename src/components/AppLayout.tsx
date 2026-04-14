@@ -146,8 +146,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto relative">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-          <img src={watermarkLogo} alt="" className="w-[400px] h-[400px] object-contain opacity-[0.06]" />
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 pb-8">
+          <img src={watermarkLogo} alt="" className="w-[350px] h-[350px] object-contain opacity-[0.06]" />
         </div>
         <div className="p-3 md:p-4 max-w-[1600px] mx-auto relative z-10">
           {children}
