@@ -76,7 +76,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [role, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Top Header Bar - dark green like PARKEE */}
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-2 shrink-0">
