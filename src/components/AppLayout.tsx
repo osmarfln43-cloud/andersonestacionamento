@@ -11,12 +11,12 @@ import {
 
 const navItems = [
   { title: "Pátio", url: "/patio", icon: Car, perm: "patio", fKey: "F1", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
-  { title: "Cancelar", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
+  { title: "Saída/Fechamento", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
   { title: "Anotações", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F3", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
   { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F4", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F5", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
   { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
-  { title: "Recibo", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F7", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Entrada", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F7", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
   { title: "Clientes", url: "/clientes", icon: Users, perm: "clientes", fKey: "F8", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
   { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
   { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos", fKey: "F10", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
