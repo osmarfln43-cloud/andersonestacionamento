@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import watermarkLogo from "@/assets/watermark-logo.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
 import logoImg from "@/assets/logo.png";
