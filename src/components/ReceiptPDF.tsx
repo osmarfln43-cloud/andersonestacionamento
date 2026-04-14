@@ -51,26 +51,27 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     // Try USB direct printing first
     const printerConfig = getSavedPrinterConfig();
     if (printerConfig?.type === 'usb') {
-      const escposData = buildReceiptESCPOS({
-        nomeEstacionamento: data.nomeEstacionamento,
-        disclaimer: data.disclaimerComprovante,
-        diasFuncionamento: data.diasFuncionamento,
-        horarioAbertura: data.horarioAbertura,
-        horarioFechamento: data.horarioFechamento,
-        placa: data.placa,
-        modelo: data.modelo,
-        cor: data.cor,
-        entrada: data.entrada,
-        saida: data.saida,
-        tempoTotal: data.tempoTotal,
-        tipoCliente: data.tipo_cliente,
-        formaPagamento: data.formaPagamento,
-        valorHora: data.valorHora,
-        valorTotal: data.valorTotal,
-        mensagemComprovante: data.mensagemComprovante,
-        endereco: data.endereco,
-        cnpj: data.cnpj,
-      }, printerConfig.paperWidth);
+        const escposData = buildReceiptESCPOS({
+          nomeEstacionamento: data.nomeEstacionamento,
+          disclaimer: data.disclaimerComprovante,
+          diasFuncionamento: data.diasFuncionamento,
+          horarioAbertura: data.horarioAbertura,
+          horarioFechamento: data.horarioFechamento,
+          placa: data.placa,
+          modelo: data.modelo,
+          cor: data.cor,
+          entrada: data.entrada,
+          saida: data.saida,
+          tempoTotal: data.tempoTotal,
+          tipoCliente: data.tipo_cliente,
+          formaPagamento: data.formaPagamento,
+          valorHora: data.valorHora,
+          valorTotal: data.valorTotal,
+          mensagemComprovante: data.mensagemComprovante,
+          endereco: data.endereco,
+          telefone: data.telefone,
+          cnpj: data.cnpj,
+        }, printerConfig.paperWidth);
 
       const success = await printViaUSB(escposData);
       if (success) {
