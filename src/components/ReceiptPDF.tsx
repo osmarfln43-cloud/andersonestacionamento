@@ -27,6 +27,7 @@ export interface ReceiptData {
   disclaimerComprovante?: string;
   qrCodeUrl?: string;
   cnpj?: string;
+  regraAplicada?: string;
 }
 
 interface Props {
