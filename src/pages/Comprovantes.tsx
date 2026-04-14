@@ -223,7 +223,7 @@ export default function Comprovantes() {
 
               {/* Print button */}
               <Button onClick={() => setReceiptData(buildReceipt(viewMov))} className="w-full h-12 gap-2 rounded-xl">
-                <Printer className="h-4 w-4" /> Imprimir Comprovante
+                <Printer className="h-4 w-4" /> Imprimir Comprovante <span className="text-[10px] font-normal opacity-70">2ª via</span>
               </Button>
             </div>
           ) : (
