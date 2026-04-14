@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 const tooltipStyle = {
-  background: 'hsl(60, 4%, 15%)',
-  border: '1px solid hsl(60, 4%, 30%)',
-  borderRadius: 6,
+  background: 'hsl(0, 0%, 100%)',
+  border: '1px solid hsl(200, 20%, 82%)',
+  borderRadius: 4,
   fontSize: 12,
   padding: '8px 12px',
-  color: 'hsl(60, 10%, 90%)',
+  color: 'hsl(0, 0%, 10%)',
 };
 
 function StatCard({ icon: Icon, label, value, color }: {
