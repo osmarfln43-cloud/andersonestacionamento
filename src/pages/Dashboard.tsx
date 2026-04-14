@@ -44,6 +44,43 @@ export default function Dashboard() {
   const { data: mensalistas = [] } = useMensalistas();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
 
+  // Last 6 months of finalized movimentacoes for month comparison
+  const { data: movLast6Months = [] } = useQuery({
+    queryKey: ['movimentacoes', 'last-6-months'],
+    queryFn: async () => {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      sixMonthsAgo.setDate(1);
+      sixMonthsAgo.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('entrada, valor_total, status_movimentacao, categoria, forma_pagamento')
+        .eq('status_movimentacao', 'finalizado')
+        .gte('entrada', sixMonthsAgo.toISOString())
+        .order('entrada', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 60000,
+  });
+
+  const monthlyComparison = useMemo(() => {
+    const months: Record<string, { mes: string; faturamento: number; veiculos: number; carros: number; motos: number; pix: number; dinheiro: number }> = {};
+    movLast6Months.forEach((m: any) => {
+      const d = new Date(m.entrada);
+      const key = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      if (!months[key]) months[key] = { mes: key, faturamento: 0, veiculos: 0, carros: 0, motos: 0, pix: 0, dinheiro: 0 };
+      const val = Number(m.valor_total) || 0;
+      months[key].faturamento += val;
+      months[key].veiculos += 1;
+      if (m.categoria === 'moto') months[key].motos += 1;
+      else months[key].carros += 1;
+      if (m.forma_pagamento === 'pix') months[key].pix += val;
+      else months[key].dinheiro += val;
+    });
+    return Object.values(months);
+  }, [movLast6Months]);
+
   const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
   const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = saidasHoje.length > 0 ? (faturamentoHoje / saidasHoje.length).toFixed(0) : '0';
