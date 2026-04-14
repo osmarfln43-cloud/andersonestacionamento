@@ -255,6 +255,43 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+      {/* Monthly Comparison */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-6">📊 Comparativo Mês a Mês — Faturamento</h3>
+          {monthlyComparison.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={monthlyComparison} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={60} tickFormatter={(v) => `R$${v}`} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number, name: string) => [`R$ ${v.toFixed(2)}`, name === 'pix' ? 'PIX' : name === 'dinheiro' ? 'Dinheiro' : name]} />
+                <Bar dataKey="pix" name="PIX" stackId="a" fill="hsl(217, 91%, 60%)" maxBarSize={36} />
+                <Bar dataKey="dinheiro" name="Dinheiro" stackId="a" fill="hsl(160, 65%, 48%)" radius={[6, 6, 0, 0]} maxBarSize={36} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-16">Sem dados nos últimos 6 meses</p>
+          )}
+        </div>
+
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-6">🚗 Veículos por Mês — Carros vs Motos</h3>
+          {monthlyComparison.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={monthlyComparison} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="carros" name="Carros" fill="hsl(217, 91%, 60%)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="motos" name="Motos" fill="hsl(45, 93%, 47%)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-16">Sem dados nos últimos 6 meses</p>
+          )}
+        </div>
       </div>
     </div>
   );
