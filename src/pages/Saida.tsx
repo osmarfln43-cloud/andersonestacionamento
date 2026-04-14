@@ -54,7 +54,8 @@ export default function Saida() {
   };
 
   const handlePagamento = (tipo: 'pix' | 'dinheiro') => {
-    if (!selectedId) return;
+    if (!selectedId || !selected) return;
+    const billing = calcularValor(selected);
     registrarSaida.mutate(
       { id: selectedId, forma_pagamento: tipo },
       {
@@ -63,6 +64,35 @@ export default function Saida() {
           setFinalizado(true);
           if (tipo === 'pix') setShowPix(true);
           toast({ title: "✓ Saída registrada", description: `${(selected as any)?.placa} — ${tipo.toUpperCase()}` });
+          // Build receipt for print
+          const saida = (data as any)?.saida || new Date().toISOString();
+          setReceiptData({
+            placa: (selected as any).placa,
+            modelo: (selected as any).modelo || 'N/I',
+            cor: (selected as any).cor || '',
+            tipo_cliente: (selected as any).tipo_cliente,
+            entrada: (selected as any).entrada,
+            saida,
+            tempoTotal: (data as any)?.tempo_total || `${billing.hours}h ${billing.mins}min`,
+            valorTotal: Number((data as any)?.valor_total ?? billing.total),
+            formaPagamento: tipo.toUpperCase(),
+            nomeEstacionamento: config?.nome_estacionamento,
+            endereco: config?.endereco || undefined,
+            telefone: config?.telefone || undefined,
+            chavePix: config?.chave_pix || undefined,
+            tipoChavePix: config?.tipo_chave_pix || undefined,
+            nomeBeneficiario: config?.nome_beneficiario || undefined,
+            mensagemComprovante: config?.mensagem_comprovante || undefined,
+            valorHora: Number((selected as any).valor_hora),
+            tipo: 'saida',
+            horarioAbertura: config?.horario_abertura || undefined,
+            horarioFechamento: config?.horario_fechamento || undefined,
+            diasFuncionamento: config?.dias_funcionamento || undefined,
+            disclaimerComprovante: config?.disclaimer_comprovante || undefined,
+            qrCodeUrl: config?.qr_code_url || undefined,
+            cnpj: config?.cnpj || undefined,
+            regraAplicada: billing.regraAplicada,
+          });
         },
         onError: (err: any) => {
           toast({ title: "Erro", description: err.message, variant: "destructive" });
