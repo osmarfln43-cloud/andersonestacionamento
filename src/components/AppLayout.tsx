@@ -9,18 +9,18 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { title: "Pátio", url: "/patio", icon: Car, perm: "patio", fKey: "F1" },
-  { title: "Cancelar", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2" },
-  { title: "Anotações", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F3" },
-  { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F4" },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F5" },
-  { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6" },
-  { title: "Recibo", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F7" },
-  { title: "Clientes", url: "/clientes", icon: Users, perm: "clientes", fKey: "F8" },
-  { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9" },
-  { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos", fKey: "F10" },
-  { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard", fKey: "F11" },
-  { title: "Admin", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F12" },
+  { title: "Pátio", url: "/patio", icon: Car, perm: "patio", fKey: "F1", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
+  { title: "Cancelar", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
+  { title: "Anotações", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F3", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
+  { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F4", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F5", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
+  { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
+  { title: "Recibo", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F7", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Clientes", url: "/clientes", icon: Users, perm: "clientes", fKey: "F8", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos", fKey: "F10", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard", fKey: "F11", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Admin", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F12", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -152,7 +152,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Bottom Navigation - 2 rows like PARKEE */}
       <nav className="hidden md:block shrink-0">
-        {/* Row 1 - Green buttons */}
+        {/* Row 1 */}
         <div className="flex gap-0.5 px-1 pt-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
           {visibleItems.slice(0, 6).map((item) => {
             const isActive = location.pathname === item.url;
@@ -160,20 +160,16 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 key={item.url}
                 onClick={() => navigate(item.url)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 ${
-                  isActive
-                    ? 'border-green-800 text-white'
-                    : 'border-green-700/50 text-white'
-                }`}
-                style={{ backgroundColor: isActive ? 'hsl(120 50% 32%)' : 'hsl(120 50% 38%)', borderRadius: '2px' }}
+                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
+                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
               >
                 <span>{item.title}</span>
-                <span className="text-[9px] opacity-60 mt-0.5">{item.fKey}</span>
+                <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
               </button>
             );
           })}
         </div>
-        {/* Row 2 - Yellow-green buttons */}
+        {/* Row 2 */}
         <div className="flex gap-0.5 px-1 pb-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
           {visibleItems.slice(6, 12).map((item) => {
             const isActive = location.pathname === item.url;
@@ -181,12 +177,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 key={item.url}
                 onClick={() => navigate(item.url)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 ${
-                  isActive
-                    ? 'border-yellow-700 text-black'
-                    : 'border-yellow-600/50 text-black'
-                }`}
-                style={{ backgroundColor: isActive ? 'hsl(65 65% 45%)' : 'hsl(65 70% 52%)', borderRadius: '2px' }}
+                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
+                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
               >
                 <span>{item.title}</span>
                 <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
