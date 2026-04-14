@@ -10,13 +10,14 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
-  // Convert username to a fake email for Supabase auth
-  const toEmail = (username: string) => `${username.toLowerCase().trim()}@parking.local`;
+  // Use login as fake email for auth, store real email in profile
+  const toAuthEmail = (username: string) => `${username.toLowerCase().trim()}@parking.local`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +25,12 @@ export default function Login() {
     setLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await signUp(toEmail(login), senha, nome || login);
+        if (!email.trim()) {
+          toast({ title: "Informe seu e-mail", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        const { error } = await signUp(toAuthEmail(login), senha, nome || login, email);
         if (error) {
           toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
         } else {
@@ -32,7 +38,7 @@ export default function Login() {
           navigate("/");
         }
       } else {
-        const { error } = await signIn(toEmail(login), senha);
+        const { error } = await signIn(toAuthEmail(login), senha);
         if (error) {
           toast({ title: "Erro ao entrar", description: "Login ou senha incorretos", variant: "destructive" });
         } else {
@@ -61,16 +67,23 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="pdv-card p-5 space-y-4">
           {isSignUp && (
-            <div className="space-y-1">
-              <label className="stat-label">Nome completo</label>
-              <input placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} className="pdv-input w-full text-base" />
-            </div>
+            <>
+              <div className="space-y-1">
+                <label className="stat-label">Nome completo</label>
+                <input placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} className="pdv-input w-full text-base" required />
+              </div>
+              <div className="space-y-1">
+                <label className="stat-label">E-mail</label>
+                <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pdv-input w-full text-base" required />
+                <p className="text-[10px] text-muted-foreground mt-1">Usado para identificação no sistema</p>
+              </div>
+            </>
           )}
           <div className="space-y-1">
             <label className="stat-label">Login</label>
             <input
               type="text"
-              placeholder="Digite seu login"
+              placeholder="Crie seu login"
               value={login}
               onChange={(e) => setLogin(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ''))}
               className="pdv-input w-full text-base"
