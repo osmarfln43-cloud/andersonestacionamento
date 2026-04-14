@@ -616,6 +616,7 @@ export default function Configuracoes() {
                   </div>
                 </div>
               </Section>
+            </TabsContent>
 
             <TabsContent value="impressao" className="space-y-6">
               <PrinterSetup form={form} setField={setField} save={save} />
