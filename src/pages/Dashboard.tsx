@@ -1,4 +1,4 @@
-import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight, CalendarCheck, Banknote, CreditCard } from "lucide-react";
+import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight, CalendarCheck, Banknote, CreditCard, Flame } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMovimentacoesAtivas, useMovimentacoesHoje, useMensalistas, useMovimentacoesFinalizadasHoje } from "@/hooks/useDatabase";
 import { useMemo } from "react";
