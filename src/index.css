@@ -2,7 +2,7 @@
   display: none !important;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,57 +10,62 @@
 
 @layer base {
   :root {
-    --background: 204 60% 94%;
-    --foreground: 225 25% 12%;
+    --background: 60 5% 18%;
+    --foreground: 60 10% 90%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 225 25% 12%;
+    --card: 60 4% 22%;
+    --card-foreground: 60 10% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 25% 12%;
+    --popover: 60 4% 20%;
+    --popover-foreground: 60 10% 90%;
 
-    --primary: 217 91% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 45 90% 50%;
+    --primary-foreground: 0 0% 5%;
 
-    --secondary: 220 14% 93%;
-    --secondary-foreground: 225 20% 25%;
+    --secondary: 60 4% 26%;
+    --secondary-foreground: 60 10% 85%;
 
-    --muted: 220 14% 95%;
-    --muted-foreground: 218 12% 45%;
+    --muted: 60 4% 28%;
+    --muted-foreground: 60 8% 55%;
 
-    --accent: 160 65% 40%;
+    --accent: 120 55% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 88%;
-    --input: 220 13% 90%;
-    --ring: 217 91% 55%;
+    --border: 60 4% 30%;
+    --input: 60 4% 25%;
+    --ring: 45 90% 50%;
 
-    --radius: 0.875rem;
+    --radius: 0.5rem;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 8%;
-    --success: 160 65% 40%;
+    --success: 120 55% 42%;
     --success-foreground: 0 0% 100%;
-    --info: 217 91% 55%;
+    --info: 200 80% 50%;
     --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 97%;
-    --sidebar-foreground: 218 12% 40%;
-    --sidebar-primary: 217 91% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 93%;
-    --sidebar-accent-foreground: 225 25% 12%;
-    --sidebar-border: 220 13% 88%;
-    --sidebar-ring: 217 91% 55%;
+    --sidebar-background: 60 4% 15%;
+    --sidebar-foreground: 60 8% 55%;
+    --sidebar-primary: 45 90% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 60 4% 22%;
+    --sidebar-accent-foreground: 60 10% 90%;
+    --sidebar-border: 60 4% 25%;
+    --sidebar-ring: 45 90% 50%;
 
-    --chart-1: 217 91% 55%;
-    --chart-2: 160 65% 40%;
-    --chart-3: 38 92% 50%;
+    --chart-1: 200 80% 50%;
+    --chart-2: 120 55% 42%;
+    --chart-3: 45 90% 50%;
     --chart-4: 280 65% 55%;
     --chart-5: 0 72% 50%;
+
+    --pdv-green: 120 55% 42%;
+    --pdv-yellow: 50 90% 55%;
+    --pdv-red: 0 72% 50%;
+    --pdv-header: 60 4% 12%;
   }
 }
 
@@ -70,54 +75,100 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'JetBrains Mono', 'Space Grotesk', 'Inter', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Premium scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(225 15% 18%); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(225 15% 25%); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: hsl(60 4% 15%); }
+  ::-webkit-scrollbar-thumb { background: hsl(60 4% 30%); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(60 4% 38%); }
 }
 
 @layer components {
-  .glass-card {
-    @apply relative border border-border rounded-2xl overflow-hidden;
-    background-color: hsl(0 0% 100% / 0.85);
-    box-shadow: 0 1px 3px 0 hsl(204 40% 70% / 0.3), 0 0 0 1px hsl(204 30% 85% / 0.5);
+  .pdv-card {
+    @apply relative border border-border rounded-lg overflow-hidden;
+    background-color: hsl(60 4% 22%);
   }
-  .dark .glass-card {
-    background-color: hsl(217 50% 12% / 0.6);
+  .pdv-card-hover {
+    @apply pdv-card transition-all duration-200 ease-out;
   }
-  .glass-card-hover {
-    @apply glass-card transition-all duration-300 ease-out;
+  .pdv-card-hover:hover {
+    border-color: hsl(45 90% 50% / 0.4);
+    background-color: hsl(60 4% 25%);
   }
-  .glass-card-hover:hover {
-    border-color: hsl(217 91% 60% / 0.25);
-    box-shadow: 0 4px 24px -4px hsl(217 91% 60% / 0.08), 0 0 0 1px hsl(217 91% 60% / 0.15);
-    transform: translateY(-1px);
+
+  .pdv-header {
+    background-color: hsl(60 4% 12%);
+    @apply border-b border-border;
   }
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(217 91% 65%), hsl(160 65% 55%));
+
+  .pdv-btn {
+    @apply font-bold text-sm uppercase tracking-wider px-4 py-3 rounded-md border-2 transition-all duration-150 active:scale-95;
   }
-  .stat-value {
-    @apply text-3xl font-bold tracking-tight;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  .pdv-btn-green {
+    @apply pdv-btn;
+    background-color: hsl(120 55% 42%);
+    border-color: hsl(120 55% 35%);
+    color: white;
   }
+  .pdv-btn-green:hover {
+    background-color: hsl(120 55% 48%);
+  }
+  .pdv-btn-yellow {
+    @apply pdv-btn;
+    background-color: hsl(50 90% 55%);
+    border-color: hsl(50 90% 45%);
+    color: hsl(0 0% 10%);
+  }
+  .pdv-btn-yellow:hover {
+    background-color: hsl(50 90% 62%);
+  }
+  .pdv-btn-red {
+    @apply pdv-btn;
+    background-color: hsl(0 72% 50%);
+    border-color: hsl(0 72% 40%);
+    color: white;
+  }
+  .pdv-btn-red:hover {
+    background-color: hsl(0 72% 58%);
+  }
+
+  .pdv-table {
+    @apply w-full text-sm;
+  }
+  .pdv-table thead {
+    background-color: hsl(60 4% 16%);
+  }
+  .pdv-table th {
+    @apply px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border;
+  }
+  .pdv-table td {
+    @apply px-3 py-2 border-b border-border/50 font-mono;
+  }
+  .pdv-table tbody tr:hover {
+    background-color: hsl(60 4% 25%);
+  }
+
+  .pdv-input {
+    @apply bg-card border-2 border-border text-foreground font-mono font-bold text-lg px-3 py-2 rounded-md;
+  }
+  .pdv-input:focus {
+    @apply outline-none border-primary;
+  }
+
+  /* Legacy aliases */
+  .glass-card { @apply pdv-card; }
+  .glass-card-hover { @apply pdv-card-hover; }
   .stat-label {
-    @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground;
+    @apply text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground;
   }
   .section-title {
-    @apply text-sm font-semibold text-foreground tracking-tight;
+    @apply text-sm font-bold text-foreground tracking-tight uppercase;
   }
-  .glow-primary {
-    box-shadow: 0 0 40px -8px hsl(217 91% 60% / 0.25);
-  }
-  .glow-accent {
-    box-shadow: 0 0 40px -8px hsl(160 65% 48% / 0.2);
+  .gradient-text {
+    @apply text-primary font-bold;
   }
 
   /* Thermal receipt */
@@ -145,18 +196,21 @@
 
 @layer utilities {
   .animate-in {
-    animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   @keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
-  .stagger-6 { animation-delay: 0.3s; }
-  .stagger-7 { animation-delay: 0.35s; }
-  .stagger-8 { animation-delay: 0.4s; }
+  .stagger-1 { animation-delay: 0.03s; }
+  .stagger-2 { animation-delay: 0.06s; }
+  .stagger-3 { animation-delay: 0.09s; }
+  .stagger-4 { animation-delay: 0.12s; }
+  .stagger-5 { animation-delay: 0.15s; }
+  .stagger-6 { animation-delay: 0.18s; }
+  .stagger-7 { animation-delay: 0.21s; }
+  .stagger-8 { animation-delay: 0.24s; }
+
+  .pdv-moto-row { color: hsl(0 72% 55%); }
+  .pdv-carro-row { color: hsl(60 10% 90%); }
 }
