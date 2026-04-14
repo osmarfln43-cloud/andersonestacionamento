@@ -219,33 +219,54 @@ export default function Saida() {
             </Button>
           </div>
         ) : (
-          <div className="glass-card p-5">
-            {showPix ? (
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium">
-                  <QrCode className="h-3.5 w-3.5" /> Pagamento PIX
-                </div>
-                <div className="bg-foreground p-4 rounded-2xl inline-block mx-auto">
-                  <QRCodeSVG value={pixCode} size={180} level="H" />
-                </div>
-                <p className="text-xs text-muted-foreground">Escaneie com o app do banco</p>
-                <button onClick={() => { navigator.clipboard.writeText(pixCode); toast({ title: "Código copiado!" }); }}
-                  className="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-xs text-muted-foreground transition-colors">
-                  <Copy className="h-3 w-3" /> Copiar código PIX
-                </button>
-              </div>
-            ) : (
+          <div className="space-y-3">
+            <div className="glass-card p-5">
               <div className="text-center space-y-3">
                 <div className="h-14 w-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto">
                   <Check className="h-7 w-7 text-accent" />
                 </div>
-                <p className="text-lg font-semibold">Pagamento em Dinheiro</p>
-                <p className="text-sm text-muted-foreground">Registrado com sucesso</p>
-                <p className="text-2xl font-display font-bold text-accent">R$ {Number((displayData as any).valor_total)}</p>
+                <p className="text-lg font-semibold">Saída Registrada</p>
+                <div className="grid grid-cols-2 gap-3 text-sm max-w-sm mx-auto">
+                  <div className="text-left text-muted-foreground">Permanência:</div>
+                  <div className="text-right font-semibold">{(displayData as any).tempo_total || `${calc.hours}h ${calc.mins}min`}</div>
+                  <div className="text-left text-muted-foreground">Regra aplicada:</div>
+                  <div className="text-right font-semibold text-primary">{calc.regraAplicada}</div>
+                  <div className="text-left text-muted-foreground">Pagamento:</div>
+                  <div className="text-right font-semibold uppercase">{(displayData as any).forma_pagamento || ''}</div>
+                  <div className="text-left text-muted-foreground">Valor Total:</div>
+                  <div className="text-right text-xl font-display font-bold text-accent">R$ {Number((displayData as any).valor_total ?? calc.total).toFixed(2)}</div>
+                </div>
               </div>
-            )}
+
+              {showPix && (
+                <div className="text-center space-y-3 mt-4 pt-4 border-t border-border/50">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium">
+                    <QrCode className="h-3.5 w-3.5" /> QR Code PIX
+                  </div>
+                  <div className="bg-foreground p-4 rounded-2xl inline-block mx-auto">
+                    <QRCodeSVG value={pixCode} size={180} level="H" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Escaneie com o app do banco</p>
+                  <button onClick={() => { navigator.clipboard.writeText(pixCode); toast({ title: "Código copiado!" }); }}
+                    className="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-xs text-muted-foreground transition-colors">
+                    <Copy className="h-3 w-3" /> Copiar código PIX
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={() => setReceiptData(prev => prev ? { ...prev } : prev)}
+              className="w-full h-12 text-sm font-semibold gap-2 rounded-xl"
+              variant="secondary"
+            >
+              <Printer className="h-5 w-5" /> Imprimir Comprovante de Saída
+            </Button>
           </div>
         )}
+
+        {/* Hidden receipt for printing */}
+        <ReceiptPDF data={receiptData} onDone={() => {}} />
       </div>
     );
   }
