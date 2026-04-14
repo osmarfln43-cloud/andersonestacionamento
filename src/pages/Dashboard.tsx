@@ -118,16 +118,16 @@ export default function Dashboard() {
   }, [saidasHoje]);
 
   const stats = [
-    { icon: Car, label: "No Pátio", value: veiculosAtivos.length, color: "hsl(200,80%,50%)" },
+    { icon: Car, label: "No Pátio", value: veiculosAtivos.length, color: "hsl(200,70%,45%)" },
     { icon: LogIn, label: "Entradas", value: movimentacoesHoje.length, color: "hsl(120,55%,42%)" },
     { icon: LogOut, label: "Saídas", value: saidasHoje.length, color: "hsl(45,90%,50%)" },
     { icon: DollarSign, label: "Faturamento", value: `R$ ${faturamentoHoje.toLocaleString()}`, color: "hsl(120,55%,42%)" },
     { icon: DollarSign, label: "Ticket Médio", value: `R$ ${ticketMedio}`, color: "hsl(280,65%,55%)" },
-    { icon: Clock, label: "Tempo Médio", value: tempoMedio, color: "hsl(200,80%,50%)" },
+    { icon: Clock, label: "Tempo Médio", value: tempoMedio, color: "hsl(200,70%,45%)" },
     { icon: Percent, label: "Ocupação", value: `${ocupacao}%`, color: "hsl(45,90%,50%)" },
     { icon: Users, label: "Mensalistas", value: mensalistasAtivos, color: "hsl(280,65%,55%)" },
     { icon: CalendarCheck, label: "Rec. Mensal", value: `R$ ${receitaMensalistas.toLocaleString()}`, color: "hsl(120,55%,42%)" },
-    { icon: CreditCard, label: "PIX Hoje", value: `R$ ${faturamentoPix.toLocaleString()}`, color: "hsl(200,80%,50%)" },
+    { icon: CreditCard, label: "PIX Hoje", value: `R$ ${faturamentoPix.toLocaleString()}`, color: "hsl(200,70%,45%)" },
     { icon: Banknote, label: "Dinheiro", value: `R$ ${faturamentoDinheiro.toLocaleString()}`, color: "hsl(45,90%,50%)" },
     { icon: TrendingUp, label: "Total Geral", value: `R$ ${(faturamentoHoje + receitaMensalistas).toLocaleString()}`, color: "hsl(120,55%,42%)" },
   ];
@@ -147,15 +147,15 @@ export default function Dashboard() {
             <AreaChart data={hourlyData}>
               <defs>
                 <linearGradient id="gradFat" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(200,80%,50%)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="hsl(200,80%,50%)" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(200,70%,45%)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="hsl(200,70%,45%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(60,4%,30%)" vertical={false} />
-              <XAxis dataKey="hora" tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(200,20%,82%)" vertical={false} />
+              <XAxis dataKey="hora" tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="faturamento" stroke="hsl(200,80%,50%)" fill="url(#gradFat)" strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="faturamento" stroke="hsl(200,70%,45%)" fill="url(#gradFat)" strokeWidth={2} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -193,13 +193,13 @@ export default function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={hourlyData} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(60,4%,30%)" vertical={false} />
-              <XAxis dataKey="hora" tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} width={25} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(200,20%,82%)" vertical={false} />
+              <XAxis dataKey="hora" tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} width={25} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="entradas" name="Entradas" radius={[4, 4, 0, 0]} maxBarSize={18}>
                 {hourlyData.map((entry: any, index: number) => (
-                  <Cell key={index} fill={entry.entradas >= peakThreshold ? 'hsl(0,72%,50%)' : 'hsl(200,80%,50%)'} />
+                  <Cell key={index} fill={entry.entradas >= peakThreshold ? 'hsl(0,72%,50%)' : 'hsl(200,70%,45%)'} />
                 ))}
               </Bar>
               <Bar dataKey="saidas" fill="hsl(120,55%,42%)" radius={[4, 4, 0, 0]} maxBarSize={18} name="Saídas" />
@@ -236,11 +236,11 @@ export default function Dashboard() {
             <h3 className="section-title mb-4">Faturamento Mensal</h3>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={monthlyComparison} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(60,4%,30%)" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => `R$${v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(200,20%,82%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => `R$${v}`} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number, name: string) => [`R$ ${v.toFixed(2)}`, name === 'pix' ? 'PIX' : 'Dinheiro']} />
-                <Bar dataKey="pix" name="PIX" stackId="a" fill="hsl(200,80%,50%)" maxBarSize={30} />
+                <Bar dataKey="pix" name="PIX" stackId="a" fill="hsl(200,70%,45%)" maxBarSize={30} />
                 <Bar dataKey="dinheiro" name="Dinheiro" stackId="a" fill="hsl(120,55%,42%)" radius={[4, 4, 0, 0]} maxBarSize={30} />
               </BarChart>
             </ResponsiveContainer>
@@ -249,11 +249,11 @@ export default function Dashboard() {
             <h3 className="section-title mb-4">Veículos / Mês</h3>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={monthlyComparison} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(60,4%,30%)" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'hsl(60,8%,55%)', fontSize: 10 }} axisLine={false} tickLine={false} width={25} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(200,20%,82%)" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(0,0%,40%)', fontSize: 10 }} axisLine={false} tickLine={false} width={25} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="carros" name="Carros" fill="hsl(200,80%,50%)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="carros" name="Carros" fill="hsl(200,70%,45%)" radius={[4, 4, 0, 0]} maxBarSize={24} />
                 <Bar dataKey="motos" name="Motos" fill="hsl(45,90%,50%)" radius={[4, 4, 0, 0]} maxBarSize={24} />
               </BarChart>
             </ResponsiveContainer>
