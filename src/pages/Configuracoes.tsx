@@ -455,7 +455,8 @@ export default function Configuracoes() {
                 { label: 'Horários', value: 'horarios' },
                 { label: 'Cobrança', value: 'cobranca' },
                 { label: 'PIX / QR Code', value: 'pix' },
-                { label: 'Comprovante', value: 'comprovante' },
+                { label: 'Comprovante Entrada', value: 'comprovante' },
+                { label: 'Comprovante Saída', value: 'comprovante-saida' },
                 { label: 'Impressão', value: 'impressao' },
               ].map((t) => (
                 <TabsTrigger
