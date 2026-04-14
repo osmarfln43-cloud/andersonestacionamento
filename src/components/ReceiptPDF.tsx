@@ -268,7 +268,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
           <div className="footer">{data.mensagemComprovante || "AGRADECEMOS A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
-          {data.telefone && <div className="footer-addr">TEL: {data.telefone}</div>}
+          {data.telefone && <div className="footer-addr">MEU CONTATO: {data.telefone}</div>}
           {data.cnpj && <div className="footer-addr">CNPJ: {data.cnpj}</div>}
         </div>
       </div>

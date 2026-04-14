@@ -43,6 +43,7 @@ function ReceiptPreview({ form }: { form: any }) {
   const abertura = form.horario_abertura || '07:00';
   const fechamento = form.horario_fechamento || '19:00';
   const endereco = (form.endereco || '').toUpperCase();
+  const telefone = form.telefone || '';
   const mensagem = form.mensagem_comprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERÊNCIA';
   const valorHora = Number(form.valor_hora || 10).toFixed(2);
   const chavePix = form.chave_pix || '';
@@ -106,6 +107,7 @@ function ReceiptPreview({ form }: { form: any }) {
         <div className="text-center space-y-0.5 pt-1">
           <p className="font-bold text-[9px]">{mensagem}</p>
           {endereco && <p className="text-[8px]">{endereco}</p>}
+          {telefone && <p className="text-[8px]">MEU CONTATO: {telefone}</p>}
           {form.cnpj && <p className="text-[8px]">CNPJ: {form.cnpj}</p>}
         </div>
       </div>
@@ -120,6 +122,7 @@ function ExitReceiptPreview({ form }: { form: any }) {
   const abertura = form.horario_abertura || '07:00';
   const fechamento = form.horario_fechamento || '19:00';
   const endereco = (form.endereco || '').toUpperCase();
+  const telefone = form.telefone || '';
   const mensagem = form.mensagem_comprovante || 'AGRADECEMOS A PREFERENCIA';
   const valorHora = Number(form.valor_hora || 10).toFixed(2);
 
@@ -170,6 +173,7 @@ function ExitReceiptPreview({ form }: { form: any }) {
         <div className="text-center space-y-0.5">
           <p className="font-bold text-[8px]">{mensagem}</p>
           {endereco && <p className="text-[7px]">{endereco}</p>}
+          {telefone && <p className="text-[7px]">MEU CONTATO: {telefone}</p>}
           {form.cnpj && <p className="text-[7px]">CNPJ: {form.cnpj}</p>}
         </div>
       </div>
