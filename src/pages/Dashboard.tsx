@@ -207,26 +207,39 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="pdv-card p-4">
-          <h3 className="section-title mb-3">Últimas Movimentações</h3>
-          <div className="space-y-1">
-            {movimentacoesHoje.length === 0 && <p className="text-sm text-muted-foreground text-center py-6 font-mono">Nenhuma hoje</p>}
-            {movimentacoesHoje.slice(0, 8).map((m) => (
-              <div key={m.id} className="flex items-center gap-2 p-2 rounded bg-secondary/40 hover:bg-secondary/60 transition-colors">
-                <span className={`h-2 w-2 rounded-full shrink-0 ${m.status_movimentacao === 'ativo' ? 'bg-accent' : 'bg-muted-foreground/40'}`} />
-                <span className="font-mono font-bold text-sm">{m.placa}</span>
-                <span className="text-xs text-muted-foreground truncate flex-1">{m.modelo}</span>
-                <span className="text-[11px] font-mono text-muted-foreground">
-                  {new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                  m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="pdv-card overflow-hidden">
+          <h3 className="section-title p-4 pb-2">Movimentações de Hoje</h3>
+          <table className="pdv-table">
+            <thead>
+              <tr>
+                <th>Cupom</th>
+                <th>Entrada</th>
+                <th>Placa</th>
+                <th>Descrição</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movimentacoesHoje.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">Nenhuma hoje</td></tr>
+              )}
+              {movimentacoesHoje.slice(0, 12).map((m, i) => (
+                <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
+                  <td className="text-base font-bold">{String(i + 1).padStart(4, '0')}</td>
+                  <td className="text-base font-bold">{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td className="text-lg font-bold">{m.placa}</td>
+                  <td className="text-base font-bold">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
+                  <td>
+                    <span className={`text-xs font-bold px-2 py-1 rounded ${
+                      m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
