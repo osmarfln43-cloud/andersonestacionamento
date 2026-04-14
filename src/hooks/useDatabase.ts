@@ -179,12 +179,27 @@ export function useRegistrarSaida() {
         ? Number((configData as any)?.valor_maximo_diario_moto ?? 15)
         : Number(configData?.valor_maximo_diario ?? 35);
 
-      // 3+ hours = automatic daily rate
+      // Billing logic:
+      // - Up to 1h30min = 1 hour charged
+      // - After 1h30min = 2 hours charged
+      // - 3+ hours = full daily rate
       let valorTotal: number;
+      const valorHora = Number(mov.valor_hora);
+      
       if (diffH >= 3 && maxDiario > 0) {
         valorTotal = maxDiario;
       } else {
-        valorTotal = Math.max(Math.ceil(diffH), 1) * Number(mov.valor_hora);
+        // Calculate billable hours: only rounds up after 30min past the hour
+        let horasCobradasCalc: number;
+        if (diffH <= 0) {
+          horasCobradasCalc = 1;
+        } else {
+          const fullHours = Math.floor(diffH);
+          const remainingMins = (diffH - fullHours) * 60;
+          // Only counts next hour if exceeded 30min past the current hour
+          horasCobradasCalc = remainingMins > 30 ? fullHours + 1 : Math.max(fullHours, 1);
+        }
+        valorTotal = horasCobradasCalc * valorHora;
         if (maxDiario > 0 && valorTotal > maxDiario) {
           valorTotal = maxDiario;
         }
