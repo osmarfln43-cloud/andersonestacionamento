@@ -20,12 +20,12 @@ const COLORS = [
 ];
 
 const tooltipStyle = {
-  background: 'hsl(60, 4%, 15%)',
-  border: '1px solid hsl(60, 4%, 30%)',
-  borderRadius: 6,
+  background: 'hsl(0, 0%, 100%)',
+  border: '1px solid hsl(200, 20%, 82%)',
+  borderRadius: 4,
   fontSize: 12,
   padding: '8px 12px',
-  color: 'hsl(60, 10%, 90%)',
+  color: 'hsl(0, 0%, 10%)',
 };
 
 type Periodo = 'hoje' | '15dias' | '30dias' | '6meses' | '1ano' | 'custom';
