@@ -257,6 +257,32 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Cumulative Evolution */}
+      {monthlyComparison.length > 0 && (
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-6">📈 Evolução Acumulada — Últimos 6 Meses</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={monthlyComparison.reduce((acc: any[], item, i) => {
+              const prev = i > 0 ? acc[i - 1].acumulado : 0;
+              acc.push({ ...item, acumulado: prev + item.faturamento });
+              return acc;
+            }, [])}>
+              <defs>
+                <linearGradient id="gradAcumulado" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(160,65%,48%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(160,65%,48%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={70} tickFormatter={(v) => `R$${v}`} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`R$ ${v.toFixed(2)}`, 'Acumulado']} />
+              <Area type="monotone" dataKey="acumulado" name="Acumulado" stroke="hsl(160,65%,48%)" fill="url(#gradAcumulado)" strokeWidth={2.5} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* Monthly Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-6">
