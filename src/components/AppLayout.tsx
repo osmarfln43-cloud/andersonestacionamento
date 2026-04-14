@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
 
             <div className="hidden lg:flex items-center gap-2 ml-4 px-3 py-1.5 rounded-xl bg-secondary border border-border/50 text-xs text-muted-foreground cursor-pointer hover:border-primary/30 transition-colors">
-              <span>ME PARK Centro</span>
+              <span>Anderson Estacionamentos</span>
               <ChevronDown className="h-3 w-3" />
             </div>
 
@@ -76,7 +76,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           </main>
           <footer className="shrink-0 border-t border-border/50 py-4 px-6 text-center text-[11px] text-muted-foreground space-y-0.5">
-            <p>© 2026 ME PARK - Copyright Todos os Direitos Reservados</p>
+            <p>© 2026 Anderson Estacionamentos - Copyright Todos os Direitos Reservados</p>
             <p>Desenvolvimento ® OSMARJR Sistemas</p>
           </footer>
         </div>

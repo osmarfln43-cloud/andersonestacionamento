@@ -57,12 +57,12 @@ export default function Comprovantes() {
     valorTotal: m.valor_total ?? undefined,
     formaPagamento: m.forma_pagamento || undefined,
     valorHora: m.valor_hora,
-    nomeEstacionamento: config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO',
+    nomeEstacionamento: config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS',
     endereco: config?.endereco || 'RUA ESTEVE JUNIOR - CENTRO',
     telefone: config?.telefone || undefined,
     chavePix: config?.chave_pix || undefined,
     nomeBeneficiario: config?.nome_beneficiario || undefined,
-    mensagemComprovante: config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERÊNCIA',
+    mensagemComprovante: config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERÊNCIA',
     tipo: "unico",
     horarioAbertura: (config as any)?.horario_abertura || '07:00',
     horarioFechamento: (config as any)?.horario_fechamento || '19:00',
@@ -73,7 +73,7 @@ export default function Comprovantes() {
   });
 
   const pixCode = config?.chave_pix
-    ? `00020126580014br.gov.bcb.pix0136${config.chave_pix}5204000053039865802BR5913ME PARK AI6008SAOPAULO`
+    ? `00020126580014br.gov.bcb.pix0136${config.chave_pix}5204000053039865802BR5925ANDERSON ESTACIONAMENTOS6008SAOPAULO`
     : "";
 
   return (
@@ -154,7 +154,7 @@ export default function Comprovantes() {
                 <div className="p-6 space-y-3 text-xs leading-relaxed">
                   {/* Header */}
                   <div className="text-center space-y-1">
-                    <p className="text-sm font-bold tracking-wide">{config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO'}</p>
+                    <p className="text-sm font-bold tracking-wide">{config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
                     <p className="text-[10px] leading-snug">{(config as any)?.disclaimer_comprovante || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO'}. HORARIO DE FUNCIONAMENTO {((config as any)?.dias_funcionamento || 'SEGUNDA A SEXTA').toUpperCase()} DAS {(config as any)?.horario_abertura || '07:00'} ATE AS {(config as any)?.horario_fechamento || '19:00'}</p>
                     <div className="border-b border-dashed border-gray-400 my-3" />
@@ -215,7 +215,7 @@ export default function Comprovantes() {
 
                   {/* Footer */}
                   <div className="text-center space-y-1 pt-1">
-                    <p className="font-bold text-[10px]">{config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERENCIA'}</p>
+                    <p className="font-bold text-[10px]">{config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERENCIA'}</p>
                     {config?.endereco && <p className="text-[10px]">{config.endereco.toUpperCase()}</p>}
                   </div>
                 </div>

@@ -62,7 +62,7 @@ export default function Saida() {
     );
   };
 
-  const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'mepark@estacionamento.com.br'}5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5913ME PARK AI6008SAOPAULO`;
+  const pixCode = `00020126580014br.gov.bcb.pix0136${config?.chave_pix || 'anderson@estacionamento.com.br'}5204000053039865404${selected ? calcularValor(selected).total.toFixed(2) : '0.00'}5802BR5925ANDERSON ESTACIONAMENTOS6008SAOPAULO`;
   const [horaAtual, setHoraAtual] = useState(() => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [dataAtual] = useState(() => new Date().toLocaleDateString('pt-BR'));
 

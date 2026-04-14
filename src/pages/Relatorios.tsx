@@ -137,7 +137,7 @@ export default function Relatorios() {
       };
 
       // === HEADER ===
-      drawText(config?.nome_estacionamento || 'ME PARK ESTACIONAMENTO', margin, y, 18, 'bold');
+      drawText(config?.nome_estacionamento || 'ANDERSON ESTACIONAMENTOS', margin, y, 18, 'bold');
       y += 6;
       drawText('RELATÓRIO FINANCEIRO COMPLETO', margin, y, 10, 'normal', [100, 100, 100]);
       y += 5;
@@ -279,7 +279,7 @@ export default function Relatorios() {
       drawLine(y); y += 6;
       drawText(config?.endereco?.toUpperCase() || '', margin, y, 7, 'normal', [140, 140, 140]);
       y += 4;
-      drawText(config?.mensagem_comprovante || 'ME PARK AGRADECE A PREFERENCIA', margin, y, 7, 'bold', [100, 100, 100]);
+      drawText(config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERENCIA', margin, y, 7, 'bold', [100, 100, 100]);
 
       // Page numbers
       const totalPages = doc.getNumberOfPages();
