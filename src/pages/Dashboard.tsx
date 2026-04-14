@@ -218,11 +218,11 @@ export default function Dashboard() {
           <table className="pdv-table w-full">
             <thead>
               <tr>
-                <th className="text-xl font-black uppercase py-3">Cupom</th>
-                <th className="text-xl font-black uppercase py-3">Entrada</th>
-                <th className="text-xl font-black uppercase py-3">Placa</th>
-                <th className="text-xl font-black uppercase py-3">Descrição</th>
-                <th className="text-xl font-black uppercase py-3">Status</th>
+                <th className="text-2xl font-black uppercase py-3">Cupom</th>
+                <th className="text-2xl font-black uppercase py-3">Entrada</th>
+                <th className="text-2xl font-black uppercase py-3">Placa</th>
+                <th className="text-2xl font-black uppercase py-3">Descrição</th>
+                <th className="text-2xl font-black uppercase py-3">Status</th>
               </tr>
             </thead>
             <tbody>
