@@ -1,4 +1,4 @@
-import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight, CalendarCheck, Banknote, CreditCard } from "lucide-react";
+import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, ArrowUpRight, CalendarCheck, Banknote, CreditCard, Flame } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMovimentacoesAtivas, useMovimentacoesHoje, useMensalistas, useMovimentacoesFinalizadasHoje } from "@/hooks/useDatabase";
 import { useMemo } from "react";
@@ -91,7 +91,7 @@ export default function Dashboard() {
   const faturamentoDinheiro = saidasHoje.filter(m => m.forma_pagamento === 'dinheiro').reduce((s, m) => s + (Number(m.valor_total) || 0), 0);
 
   // Build hourly data from real movements
-  const hourlyData = useMemo(() => {
+  const { hourlyData, peakThreshold } = useMemo(() => {
     const hours: Record<string, { hora: string; faturamento: number; entradas: number; saidas: number }> = {};
     for (let h = 6; h <= 22; h++) {
       const key = `${h.toString().padStart(2, '0')}h`;
@@ -112,7 +112,10 @@ export default function Dashboard() {
         if (hours[skey]) hours[skey].saidas++;
       }
     });
-    return Object.values(hours);
+    const arr = Object.values(hours);
+    const maxEntradas = Math.max(...arr.map(h => h.entradas), 0);
+    const threshold = Math.max(Math.ceil(maxEntradas * 0.7), 2);
+    return { hourlyData: arr, peakThreshold: threshold };
   }, [movimentacoesHoje]);
 
   // Payment distribution from real data
@@ -215,14 +218,31 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass-card p-6">
-          <h3 className="section-title mb-6">Movimentação por Hora</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="section-title">Movimentação por Hora</h3>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Flame className="h-3.5 w-3.5 text-destructive" />
+              <span>= Horário de Pico</span>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={hourlyData} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(225,15%,14%)" vertical={false} />
               <XAxis dataKey="hora" tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'hsl(218,12%,50%)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="entradas" fill="hsl(217,91%,60%)" radius={[6, 6, 0, 0]} maxBarSize={20} name="Entradas" />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value: number, name: string, props: any) => {
+                const isPeak = props.payload.entradas >= peakThreshold;
+                const label = name === 'Entradas' ? (isPeak ? '🔥 Entradas (PICO)' : 'Entradas') : 'Saídas';
+                return [value, label];
+              }} />
+              <Bar dataKey="entradas" name="Entradas" radius={[6, 6, 0, 0]} maxBarSize={20}>
+                {hourlyData.map((entry, index) => (
+                  <Cell
+                    key={`ent-${index}`}
+                    fill={entry.entradas >= peakThreshold ? 'hsl(0, 84%, 60%)' : 'hsl(217,91%,60%)'}
+                  />
+                ))}
+              </Bar>
               <Bar dataKey="saidas" fill="hsl(160,65%,48%)" radius={[6, 6, 0, 0]} maxBarSize={20} name="Saídas" />
             </BarChart>
           </ResponsiveContainer>
