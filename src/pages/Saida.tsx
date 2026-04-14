@@ -258,17 +258,17 @@ export default function Saida() {
             </div>
 
             <Button
-              onClick={() => setReceiptData(prev => prev ? { ...prev } : prev)}
+              onClick={() => setReceiptKey(k => k + 1)}
               className="w-full h-12 text-sm font-semibold gap-2 rounded-xl"
               variant="secondary"
             >
-              <Printer className="h-5 w-5" /> Imprimir Comprovante de Saída
+              <Printer className="h-5 w-5" /> Reimprimir Comprovante
             </Button>
           </div>
         )}
 
         {/* Hidden receipt for printing */}
-        <ReceiptPDF data={receiptData} onDone={() => {}} />
+        <ReceiptPDF key={receiptKey} data={receiptData} onDone={() => {}} />
       </div>
     );
   }
