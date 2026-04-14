@@ -581,6 +581,42 @@ export default function Configuracoes() {
               <Button onClick={save} className="gap-2 h-12 px-8 rounded-xl"><Save className="h-4 w-4" /> Salvar</Button>
             </TabsContent>
 
+            <TabsContent value="comprovante-saida" className="space-y-6">
+              <Section title="Preview — Comprovante de Saída">
+                <p className="text-xs text-muted-foreground mb-4">
+                  O comprovante de saída é impresso automaticamente ao registrar o pagamento. Ele exibe a regra de cobrança aplicada (1h, 2h, 3h ou Diária), tempo de permanência, forma de pagamento e valor total.
+                </p>
+                <ExitReceiptPreview form={form} />
+              </Section>
+              <Section title="Informações exibidas no comprovante de saída">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Placa, modelo e cor do veículo</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Data/hora de entrada e saída</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Tempo de permanência</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Regra de cobrança (1 hora, 2 horas, 3 horas ou Diária)</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Forma de pagamento (PIX ou Dinheiro)</p></div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                    <span className="text-primary font-bold">✓</span>
+                    <div><p className="font-medium">Valor total pago</p></div>
+                  </div>
+                </div>
+              </Section>
+
             <TabsContent value="impressao" className="space-y-6">
               <PrinterSetup form={form} setField={setField} save={save} />
             </TabsContent>
