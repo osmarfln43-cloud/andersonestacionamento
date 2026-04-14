@@ -146,6 +146,7 @@ export function buildReceiptESCPOS(data: {
   valorTotal?: number;
   mensagemComprovante?: string;
   endereco?: string;
+  telefone?: string;
   cnpj?: string;
 }, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
   const cols = paperWidth === '58mm' ? 32 : 48;
@@ -230,6 +231,9 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposBold(false));
   if (data.endereco) {
     cmds.push(...textToBytes(data.endereco.toUpperCase()), LF);
+  }
+  if (data.telefone) {
+    cmds.push(...textToBytes(`MEU CONTATO: ${data.telefone}`), LF);
   }
   if (data.cnpj) {
     cmds.push(...textToBytes(`CNPJ: ${data.cnpj}`), LF);

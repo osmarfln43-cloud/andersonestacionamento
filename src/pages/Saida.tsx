@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { calculateParkingBilling } from "@/lib/billing";
+import { formatBillingRuleLabel } from "@/lib/receipt";
 import ReceiptPDF, { ReceiptData } from "@/components/ReceiptPDF";
 
 type MovData = {
@@ -74,7 +75,7 @@ export default function Saida() {
             tipo_cliente: (selected as any).tipo_cliente,
             entrada: (selected as any).entrada,
             saida,
-            tempoTotal: (data as any)?.tempo_total || `${billing.hours}h ${billing.mins}min`,
+            tempoTotal: formatBillingRuleLabel(billing.regraAplicada) || (data as any)?.tempo_total || `${billing.hours}h ${billing.mins}min`,
             valorTotal: Number((data as any)?.valor_total ?? billing.total),
             formaPagamento: tipo.toUpperCase(),
             nomeEstacionamento: config?.nome_estacionamento,
