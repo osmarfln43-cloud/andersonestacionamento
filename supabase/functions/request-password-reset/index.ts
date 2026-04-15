@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         email: profile.email,
-        redirectTo,
+        redirect_to: redirectTo,
       }),
     });
 
