@@ -51,6 +51,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const role = profile?.perfil || 'operador';
   const roleLabel = roleLabels[role] || role.toUpperCase();
@@ -68,9 +69,14 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // F1-F12 keyboard shortcuts
+  // F1-F12 + ESC keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowExitDialog(true);
+        return;
+      }
       if (e.key.startsWith('F') && e.key.length <= 3) {
         const fNum = parseInt(e.key.substring(1));
         if (fNum >= 1 && fNum <= 12) {
