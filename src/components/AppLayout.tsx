@@ -76,7 +76,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [role, navigate]);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Top Header Bar - dark green like PARKEE */}
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-2 shrink-0">
@@ -145,7 +145,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
+      <main className="flex-1 relative overflow-x-hidden">
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 pb-8">
           <img src={watermarkLogo} alt="" className="w-[350px] h-[350px] object-contain opacity-[0.06]" />
         </div>
