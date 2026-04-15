@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload } from "lucide-react";
+import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRegistrarEntrada, useConfiguracoes, useMovimentacoesHoje } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -220,17 +221,21 @@ export default function Entrada() {
               autoFocus
             />
           </div>
-          <div className="space-y-1 w-40">
+          <div className="space-y-1 w-44">
             <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">TIPO</label>
-            <select
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value as 'carro' | 'moto')}
-              className="pdv-input w-full text-xl font-bold h-[60px]"
-              style={{ color: categoria === 'carro' ? 'hsl(0, 72%, 45%)' : 'hsl(210, 80%, 45%)' }}
-            >
-              <option value="carro" style={{ color: 'hsl(0, 72%, 45%)' }}>🚗 Carro</option>
-              <option value="moto" style={{ color: 'hsl(210, 80%, 45%)' }}>🏍️ Moto</option>
-            </select>
+            <Select value={categoria} onValueChange={(value) => setCategoria(value as 'carro' | 'moto')}>
+              <SelectTrigger className={`pdv-input w-full text-xl font-bold h-[60px] ${categoria === 'carro' ? 'text-destructive' : 'text-info'}`}>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="carro">
+                  <span className="flex items-center gap-2 text-destructive font-bold"><CarFront className="h-4 w-4" /> Carro</span>
+                </SelectItem>
+                <SelectItem value="moto">
+                  <span className="flex items-center gap-2 text-info font-bold"><Bike className="h-4 w-4" /> Moto</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1 flex-1 min-w-[200px]">
             <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">DESCRIÇÃO (modelo + cor)</label>
