@@ -76,9 +76,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [role, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-background">
       {/* Top Header Bar - dark green like PARKEE */}
-      <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 sticky top-0 z-50">
+      <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 z-40">
         <div className="flex items-center gap-2 shrink-0">
           <img src={logoImg} alt="Logo" className="h-7 w-7 rounded-sm object-cover" />
           <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">OSMARJR SISTEMAS</span>
@@ -111,7 +111,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 pt-12 overflow-auto md:hidden" style={{ backgroundColor: 'hsl(120 30% 22%)' }}>
+        <div className="fixed inset-0 z-40 pt-12 overflow-y-auto overscroll-contain md:hidden" style={{ backgroundColor: 'hsl(120 30% 22%)' }}>
           <div className="p-3 space-y-1">
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/20">
               <span className="text-sm font-bold text-white">{profile?.nome || 'Usuário'}</span>
@@ -145,11 +145,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 relative overflow-x-hidden">
+      <main className="app-scroll-area relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 pb-8">
           <img src={watermarkLogo} alt="" className="w-[350px] h-[350px] object-contain opacity-[0.06]" />
         </div>
-        <div className="p-3 md:p-4 max-w-[1600px] mx-auto relative z-10">
+        <div className="relative z-10 mx-auto w-full max-w-[1600px] min-h-full p-3 md:p-4">
           {children}
         </div>
       </main>
