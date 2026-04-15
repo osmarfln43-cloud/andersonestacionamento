@@ -220,16 +220,32 @@ export default function Entrada() {
               autoFocus
             />
           </div>
-          <div className="space-y-1 w-32">
+          <div className="space-y-1 w-40">
             <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">TIPO</label>
-            <select
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value as 'carro' | 'moto')}
-              className="pdv-input w-full text-xl font-bold h-[60px]"
-            >
-              <option value="carro">🚗 Carro</option>
-              <option value="moto">🏍️ Moto</option>
-            </select>
+            <div className="flex gap-1 h-[60px]">
+              <button
+                type="button"
+                onClick={() => setCategoria('carro')}
+                className={`flex-1 flex items-center justify-center gap-1.5 text-base font-black rounded-sm border-2 transition-all ${
+                  categoria === 'carro'
+                    ? 'bg-destructive/15 border-destructive text-destructive'
+                    : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                🚗 <span>Carro</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoria('moto')}
+                className={`flex-1 flex items-center justify-center gap-1.5 text-base font-black rounded-sm border-2 transition-all ${
+                  categoria === 'moto'
+                    ? 'bg-info/15 border-info text-info'
+                    : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                🏍️ <span>Moto</span>
+              </button>
+            </div>
           </div>
           <div className="space-y-1 flex-1 min-w-[200px]">
             <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">DESCRIÇÃO (modelo + cor)</label>
