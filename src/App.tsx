@@ -75,7 +75,7 @@ function ProtectedRoleRoute({ children }: { children: React.ReactNode }) {
 const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-    <Route path="/" element={<ProtectedRoleRoute><Dashboard /></ProtectedRoleRoute>} />
+    <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/entrada" element={<ProtectedRoleRoute><Entrada /></ProtectedRoleRoute>} />
     <Route path="/saida" element={<ProtectedRoleRoute><Saida /></ProtectedRoleRoute>} />
     <Route path="/patio" element={<ProtectedRoleRoute><Patio /></ProtectedRoleRoute>} />
