@@ -145,7 +145,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto relative">
+      <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 pb-8">
           <img src={watermarkLogo} alt="" className="w-[350px] h-[350px] object-contain opacity-[0.06]" />
         </div>
