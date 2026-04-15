@@ -89,6 +89,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         <span className="text-xs font-bold text-white hidden md:block">ANDERSON ESTACIONAMENTOS</span>
         <span className="text-xs text-white/50 hidden md:block">›</span>
         <span className="text-xs font-bold text-yellow-300 hidden md:block">{roleLabel}</span>
+        <span className="text-xs text-white/50 hidden md:block">›</span>
+        <span className="text-xs font-bold text-white/80 hidden md:block">{profile?.nome || ''}</span>
 
         <div className="ml-auto flex items-center gap-3">
           <span className="text-base md:text-lg font-mono font-bold text-white tabular-nums">{horaAtual}</span>
