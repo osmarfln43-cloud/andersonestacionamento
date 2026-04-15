@@ -90,17 +90,19 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbar visível e estilizada */
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: hsl(200 30% 88%); }
-  ::-webkit-scrollbar-thumb { background: hsl(120 30% 45%); border-radius: 10px; min-height: 40px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(120 30% 35%); }
+  /* Scrollbar visível e estilizada - Webkit (Chrome, Edge, Safari) */
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: hsl(200 30% 85%); }
+  ::-webkit-scrollbar-thumb { background: hsl(120 30% 40%); border-radius: 6px; min-height: 50px; border: 2px solid hsl(200 30% 85%); }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(120 30% 30%); }
 
   .app-scroll-area {
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-gutter: stable;
+    scrollbar-width: auto;
+    scrollbar-color: hsl(120 30% 40%) hsl(200 30% 85%);
   }
 }
 

@@ -155,8 +155,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </main>
 
-      {/* Bottom Navigation - 2 rows like PARKEE */}
-      <nav className="hidden md:block shrink-0">
+      {/* Bottom Navigation - always visible */}
+      <nav className="shrink-0">
         {/* Row 1 */}
         <div className="flex gap-0.5 px-1 pt-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
           {visibleItems.slice(0, 6).map((item) => {
