@@ -18,22 +18,39 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const hash = window.location.hash;
+    const search = window.location.search;
+    const searchParams = new URLSearchParams(search);
     const hasRecoveryHash = hash.includes("type=recovery") || hash.includes("access_token=");
+    const recoveryCode = searchParams.get("code");
+    const recoveryType = searchParams.get("type");
+
+    const prepareRecovery = async () => {
+      if (recoveryCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+        if (error) {
+          setIsRecoveryReady(false);
+          setChecking(false);
+          toast({ title: "Link inválido", description: error.message, variant: "destructive" });
+          return;
+        }
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsRecoveryReady(Boolean(session) || hasRecoveryHash || recoveryType === "recovery");
+      setChecking(false);
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || (!!session && hasRecoveryHash)) {
+      if (event === "PASSWORD_RECOVERY" || !!session) {
         setIsRecoveryReady(true);
       }
       setChecking(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsRecoveryReady(Boolean(session) || hasRecoveryHash);
-      setChecking(false);
-    });
+    prepareRecovery();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
