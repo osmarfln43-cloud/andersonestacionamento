@@ -49,10 +49,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email, nome, perfil } = await req.json();
+    const { email, nome, perfil, login, password } = await req.json();
 
-    if (!email || !nome || !perfil) {
-      return new Response(JSON.stringify({ error: "Email, nome e perfil são obrigatórios" }), {
+    if (!email || !nome) {
+      return new Response(JSON.stringify({ error: "Email e nome são obrigatórios" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -73,14 +73,15 @@ Deno.serve(async (req) => {
     }
 
     // Generate a temporary password
-    const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
+    const tempPassword = password || (crypto.randomUUID().slice(0, 12) + "A1!");
+    const cleanLogin = login ? login.toLowerCase().replace(/[^a-z0-9._-]/g, '') : null;
 
     // Create user via admin API
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
-      user_metadata: { nome },
+      user_metadata: { nome, login: cleanLogin, real_email: email },
     });
 
     if (createError) {
@@ -92,9 +93,12 @@ Deno.serve(async (req) => {
 
     // Update the profile with the correct role
     if (newUser.user) {
+      const profileUpdate: Record<string, any> = { perfil: perfil || 'operador', nome };
+      if (cleanLogin) profileUpdate.login = cleanLogin;
+      if (email && !email.endsWith('@parking.local')) profileUpdate.email = email;
       await supabaseAdmin
         .from("profiles")
-        .update({ perfil, nome })
+        .update(profileUpdate)
         .eq("user_id", newUser.user.id);
     }
 

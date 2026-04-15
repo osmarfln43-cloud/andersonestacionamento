@@ -107,11 +107,14 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteLogin, setInviteLogin] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteNome, setInviteNome] = useState("");
+  const [inviteSenha, setInviteSenha] = useState("");
+  const [showInviteSenha, setShowInviteSenha] = useState(false);
   const [invitePerfil, setInvitePerfil] = useState("operador");
   const [inviting, setInviting] = useState(false);
-  const [inviteResult, setInviteResult] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ login: string; email: string; senha: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [adminNewPassword, setAdminNewPassword] = useState("");
   const [showAdminPassword, setShowAdminPassword] = useState(false);
@@ -213,19 +216,22 @@ export default function Admin() {
   };
 
   const inviteUser = async () => {
-    if (!inviteEmail || !inviteNome) return;
+    if (!inviteNome) return;
+    const loginClean = inviteLogin.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    const emailToUse = inviteEmail.trim() || `${loginClean || 'user'}@parking.local`;
+    const senhaToUse = inviteSenha.trim() || crypto.randomUUID().slice(0, 12) + "A1!";
     setInviting(true);
     try {
       const { data, error } = await supabase.functions.invoke('invite-user', {
-        body: { email: inviteEmail, nome: inviteNome, perfil: invitePerfil },
+        body: { email: emailToUse, nome: inviteNome, perfil: invitePerfil, login: loginClean, password: senhaToUse },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      setInviteResult({ email: data.email, tempPassword: data.tempPassword });
-      toast({ title: "✓ Usuário convidado!", description: `${inviteNome} (${inviteEmail})` });
+      setInviteResult({ login: loginClean || emailToUse, email: emailToUse, senha: data.tempPassword || senhaToUse });
+      toast({ title: "✓ Usuário criado!", description: `${inviteNome}` });
     } catch (err: any) {
-      toast({ title: "Erro ao convidar", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao criar usuário", description: err.message, variant: "destructive" });
     } finally {
       setInviting(false);
     }
@@ -233,15 +239,18 @@ export default function Admin() {
 
   const copyCredentials = () => {
     if (!inviteResult) return;
-    navigator.clipboard.writeText(`Email: ${inviteResult.email}\nSenha temporária: ${inviteResult.tempPassword}`);
+    navigator.clipboard.writeText(`Login: ${inviteResult.login}\nSenha: ${inviteResult.senha}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const closeInvite = () => {
     setInviteOpen(false);
+    setInviteLogin("");
     setInviteEmail("");
     setInviteNome("");
+    setInviteSenha("");
+    setShowInviteSenha(false);
     setInvitePerfil("operador");
     setInviteResult(null);
     setCopied(false);
@@ -291,7 +300,7 @@ export default function Admin() {
               </div>
             </div>
             <Button onClick={() => setInviteOpen(true)} className="h-11 gap-2 rounded-xl">
-              <Mail className="h-4 w-4" /> Convidar
+              <Plus className="h-4 w-4" /> Adicionar Usuário
             </Button>
           </div>
 
@@ -549,7 +558,7 @@ export default function Admin() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-4 w-4" /> Convidar Usuário
+              <Plus className="h-4 w-4" /> Adicionar Usuário
             </DialogTitle>
           </DialogHeader>
 
@@ -559,11 +568,11 @@ export default function Admin() {
                 <p className="text-sm font-medium text-accent flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" /> Usuário criado com sucesso!
                 </p>
-                <p className="text-xs text-muted-foreground">Envie as credenciais abaixo para o novo usuário:</p>
+                <p className="text-xs text-muted-foreground">Anote as credenciais do novo usuário:</p>
               </div>
               <div className="bg-secondary/50 rounded-xl p-4 space-y-2 font-mono text-sm">
-                <p><span className="text-muted-foreground">Email:</span> {inviteResult.email}</p>
-                <p><span className="text-muted-foreground">Senha:</span> {inviteResult.tempPassword}</p>
+                <p><span className="text-muted-foreground">Login:</span> {inviteResult.login}</p>
+                <p><span className="text-muted-foreground">Senha:</span> {inviteResult.senha}</p>
               </div>
               <Button onClick={copyCredentials} variant="outline" className="w-full h-11 gap-2 rounded-xl">
                 {copied ? <><CheckCircle className="h-4 w-4 text-accent" /> Copiado!</> : <><Copy className="h-4 w-4" /> Copiar Credenciais</>}
@@ -579,8 +588,34 @@ export default function Admin() {
                 <Input value={inviteNome} onChange={(e) => setInviteNome(e.target.value)} placeholder="Nome do usuário" className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label className="stat-label text-[11px]">Email</Label>
-                <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="email@exemplo.com" className="h-11" />
+                <Label className="stat-label text-[11px]">Login</Label>
+                <Input value={inviteLogin} onChange={(e) => setInviteLogin(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ''))} placeholder="login.usuario" className="h-11 font-mono" autoCapitalize="off" autoCorrect="off" />
+                <p className="text-[10px] text-muted-foreground">Letras, números, pontos ou hífens</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label text-[11px]">E-mail (opcional)</Label>
+                <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="email@exemplo.com (opcional)" className="h-11" />
+                <p className="text-[10px] text-muted-foreground">Se não informar, será gerado automaticamente</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="stat-label text-[11px]">Senha inicial</Label>
+                <div className="relative">
+                  <Input
+                    type={showInviteSenha ? 'text' : 'password'}
+                    value={inviteSenha}
+                    onChange={(e) => setInviteSenha(e.target.value)}
+                    placeholder="Deixe vazio para gerar automaticamente"
+                    className="h-11 pr-12"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowInviteSenha((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showInviteSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="stat-label text-[11px]">Perfil / Cargo</Label>
@@ -602,8 +637,8 @@ export default function Admin() {
                   ))}
                 </div>
               </div>
-              <Button onClick={inviteUser} disabled={inviting || !inviteEmail || !inviteNome} className="w-full h-12 gap-2 rounded-xl">
-                {inviting ? 'Convidando...' : '✉ Enviar Convite'}
+              <Button onClick={inviteUser} disabled={inviting || !inviteNome} className="w-full h-12 gap-2 rounded-xl">
+                {inviting ? 'Criando...' : '✓ Criar Usuário'}
               </Button>
             </div>
           )}
