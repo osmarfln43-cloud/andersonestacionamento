@@ -58,30 +58,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const looksLikeEmail = value.includes('@');
     const normalizedLogin = normalizeLogin(value);
 
-    let profileMatch: any = null;
+    // Build candidate emails to try
+    const candidates: string[] = [];
 
+    // 1. If it looks like email, try it directly
     if (looksLikeEmail) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', value)
-        .maybeSingle();
-      profileMatch = data;
-    } else if (normalizedLogin) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('login', normalizedLogin)
-        .maybeSingle();
-      profileMatch = data;
+      candidates.push(value);
     }
 
-    const candidates = Array.from(new Set([
-      looksLikeEmail ? value : null,
-      profileMatch?.email?.toLowerCase?.(),
-      profileMatch?.login ? toLegacyAuthEmail(profileMatch.login) : null,
-      !looksLikeEmail && normalizedLogin ? toLegacyAuthEmail(normalizedLogin) : null,
-    ].filter(Boolean) as string[]));
+    // 2. Use secure RPC to resolve login/email to the real auth email (works without auth)
+    try {
+      const { data: resolvedEmail } = await supabase.rpc('resolve_auth_email', {
+        identifier: value,
+      });
+      if (resolvedEmail && !candidates.includes(resolvedEmail.toLowerCase())) {
+        candidates.push(resolvedEmail.toLowerCase());
+      }
+    } catch {
+      // RPC not available, continue with other candidates
+    }
+
+    // 3. Try legacy @parking.local pattern as fallback
+    if (!looksLikeEmail && normalizedLogin) {
+      const legacyEmail = toLegacyAuthEmail(normalizedLogin);
+      if (!candidates.includes(legacyEmail)) {
+        candidates.push(legacyEmail);
+      }
+    }
+
+    // If no candidates at all, use the raw value
+    if (candidates.length === 0) {
+      candidates.push(value);
+    }
 
     let lastError: any = null;
 
