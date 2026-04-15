@@ -76,23 +76,32 @@
   }
 
   html, body, #root {
-    min-height: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
+    height: 100dvh;
+    overflow: hidden;
     font-family: 'JetBrains Mono', 'Space Grotesk', 'Inter', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: hsl(200 30% 90%); }
-  ::-webkit-scrollbar-thumb { background: hsl(200 20% 75%); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(200 20% 65%); }
+  /* Scrollbar visível e estilizada */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: hsl(200 30% 88%); }
+  ::-webkit-scrollbar-thumb { background: hsl(120 30% 45%); border-radius: 10px; min-height: 40px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(120 30% 35%); }
+
+  .app-scroll-area {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+  }
 }
 
 @layer components {

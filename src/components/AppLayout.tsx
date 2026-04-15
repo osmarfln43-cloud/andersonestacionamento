@@ -4,6 +4,7 @@ import watermarkLogo from "@/assets/watermark-logo.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
 import logoImg from "@/assets/logo.png";
+import { BackToTopButton } from "@/components/ScrollToTop";
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
   FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X
@@ -196,6 +197,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       <footer className="pdv-header shrink-0 py-1.5 px-4 text-center text-[9px] text-white/40">
         <p>© 2026 Anderson Estacionamentos — Desenvolvimento ® OSMARJR Sistemas</p>
       </footer>
+
+      <BackToTopButton />
     </div>
   );
 }
