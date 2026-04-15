@@ -226,12 +226,10 @@ export default function Entrada() {
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as 'carro' | 'moto')}
               className="pdv-input w-full text-xl font-bold h-[60px]"
-              style={{
-                color: categoria === 'carro' ? 'hsl(0 72% 45%)' : 'hsl(200 70% 45%)',
-              }}
+              style={{ color: categoria === 'carro' ? 'hsl(0, 72%, 45%)' : 'hsl(210, 80%, 45%)' }}
             >
-              <option value="carro" style={{ color: 'hsl(0 72% 45%)' }}>🚗 Carro</option>
-              <option value="moto" style={{ color: 'hsl(200 70% 45%)' }}>🏍️ Moto</option>
+              <option value="carro" style={{ color: 'hsl(0, 72%, 45%)' }}>🚗 Carro</option>
+              <option value="moto" style={{ color: 'hsl(210, 80%, 45%)' }}>🏍️ Moto</option>
             </select>
           </div>
           <div className="space-y-1 flex-1 min-w-[200px]">
