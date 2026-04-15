@@ -562,6 +562,7 @@ export type Database = {
     }
     Functions: {
       normalize_login: { Args: { input_text: string }; Returns: string }
+      resolve_auth_email: { Args: { identifier: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
