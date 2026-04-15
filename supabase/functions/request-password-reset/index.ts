@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 const normalizeLogin = (value: string) =>
   value.toLowerCase().trim().replace(/[^a-z0-9._-]/g, "");
@@ -13,10 +18,10 @@ Deno.serve(async (req) => {
     const { identifier, redirectTo } = await req.json();
 
     if (!identifier || !redirectTo) {
-      return new Response(JSON.stringify({ error: "Login/e-mail e link de retorno são obrigatórios" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Login/e-mail e link de retorno são obrigatórios" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const normalizedIdentifier = String(identifier).trim().toLowerCase();
@@ -44,30 +49,36 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Ensure auth email matches profile
     await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
       email: profile.email,
       email_confirm: true,
     });
 
-    const recoverResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/recover`, {
+    // Use the recover endpoint with SERVICE_ROLE key (bypasses redirect restrictions)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")!}`,
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
       },
       body: JSON.stringify({
         email: profile.email,
-        redirect_to: redirectTo,
       }),
     });
 
-    if (!recoverResponse.ok) {
-      const errorText = await recoverResponse.text();
-      return new Response(JSON.stringify({ error: errorText || "Não foi possível enviar o link" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const responseText = await response.text();
+    console.log("recover response:", response.status, responseText);
+
+    if (!response.ok) {
+      return new Response(
+        JSON.stringify({ error: "Não foi possível enviar o link" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -75,6 +86,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("request-password-reset error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

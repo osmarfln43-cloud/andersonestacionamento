@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import { SplashScreen } from "@/components/SplashScreen";
+import { RecoveryRedirect } from "@/components/RecoveryRedirect";
 import { useState, useCallback } from "react";
 import { canAccessRoute, getDefaultRoute } from "@/lib/permissions";
 import Dashboard from "./pages/Dashboard";
@@ -112,6 +113,7 @@ const App = () => {
           <Sonner />
           {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
           <BrowserRouter>
+            <RecoveryRedirect />
             <AppRoutes />
             <InstallPWA />
           </BrowserRouter>

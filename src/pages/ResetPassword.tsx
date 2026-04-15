@@ -17,39 +17,93 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    const search = window.location.search;
-    const searchParams = new URLSearchParams(search);
-    const hasRecoveryHash = hash.includes("type=recovery") || hash.includes("access_token=");
-    const recoveryCode = searchParams.get("code");
-    const recoveryType = searchParams.get("type");
+    let cancelled = false;
 
-    const prepareRecovery = async () => {
+    const processRecovery = async () => {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      const searchParams = new URLSearchParams(search);
+      const hashParams = new URLSearchParams(hash.replace("#", ""));
+
+      // PKCE flow: ?code=...
+      const recoveryCode = searchParams.get("code");
+      // Hash flow: #access_token=...&type=recovery
+      const hashAccessToken = hashParams.get("access_token");
+      const hashType = hashParams.get("type");
+      const hashRefreshToken = hashParams.get("refresh_token");
+
+      console.log("[ResetPassword] hash:", hash);
+      console.log("[ResetPassword] code:", recoveryCode, "hashType:", hashType);
+
+      // Try PKCE code exchange
       if (recoveryCode) {
+        console.log("[ResetPassword] Exchanging code for session...");
         const { error } = await supabase.auth.exchangeCodeForSession(recoveryCode);
         if (error) {
-          setIsRecoveryReady(false);
-          setChecking(false);
-          toast({ title: "Link inválido", description: error.message, variant: "destructive" });
+          console.error("[ResetPassword] Code exchange failed:", error.message);
+          if (!cancelled) {
+            setIsRecoveryReady(false);
+            setChecking(false);
+            toast({ title: "Link inválido ou expirado", description: error.message, variant: "destructive" });
+          }
           return;
         }
+        if (!cancelled) {
+          setIsRecoveryReady(true);
+          setChecking(false);
+        }
+        return;
       }
 
+      // Try hash-based recovery (set session from tokens)
+      if (hashAccessToken && hashType === "recovery") {
+        console.log("[ResetPassword] Setting session from hash tokens...");
+        const { error } = await supabase.auth.setSession({
+          access_token: hashAccessToken,
+          refresh_token: hashRefreshToken || "",
+        });
+        if (error) {
+          console.error("[ResetPassword] setSession failed:", error.message);
+          if (!cancelled) {
+            setIsRecoveryReady(false);
+            setChecking(false);
+            toast({ title: "Link inválido ou expirado", description: error.message, variant: "destructive" });
+          }
+          return;
+        }
+        if (!cancelled) {
+          setIsRecoveryReady(true);
+          setChecking(false);
+        }
+        return;
+      }
+
+      // Check if there's already a session (user may have been redirected
+      // after Supabase auto-processed the recovery)
       const { data: { session } } = await supabase.auth.getSession();
-      setIsRecoveryReady(Boolean(session) || hasRecoveryHash || recoveryType === "recovery");
-      setChecking(false);
+      if (!cancelled) {
+        setIsRecoveryReady(Boolean(session));
+        setChecking(false);
+      }
     };
 
+    // Listen for PASSWORD_RECOVERY event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || !!session) {
-        setIsRecoveryReady(true);
+      console.log("[ResetPassword] Auth event:", event);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        if (!cancelled) {
+          setIsRecoveryReady(true);
+          setChecking(false);
+        }
       }
-      setChecking(false);
     });
 
-    prepareRecovery();
+    processRecovery();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +128,7 @@ export default function ResetPassword() {
       }
 
       await supabase.auth.signOut();
-      toast({ title: "Senha atualizada", description: "Faça login com a nova senha." });
+      toast({ title: "Senha atualizada!", description: "Faça login com a nova senha." });
       navigate("/login", { replace: true });
     } finally {
       setLoading(false);
@@ -98,10 +152,14 @@ export default function ResetPassword() {
 
         <div className="pdv-card p-5 space-y-4">
           {checking ? (
-            <p className="text-sm text-center text-muted-foreground">Validando link...</p>
+            <div className="text-center space-y-2">
+              <div className="h-8 w-8 rounded-lg bg-primary animate-pulse mx-auto" />
+              <p className="text-sm text-muted-foreground">Validando link de recuperação...</p>
+            </div>
           ) : !isRecoveryReady ? (
             <div className="space-y-3 text-center">
-              <p className="text-sm text-muted-foreground">Este link é inválido ou expirou.</p>
+              <p className="text-sm text-destructive font-bold">Link inválido ou expirado</p>
+              <p className="text-xs text-muted-foreground">Solicite um novo link de recuperação na tela de login.</p>
               <button onClick={() => navigate('/login')} className="pdv-btn-yellow w-full text-sm">
                 Voltar ao login
               </button>
@@ -119,6 +177,7 @@ export default function ResetPassword() {
                     className="pdv-input w-full text-base pr-12"
                     minLength={6}
                     required
+                    autoFocus
                   />
                   <button
                     type="button"
