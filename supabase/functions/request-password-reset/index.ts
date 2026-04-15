@@ -32,7 +32,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find the profile
     let profileQuery = supabaseAdmin
       .from("profiles")
       .select("user_id, email, login, status");
@@ -43,7 +42,6 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await profileQuery.maybeSingle();
 
-    // Always return success (don't leak whether user exists)
     if (!profile?.user_id || !profile?.email) {
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
@@ -51,65 +49,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Ensure the auth user email matches the profile real email
+    // Ensure auth email matches profile
     await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
       email: profile.email,
       email_confirm: true,
     });
 
-    // Generate a magic link of type recovery using admin API
-    const { data: linkData, error: linkError } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email: profile.email,
-        options: {
-          redirectTo,
-        },
-      });
-
-    if (linkError) {
-      console.error("generateLink error:", linkError);
-      return new Response(
-        JSON.stringify({ error: "Não foi possível gerar o link de recuperação" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // The generated link contains a token-hash + type params pointing to the
-    // Supabase auth confirm endpoint. We need to build a link that the user
-    // clicks and lands on OUR app's /reset-password page.
-    // 
-    // The admin generateLink returns properties.hashed_token and
-    // properties.verification_type.  We'll construct a link that goes through
-    // the Supabase /auth/v1/verify endpoint which then redirects to our app.
-    const token = linkData?.properties?.hashed_token;
+    // Use the recover endpoint with SERVICE_ROLE key (bypasses redirect restrictions)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Build the verification URL that Supabase will redirect from
-    const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token}&type=recovery&redirect_to=${encodeURIComponent(redirectTo)}`;
-
-    // Send a simple recovery email using the Supabase Auth REST API
-    // We'll use the admin API to send a custom email via the /auth/v1/admin/generate_link
-    // But actually, we already have the link. Let's send the email ourselves.
-    
-    // Use Supabase's built-in email by calling the recover endpoint
-    // but this time with the admin API which is more reliable
     const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`,
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
       },
       body: JSON.stringify({
         email: profile.email,
-        gotrue_meta_security: { captcha_token: "" },
       }),
     });
 
+    const responseText = await response.text();
+    console.log("recover response:", response.status, responseText);
+
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("recover error:", errText);
+      return new Response(
+        JSON.stringify({ error: "Não foi possível enviar o link" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(JSON.stringify({ success: true }), {
