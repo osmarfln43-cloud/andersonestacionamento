@@ -21,6 +21,7 @@ import Comprovantes from "./pages/Comprovantes";
 import Admin from "./pages/Admin";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import InstallPWA from "@/components/InstallPWA";
 
