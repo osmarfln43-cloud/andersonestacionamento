@@ -6,6 +6,16 @@ import { hasPermission } from "@/lib/permissions";
 import logoImg from "@/assets/logo.png";
 import { BackToTopButton } from "@/components/ScrollToTop";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
   FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X
 } from "lucide-react";
@@ -41,6 +51,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const role = profile?.perfil || 'operador';
   const roleLabel = roleLabels[role] || role.toUpperCase();
@@ -58,9 +69,14 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // F1-F12 keyboard shortcuts
+  // F1-F12 + ESC keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowExitDialog(true);
+        return;
+      }
       if (e.key.startsWith('F') && e.key.length <= 3) {
         const fNum = parseInt(e.key.substring(1));
         if (fNum >= 1 && fNum <= 12) {
@@ -201,6 +217,27 @@ export function AppLayout({ children }: AppLayoutProps) {
       </footer>
 
       <BackToTopButton />
+
+      {/* Exit confirmation dialog (ESC key) */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-black">Sair do aplicativo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair da plataforma? Você precisará fazer login novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => signOut()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
