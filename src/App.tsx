@@ -114,6 +114,7 @@ const App = () => {
           {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
           <BrowserRouter>
             <RecoveryRedirect />
+            <ScrollToTopOnNavigate />
             <AppRoutes />
             <InstallPWA />
           </BrowserRouter>
