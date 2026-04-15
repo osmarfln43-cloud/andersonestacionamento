@@ -83,6 +83,7 @@
     @apply bg-background text-foreground antialiased;
     min-height: 100dvh;
     overflow-x: hidden;
+    overflow-y: auto;
     font-family: 'JetBrains Mono', 'Space Grotesk', 'Inter', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -225,8 +226,7 @@
 
   .app-scroll-area {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    touch-action: pan-y;
+    overscroll-behavior-y: auto;
   }
 
   .pdv-moto-row { color: hsl(0 72% 45%); }
