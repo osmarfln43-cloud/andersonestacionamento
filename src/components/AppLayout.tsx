@@ -217,6 +217,27 @@ export function AppLayout({ children }: AppLayoutProps) {
       </footer>
 
       <BackToTopButton />
+
+      {/* Exit confirmation dialog (ESC key) */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-black">Sair do aplicativo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair da plataforma? Você precisará fazer login novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => signOut()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
