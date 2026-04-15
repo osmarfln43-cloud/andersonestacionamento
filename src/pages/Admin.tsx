@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, Printer, FileDown, DollarSign, LogOut, Plus, Pencil, Mail, Copy, CheckCircle, History, Trash2, Edit, PlusCircle } from "lucide-react";
+import { ShieldCheck, Users, KeyRound, Search, Shield, Check, X, Eye, EyeOff, Printer, FileDown, DollarSign, LogOut, Plus, Pencil, Mail, Copy, CheckCircle, History, Trash2, Edit, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -113,6 +113,9 @@ export default function Admin() {
   const [inviting, setInviting] = useState(false);
   const [inviteResult, setInviteResult] = useState<{ email: string; tempPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [adminNewPassword, setAdminNewPassword] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const { toast } = useToast();
   const { data: usuarios = [], isLoading } = useProfiles();
   const { profile: myProfile, user } = useAuth();
@@ -137,6 +140,8 @@ export default function Admin() {
     setEditPerfil(userToEdit.perfil);
     setEditStatus(userToEdit.status);
     setEditNome(userToEdit.nome || '');
+    setAdminNewPassword('');
+    setShowAdminPassword(false);
   };
 
   const saveUser = async () => {
@@ -155,6 +160,30 @@ export default function Admin() {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveUserPassword = async () => {
+    if (!editingUser || !adminNewPassword.trim()) return;
+    setSavingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-set-user-password', {
+        body: {
+          userId: editingUser.user_id,
+          password: adminNewPassword,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: '✓ Nova senha salva', description: `Senha atualizada para ${editingUser.nome || editingUser.email}` });
+      setAdminNewPassword('');
+      setShowAdminPassword(false);
+    } catch (err: any) {
+      toast({ title: 'Erro ao redefinir senha', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -241,7 +270,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="usuarios" className="space-y-6">
-       <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
+        <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto flex-wrap">
           <TabsTrigger value="usuarios" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 py-2.5 px-4">
             <Users className="h-4 w-4" /> Usuários
           </TabsTrigger>
@@ -453,6 +482,33 @@ export default function Admin() {
                 </div>
               </div>
 
+              <div className="rounded-xl border border-border bg-secondary/20 p-4 space-y-3">
+                <div>
+                  <Label className="stat-label text-[11px]">Definir nova senha</Label>
+                  <p className="text-[10px] text-muted-foreground mt-1">O Admin pode criar uma nova senha manualmente para este usuário.</p>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showAdminPassword ? 'text' : 'password'}
+                    value={adminNewPassword}
+                    onChange={(e) => setAdminNewPassword(e.target.value)}
+                    className="h-11 pr-12"
+                    placeholder="Nova senha"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showAdminPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button onClick={saveUserPassword} disabled={savingPassword || adminNewPassword.trim().length < 6} variant="outline" className="w-full h-11 gap-2 rounded-xl">
+                  <KeyRound className="h-4 w-4" /> {savingPassword ? 'Salvando senha...' : 'Salvar nova senha'}
+                </Button>
+              </div>
+
               <Button onClick={saveUser} disabled={saving} className="w-full h-12 gap-2 rounded-xl">
                 {saving ? 'Salvando...' : '✓ Salvar Alterações'}
               </Button>
@@ -584,7 +640,6 @@ function AuditTab() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="glass-card p-2 flex-1 min-w-[200px] max-w-sm">
           <div className="relative">
@@ -614,7 +669,6 @@ function AuditTab() {
         </select>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Criações', count: logs.filter((l: any) => l.acao === 'INSERT').length, color: 'text-accent' },
@@ -628,7 +682,6 @@ function AuditTab() {
         ))}
       </div>
 
-      {/* Log list */}
       <div className="glass-card overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Carregando logs...</div>

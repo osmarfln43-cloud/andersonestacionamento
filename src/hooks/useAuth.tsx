@@ -7,12 +7,18 @@ interface AuthContextType {
   session: Session | null;
   profile: any | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, nome: string, realEmail?: string) => Promise<{ error: any }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: any }>;
+  signUp: (login: string, password: string, nome: string, realEmail: string) => Promise<{ error: any }>;
+  requestPasswordReset: (identifier: string, redirectTo: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const normalizeLogin = (value: string) =>
+  value.toLowerCase().trim().replace(/[^a-z0-9._-]/g, '');
+
+const toLegacyAuthEmail = (login: string) => `${normalizeLogin(login)}@parking.local`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -47,18 +53,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (identifier: string, password: string) => {
+    const value = identifier.trim().toLowerCase();
+    const looksLikeEmail = value.includes('@');
+    const normalizedLogin = normalizeLogin(value);
+
+    let profileMatch: any = null;
+
+    if (looksLikeEmail) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', value)
+        .maybeSingle();
+      profileMatch = data;
+    } else if (normalizedLogin) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('login', normalizedLogin)
+        .maybeSingle();
+      profileMatch = data;
+    }
+
+    const candidates = Array.from(new Set([
+      looksLikeEmail ? value : null,
+      profileMatch?.email?.toLowerCase?.(),
+      profileMatch?.login ? toLegacyAuthEmail(profileMatch.login) : null,
+      !looksLikeEmail && normalizedLogin ? toLegacyAuthEmail(normalizedLogin) : null,
+    ].filter(Boolean) as string[]));
+
+    let lastError: any = null;
+
+    for (const email of candidates) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) return { error: null };
+      lastError = error;
+    }
+
+    return { error: lastError || new Error('Login ou senha incorretos') };
+  };
+
+  const signUp = async (login: string, password: string, nome: string, realEmail: string) => {
+    const cleanLogin = normalizeLogin(login);
+    const cleanEmail = realEmail.trim().toLowerCase();
+
+    const { error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        data: {
+          nome,
+          login: cleanLogin,
+          real_email: cleanEmail,
+        },
+      },
+    });
+
     return { error };
   };
 
-  const signUp = async (email: string, password: string, nome: string, realEmail?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome, real_email: realEmail || email } },
+  const requestPasswordReset = async (identifier: string, redirectTo: string) => {
+    const { data, error } = await supabase.functions.invoke('request-password-reset', {
+      body: { identifier, redirectTo },
     });
-    return { error };
+
+    if (error) return { error };
+    if (data?.error) return { error: new Error(data.error) };
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -66,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signIn, signUp, requestPasswordReset, signOut }}>
       {children}
     </AuthContext.Provider>
   );

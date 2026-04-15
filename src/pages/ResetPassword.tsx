@@ -1,0 +1,147 @@
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import logoImg from "@/assets/logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+export default function ResetPassword() {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [isRecoveryReady, setIsRecoveryReady] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    const hasRecoveryHash = hash.includes("type=recovery") || hash.includes("access_token=");
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (!!session && hasRecoveryHash)) {
+        setIsRecoveryReady(true);
+      }
+      setChecking(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsRecoveryReady(Boolean(session) || hasRecoveryHash);
+      setChecking(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password.length < 6) {
+      toast({ title: "Senha muito curta", description: "Use pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({ title: "As senhas não coincidem", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        toast({ title: "Erro ao redefinir senha", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      await supabase.auth.signOut();
+      toast({ title: "Senha atualizada", description: "Faça login com a nova senha." });
+      navigate("/login", { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
+        <img src={logoImg} alt="" className="w-[500px] max-w-[80vw] opacity-[0.06] select-none" draggable={false} />
+      </div>
+
+      <div className="w-full max-w-[420px] space-y-5 relative z-10">
+        <div className="text-center space-y-2">
+          <div className="h-16 w-16 rounded-sm overflow-hidden flex items-center justify-center mx-auto border-2 border-primary/30">
+            <img src={logoImg} alt="Anderson Estacionamento" className="h-16 w-16 object-cover" />
+          </div>
+          <h1 className="text-xl font-bold font-mono text-primary uppercase tracking-wider">Redefinir senha</h1>
+          <p className="text-xs text-muted-foreground font-mono">Crie uma nova senha para acessar o sistema</p>
+        </div>
+
+        <div className="pdv-card p-5 space-y-4">
+          {checking ? (
+            <p className="text-sm text-center text-muted-foreground">Validando link...</p>
+          ) : !isRecoveryReady ? (
+            <div className="space-y-3 text-center">
+              <p className="text-sm text-muted-foreground">Este link é inválido ou expirou.</p>
+              <button onClick={() => navigate('/login')} className="pdv-btn-yellow w-full text-sm">
+                Voltar ao login
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="stat-label">Nova senha</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pdv-input w-full text-base pr-12"
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="stat-label">Confirmar nova senha</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pdv-input w-full text-base pr-12"
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="pdv-btn-green w-full flex items-center justify-center gap-2 text-sm">
+                <KeyRound className="h-4 w-4" /> {loading ? 'Salvando...' : 'SALVAR NOVA SENHA'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
