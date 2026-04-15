@@ -82,7 +82,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-start sm:items-center justify-center bg-background p-4 py-6 relative">
+    <div className="min-h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-background p-4 py-6 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
         <img src={logoImg} alt="" className="w-[500px] max-w-[80vw] opacity-[0.06] select-none" draggable={false} />
       </div>

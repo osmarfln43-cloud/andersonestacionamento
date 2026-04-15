@@ -74,8 +74,15 @@
   * {
     @apply border-border;
   }
+
+  html, body, #root {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
     font-family: 'JetBrains Mono', 'Space Grotesk', 'Inter', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -215,6 +222,12 @@
   .stagger-6 { animation-delay: 0.18s; }
   .stagger-7 { animation-delay: 0.21s; }
   .stagger-8 { animation-delay: 0.24s; }
+
+  .app-scroll-area {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
 
   .pdv-moto-row { color: hsl(0 72% 45%); }
   .pdv-carro-row { color: hsl(0 0% 10%); }
