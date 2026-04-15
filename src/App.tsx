@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import { SplashScreen } from "@/components/SplashScreen";
 import { RecoveryRedirect } from "@/components/RecoveryRedirect";
+import { ScrollToTopOnNavigate } from "@/components/ScrollToTop";
 import { useState, useCallback } from "react";
 import { canAccessRoute, getDefaultRoute } from "@/lib/permissions";
 import Dashboard from "./pages/Dashboard";
