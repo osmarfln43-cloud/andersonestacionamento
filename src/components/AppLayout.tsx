@@ -15,9 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { hasPermission } from "@/lib/permissions";
-import logoImg from "@/assets/logo.png";
-import { BackToTopButton } from "@/components/ScrollToTop";
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
   FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X
