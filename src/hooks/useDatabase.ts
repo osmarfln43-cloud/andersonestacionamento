@@ -90,7 +90,7 @@ export function useRegistrarEntrada() {
           })
           .eq('id', veiculoExistente.id);
         if (veiculoUpdateError) throw veiculoUpdateError;
-      } else if (marcaFinal || modeloFinal !== 'N/I' || corFinal) {
+      } else {
         const { data: veiculoCriado, error: veiculoInsertError } = await supabase
           .from('veiculos')
           .insert({
