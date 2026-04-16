@@ -33,9 +33,10 @@ export default function Entrada() {
   const applyVehicleData = (data: { marca?: string | null; modelo?: string | null; cor?: string | null }) => {
     const rawMarca = data.marca?.trim() || "";
     const rawModelo = data.modelo?.trim() || "";
-    const combined = [rawMarca, rawModelo].filter(Boolean).join(' ').trim();
-    setModelo(combined || rawModelo);
-    setCor(data.cor?.trim() || "");
+    const rawCor = data.cor?.trim() || "";
+    const combined = [rawMarca, rawModelo, rawCor].filter(Boolean).join(' ').trim();
+    setDescricao(combined);
+    setCor(rawCor);
   };
 
   const identifyByPhoto = async (base64: string) => {
