@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,6 +28,7 @@ export default function Entrada() {
   const { data: config } = useConfiguracoes();
   const { data: movHoje = [] } = useMovimentacoesHoje();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const applyVehicleData = (data: { marca?: string | null; modelo?: string | null; cor?: string | null }) => {
     const rawMarca = data.marca?.trim() || "";
@@ -337,7 +339,11 @@ export default function Entrada() {
                   <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
                     <td className="text-4xl font-black font-mono py-3" style={{ color: rowColor }}>{String(movHoje.length - i).padStart(4, '0')}</td>
                     <td className="text-3xl font-black font-mono py-3" style={{ color: rowColor }}>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="text-4xl font-black font-mono tracking-wider py-3">{m.placa}</td>
+                    <td
+                      className="text-4xl font-black font-mono tracking-wider py-3 cursor-pointer hover:underline hover:text-primary transition-colors"
+                      onClick={() => m.status_movimentacao === 'ativo' && navigate(`/saida?placa=${m.placa}`)}
+                      title={m.status_movimentacao === 'ativo' ? 'Clique para registrar saída' : ''}
+                    >{m.placa}</td>
                     <td className="text-3xl font-black uppercase py-3">{[m.modelo, m.cor].filter(Boolean).join(' ').toUpperCase()}</td>
                     <td className="py-3">
                       <span className={`text-lg font-black px-4 py-2 rounded ${
