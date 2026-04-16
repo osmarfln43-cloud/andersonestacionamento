@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+type StatDialog = 'patio' | 'entradas' | 'saidas' | 'estimado' | null;
+
 export default function Patio() {
   const [busca, setBusca] = useState("");
   const { data: veiculosAtivos = [], isLoading } = useMovimentacoesAtivas();
@@ -21,6 +23,7 @@ export default function Patio() {
   const [editModelo, setEditModelo] = useState("");
   const [editCor, setEditCor] = useState("");
   const [saving, setSaving] = useState(false);
+  const [statDialog, setStatDialog] = useState<StatDialog>(null);
 
   const entradasHoje = movHoje.length;
   const saidasHoje = finalizadosHoje.length;
@@ -91,12 +94,12 @@ export default function Patio() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { icon: Car, label: "NO PÁTIO", value: noPatio, color: "text-primary" },
-          { icon: LogIn, label: "ENTRADAS", value: entradasHoje, color: "text-accent" },
-          { icon: LogOut, label: "SAÍDAS", value: saidasHoje, color: "text-warning" },
-          { icon: TrendingUp, label: "ESTIMADO", value: `R$ ${totalEstimado}`, color: "text-accent" },
+          { icon: Car, label: "NO PÁTIO", value: noPatio, color: "text-primary", key: 'patio' as StatDialog },
+          { icon: LogIn, label: "ENTRADAS", value: entradasHoje, color: "text-accent", key: 'entradas' as StatDialog },
+          { icon: LogOut, label: "SAÍDAS", value: saidasHoje, color: "text-warning", key: 'saidas' as StatDialog },
+          { icon: TrendingUp, label: "ESTIMADO", value: `R$ ${totalEstimado}`, color: "text-accent", key: 'estimado' as StatDialog },
         ].map((s, i) => (
-          <div key={i} className="pdv-card p-3">
+          <div key={i} className="pdv-card p-3 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all" onClick={() => setStatDialog(s.key)}>
             <div className="flex items-center gap-2 mb-1">
               <s.icon className={`h-4 w-4 ${s.color}`} />
               <span className="stat-label">{s.label}</span>
@@ -170,6 +173,116 @@ export default function Patio() {
           </tbody>
         </table>
       </div>
+
+      {/* Stat Detail Dialogs */}
+      <Dialog open={statDialog === 'patio'} onOpenChange={() => setStatDialog(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Car className="h-5 w-5 text-primary" /> Veículos no Pátio ({noPatio})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            {veiculosAtivos.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhum veículo no pátio</p>}
+            {veiculosAtivos.map(v => {
+              const diffMs = Date.now() - new Date(v.entrada).getTime();
+              const h = Math.floor(diffMs / 3600000);
+              const m = Math.round((diffMs % 3600000) / 60000);
+              const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
+              return (
+                <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold font-mono text-base">{v.placa}</p>
+                    <p className="text-sm text-muted-foreground">{(v.modelo || 'N/I').toUpperCase()} {(v.cor || '').toUpperCase()} • {v.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-mono">{h}h{String(m).padStart(2, '0')}</p>
+                    <p className="font-bold text-accent font-mono">R$ {valor}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={statDialog === 'entradas'} onOpenChange={() => setStatDialog(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><LogIn className="h-5 w-5 text-accent" /> Entradas Hoje ({entradasHoje})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            {movHoje.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhuma entrada hoje</p>}
+            {movHoje.map(v => (
+              <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
+                <div>
+                  <p className="font-bold font-mono text-base">{v.placa}</p>
+                  <p className="text-sm text-muted-foreground">{(v.modelo || 'N/I').toUpperCase()} {(v.cor || '').toUpperCase()} • {v.categoria === 'moto' ? '🏍️ Moto' : '🚗 Carro'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-mono">{new Date(v.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded font-bold ${v.status_movimentacao === 'ativo' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    {v.status_movimentacao === 'ativo' ? 'NO PÁTIO' : 'FINALIZADO'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={statDialog === 'saidas'} onOpenChange={() => setStatDialog(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><LogOut className="h-5 w-5 text-warning" /> Saídas Hoje ({saidasHoje})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            {finalizadosHoje.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhuma saída hoje</p>}
+            {finalizadosHoje.map(v => (
+              <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
+                <div>
+                  <p className="font-bold font-mono text-base">{v.placa}</p>
+                  <p className="text-sm text-muted-foreground">{(v.modelo || 'N/I').toUpperCase()} {(v.cor || '').toUpperCase()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-mono">{v.saida ? new Date(v.saida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--'}</p>
+                  <p className="font-bold text-accent font-mono">R$ {Number(v.valor_total || 0).toFixed(0)}</p>
+                  <p className="text-xs text-muted-foreground">{v.forma_pagamento || '--'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={statDialog === 'estimado'} onOpenChange={() => setStatDialog(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-accent" /> Estimativa — R$ {totalEstimado}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 pt-2">
+            <p className="text-sm text-muted-foreground mb-3">Valor estimado por veículo ainda no pátio:</p>
+            {veiculosAtivos.length === 0 && <p className="text-muted-foreground text-center py-4">Nenhum veículo no pátio</p>}
+            {veiculosAtivos.map(v => {
+              const diffMs = Date.now() - new Date(v.entrada).getTime();
+              const h = Math.floor(diffMs / 3600000);
+              const m = Math.round((diffMs % 3600000) / 60000);
+              const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
+              return (
+                <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold font-mono">{v.placa}</p>
+                    <p className="text-xs text-muted-foreground">{h}h{String(m).padStart(2, '0')} • R$ {Number(v.valor_hora)}/h</p>
+                  </div>
+                  <p className="font-bold text-accent font-mono text-lg">R$ {valor}</p>
+                </div>
+              );
+            })}
+            <div className="border-t pt-3 flex justify-between font-bold font-mono text-lg">
+              <span>TOTAL</span>
+              <span className="text-accent">R$ {totalEstimado}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!editMov} onOpenChange={() => setEditMov(null)}>
