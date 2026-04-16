@@ -216,7 +216,7 @@ export function buildReceiptESCPOS(data: {
   telefone?: string;
   cnpj?: string;
 }, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
-  const cols = paperWidth === '58mm' ? 28 : 40;
+  const cols = paperWidth === '58mm' ? 24 : 32;
   const cmds: number[] = [];
 
   cmds.push(...escposDensity(12)); // High density for darker print
@@ -269,7 +269,7 @@ export function buildReceiptESCPOS(data: {
     pushLabelValueBlock(cmds, 'Pagamento', data.formaPagamento.toUpperCase(), cols);
   }
 
-  pushLabelValueBlock(cmds, 'Valor/hora', `R$ ${formatCurrency(data.valorHora || 10)}`, cols, 'center', true);
+  pushLabelValueBlock(cmds, 'Valor/hora', `R$ ${formatCurrency(data.valorHora || 10)}`, cols, 'left', true);
   cmds.push(...dashedLine(cols));
 
   // Total
@@ -288,7 +288,7 @@ export function buildReceiptESCPOS(data: {
   // Payment highlight
   cmds.push(...escposAlign('center'));
   cmds.push(...escposBold(true));
-  cmds.push(...textToBytes('PAGAMENTO DINHEIRO OU PIX'), LF);
+  pushWrappedText(cmds, 'PAGAMENTO DINHEIRO OU PIX', cols);
   cmds.push(...escposBold(false));
   cmds.push(...dashedLine(cols));
 
