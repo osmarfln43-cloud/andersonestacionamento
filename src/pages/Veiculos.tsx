@@ -139,6 +139,7 @@ export default function Veiculos() {
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left p-4 stat-label">Placa</th>
+                <th className="text-left p-4 stat-label">Tipo</th>
                 <th className="text-left p-4 stat-label">Veículo</th>
                 <th className="text-left p-4 stat-label">Cor</th>
                 <th className="text-left p-4 stat-label">Proprietário</th>

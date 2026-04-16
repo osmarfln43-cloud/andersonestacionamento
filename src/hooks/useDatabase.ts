@@ -87,6 +87,7 @@ export function useRegistrarEntrada() {
             marca: marcaFinal || null,
             modelo: modeloFinal,
             cor: corFinal || null,
+            categoria: mov.categoria || 'carro',
           })
           .eq('id', veiculoExistente.id);
         if (veiculoUpdateError) throw veiculoUpdateError;
@@ -98,6 +99,7 @@ export function useRegistrarEntrada() {
             marca: marcaFinal || null,
             modelo: modeloFinal,
             cor: corFinal || null,
+            categoria: mov.categoria || 'carro',
           })
           .select('id')
           .single();
