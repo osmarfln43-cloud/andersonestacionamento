@@ -30,6 +30,8 @@ export default function Entrada() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const normalizeCategoria = (value?: string | null): 'carro' | 'moto' => value === 'moto' ? 'moto' : 'carro';
+
   const applyVehicleData = (data: { marca?: string | null; modelo?: string | null; cor?: string | null }) => {
     const rawMarca = data.marca?.trim() || "";
     const rawModelo = data.modelo?.trim() || "";
@@ -50,7 +52,7 @@ export default function Entrada() {
         if (data.placa && data.placa.length >= 6) { setPlaca(data.placa.toUpperCase()); lastSearchedPlateRef.current = data.placa.toUpperCase(); }
         if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
-        if (data.categoria === 'moto') setCategoria('moto'); else setCategoria('carro');
+        setCategoria(normalizeCategoria(data.categoria));
         toast({ title: "🤖 IA identificou!", description: `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}` });
       }
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
@@ -65,7 +67,7 @@ export default function Entrada() {
       const [ativoResult, veiculoResult, historicoResult, visitasResult] = await Promise.all([
         supabase.from('movimentacoes').select('*').eq('placa', placaUpper).eq('status_movimentacao', 'ativo').order('entrada', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('veiculos').select('*, clientes(nome, tipo)').eq('placa', placaUpper).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-        supabase.from('movimentacoes').select('placa, modelo, cor, tipo_cliente').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('movimentacoes').select('placa, modelo, cor, tipo_cliente, categoria').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('movimentacoes').select('id', { count: 'exact', head: true }).eq('placa', placaUpper),
       ]);
       if (ativoResult.error) throw ativoResult.error;
@@ -77,12 +79,14 @@ export default function Entrada() {
 
       if (ativo) {
         applyVehicleData({ modelo: ativo.modelo, cor: ativo.cor });
+        setCategoria(normalizeCategoria(ativo.categoria));
         setAiResult({ source: 'patio', visitCount: visitasResult.count ?? 1 });
         toast({ title: "⚠️ Já no pátio!", description: `${placaUpper} — ${new Date(ativo.entrada).toLocaleString('pt-BR')}`, variant: "destructive" });
         return;
       }
       if (veiculoCadastrado) {
         applyVehicleData({ marca: veiculoCadastrado.marca, modelo: veiculoCadastrado.modelo, cor: veiculoCadastrado.cor });
+        setCategoria(normalizeCategoria(historico?.categoria ?? veiculoCadastrado.categoria));
         const cliente = veiculoCadastrado.clientes as any;
         const isMensalista = cliente?.tipo === 'mensalista';
         setTipo(isMensalista ? 'mensalista' : 'avulso');
@@ -92,6 +96,7 @@ export default function Entrada() {
       }
       if (historico) {
         applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
+        setCategoria(normalizeCategoria(historico.categoria));
         setTipo(historico.tipo_cliente === 'mensalista' ? 'mensalista' : 'avulso');
         setAiResult({ source: 'retorno', visitCount: proximaVisita });
         toast({ title: "🔄 Retornou!", description: `${proximaVisita}ª vez` });
@@ -103,6 +108,7 @@ export default function Entrada() {
         setAiResult(data);
         if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
+        setCategoria(normalizeCategoria(data.categoria));
         toast({ title: "🤖 IA sugeriu", description: `${data.marca} ${data.modelo}` });
       }
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
@@ -114,15 +120,24 @@ export default function Entrada() {
       lastSearchedPlateRef.current = placa;
       const quickLookup = async () => {
         const placaUpper = placa.toUpperCase();
-        const { data: veiculoCadastrado } = await supabase.from('veiculos').select('*, clientes(nome, tipo)').eq('placa', placaUpper).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        const [veiculoResult, historicoResult] = await Promise.all([
+          supabase.from('veiculos').select('*, clientes(nome, tipo)').eq('placa', placaUpper).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+          supabase.from('movimentacoes').select('modelo, cor, tipo_cliente, categoria').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle(),
+        ]);
+
+        const veiculoCadastrado = veiculoResult.data;
+        const historico = historicoResult.data;
+
         if (veiculoCadastrado) {
           applyVehicleData({ marca: veiculoCadastrado.marca, modelo: veiculoCadastrado.modelo, cor: veiculoCadastrado.cor });
+          setCategoria(normalizeCategoria(historico?.categoria ?? veiculoCadastrado.categoria));
           const cliente = veiculoCadastrado.clientes as any;
           if (cliente?.tipo === 'mensalista') setTipo('mensalista');
           toast({ title: "✓ Encontrado", description: `${veiculoCadastrado.marca || ''} ${veiculoCadastrado.modelo}`.trim() });
-        } else {
-          const { data: historico } = await supabase.from('movimentacoes').select('modelo, cor, tipo_cliente').eq('placa', placaUpper).eq('status_movimentacao', 'finalizado').order('saida', { ascending: false }).limit(1).maybeSingle();
-          if (historico) { applyVehicleData({ modelo: historico.modelo, cor: historico.cor }); toast({ title: "🔄 Dados anteriores" }); }
+        } else if (historico) {
+          applyVehicleData({ modelo: historico.modelo, cor: historico.cor });
+          setCategoria(normalizeCategoria(historico.categoria));
+          toast({ title: "🔄 Dados anteriores" });
         }
       };
       quickLookup();

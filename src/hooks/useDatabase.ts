@@ -67,7 +67,7 @@ export function useRegistrarEntrada() {
 
       const { data: veiculoExistente, error: veiculoFetchError } = await supabase
         .from('veiculos')
-        .select('id, marca, modelo, cor')
+        .select('id, marca, modelo, cor, categoria')
         .eq('placa', placaUpper)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -77,6 +77,13 @@ export function useRegistrarEntrada() {
       const marcaFinal = marcaInformada || veiculoExistente?.marca || '';
       const modeloFinal = modeloInformado !== 'N/I' ? modeloInformado : veiculoExistente?.modelo || 'N/I';
       const corFinal = corInformada || veiculoExistente?.cor || '';
+      const categoriaFinal = mov.categoria === 'moto'
+        ? 'moto'
+        : mov.categoria === 'carro'
+          ? 'carro'
+          : veiculoExistente?.categoria === 'moto'
+            ? 'moto'
+            : 'carro';
 
       let veiculoId = veiculoExistente?.id || null;
 
@@ -87,7 +94,7 @@ export function useRegistrarEntrada() {
             marca: marcaFinal || null,
             modelo: modeloFinal,
             cor: corFinal || null,
-            categoria: mov.categoria || 'carro',
+            categoria: categoriaFinal,
           })
           .eq('id', veiculoExistente.id);
         if (veiculoUpdateError) throw veiculoUpdateError;
@@ -99,7 +106,7 @@ export function useRegistrarEntrada() {
             marca: marcaFinal || null,
             modelo: modeloFinal,
             cor: corFinal || null,
-            categoria: mov.categoria || 'carro',
+            categoria: categoriaFinal,
           })
           .select('id')
           .single();
@@ -113,7 +120,7 @@ export function useRegistrarEntrada() {
         .trim() || 'N/I';
 
       // Fetch config to get correct valor_hora based on category
-      const categoriaVeiculo = mov.categoria || 'carro';
+      const categoriaVeiculo = categoriaFinal;
       const { data: configData } = await supabase
         .from('configuracoes')
         .select('valor_hora, valor_hora_moto, valor_maximo_diario, valor_maximo_diario_moto')
@@ -250,9 +257,25 @@ export function useVeiculos() {
   return useQuery({
     queryKey: ['veiculos'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('veiculos').select('*, clientes(nome)').order('placa');
-      if (error) throw error;
-      return data;
+      const [veiculosResult, movimentacoesResult] = await Promise.all([
+        supabase.from('veiculos').select('*, clientes(nome)').order('placa'),
+        supabase.from('movimentacoes').select('placa, categoria, entrada').order('entrada', { ascending: false }),
+      ]);
+
+      if (veiculosResult.error) throw veiculosResult.error;
+      if (movimentacoesResult.error) throw movimentacoesResult.error;
+
+      const categoriaPorPlaca = new Map<string, 'carro' | 'moto'>();
+
+      (movimentacoesResult.data || []).forEach((mov) => {
+        if (!mov.placa || categoriaPorPlaca.has(mov.placa)) return;
+        categoriaPorPlaca.set(mov.placa, mov.categoria === 'moto' ? 'moto' : 'carro');
+      });
+
+      return (veiculosResult.data || []).map((veiculo) => ({
+        ...veiculo,
+        categoria: categoriaPorPlaca.get(veiculo.placa) ?? (veiculo.categoria === 'moto' ? 'moto' : 'carro'),
+      }));
     },
   });
 }
