@@ -94,9 +94,9 @@ export default function Patio() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { icon: Car, label: "NO PÁTIO", value: noPatio, color: "text-primary", key: 'patio' as StatDialog },
-          { icon: LogIn, label: "ENTRADAS", value: entradasHoje, color: "text-accent", key: 'entradas' as StatDialog },
-          { icon: LogOut, label: "SAÍDAS", value: saidasHoje, color: "text-warning", key: 'saidas' as StatDialog },
+          { icon: Car, label: "NO PÁTIO AGORA", value: noPatio, color: "text-primary", key: 'patio' as StatDialog },
+          { icon: LogIn, label: "ENTRADAS TOTAL DO DIA", value: entradasHoje, color: "text-accent", key: 'entradas' as StatDialog },
+          { icon: LogOut, label: "SAÍDAS FINALIZADAS DO DIA", value: saidasHoje, color: "text-warning", key: 'saidas' as StatDialog },
           { icon: TrendingUp, label: "ESTIMADO", value: `R$ ${totalEstimado}`, color: "text-accent", key: 'estimado' as StatDialog },
         ].map((s, i) => (
           <div key={i} className="pdv-card p-3 cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all" onClick={() => setStatDialog(s.key)}>
