@@ -184,7 +184,7 @@ export default function Entrada() {
           onSuccess: (result) => {
             toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${modeloCompleto}` });
             setReceiptData({
-              placa: placaUpper, modelo: modeloCompleto, cor, tipo_cliente: tipo,
+              placa: placaUpper, modelo: modeloCompleto, cor: corFinal, tipo_cliente: tipo,
               entrada: result.entrada, nomeEstacionamento: config?.nome_estacionamento,
               endereco: config?.endereco, telefone: config?.telefone,
               chavePix: config?.chave_pix, tipoChavePix: config?.tipo_chave_pix,
