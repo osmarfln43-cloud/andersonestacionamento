@@ -202,7 +202,7 @@ export function buildReceiptESCPOS(data: {
     cmds.push(...textToBytes(`Pgto:    ${data.formaPagamento.toUpperCase()}`), LF);
   }
 
-  cmds.push(...textToBytes(`Vlr/hr:  R$ ${Number(data.valorHora || 10).toFixed(2)}`), LF);
+  cmds.push(...textToBytes(`Vlr/hr:  R$ ${Number(data.valorHora || 10).toFixed(2).replace('.', ',')}`), LF);
   cmds.push(...dashedLine(cols));
 
   // Total
@@ -212,7 +212,7 @@ export function buildReceiptESCPOS(data: {
     cmds.push(...escposFontSize(1, 1));
     cmds.push(...textToBytes('Total'), LF);
     cmds.push(...escposFontSize(2, 2));
-    cmds.push(...textToBytes(`R$ ${Number(data.valorTotal).toFixed(2)}`), LF);
+    cmds.push(...textToBytes(`R$ ${Number(data.valorTotal).toFixed(2).replace('.', ',')}`), LF);
     cmds.push(...escposFontSize(1, 1));
     cmds.push(...escposBold(false));
     cmds.push(...dashedLine(cols));

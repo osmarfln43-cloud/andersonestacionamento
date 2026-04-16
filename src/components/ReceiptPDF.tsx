@@ -226,7 +226,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
           <div className="row">
             <span className="row-label">Valor/hora:</span>
-            <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2)}</span>
+            <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2).replace('.', ',')}</span>
           </div>
 
           {data.formaPagamento && (
@@ -241,7 +241,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           {data.saida && data.valorTotal != null && (
             <>
               <div className="total-label">TOTAL</div>
-              <div className="total-value">R$ {Number(data.valorTotal).toFixed(2)}</div>
+              <div className="total-value">R$ {Number(data.valorTotal).toFixed(2).replace('.', ',')}</div>
               <div className="dashed"></div>
             </>
           )}
