@@ -112,6 +112,40 @@ export default function Relatorios() {
   const carrosCount = filtrados.filter(m => (m as any).categoria === 'carro').length;
   const motosCount = filtrados.filter(m => (m as any).categoria === 'moto').length;
 
+  // Multi-period earnings summary
+  const { data: resumoGanhos } = useQuery({
+    queryKey: ['movimentacoes', 'resumo-ganhos'],
+    queryFn: async () => {
+      const now = new Date();
+      const ranges = {
+        hoje: (() => { const d = new Date(now); d.setHours(0,0,0,0); return d.toISOString(); })(),
+        mesAtual: (() => { const d = new Date(now.getFullYear(), now.getMonth(), 1); return d.toISOString(); })(),
+        ultimos30: (() => { const d = new Date(now); d.setDate(d.getDate() - 30); d.setHours(0,0,0,0); return d.toISOString(); })(),
+        ultimos6m: (() => { const d = new Date(now); d.setMonth(d.getMonth() - 6); d.setHours(0,0,0,0); return d.toISOString(); })(),
+        ultimoAno: (() => { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); d.setHours(0,0,0,0); return d.toISOString(); })(),
+      };
+      const results: Record<string, { total: number; count: number; pix: number; dinheiro: number }> = {};
+      for (const [key, desde] of Object.entries(ranges)) {
+        const { data, error } = await supabase
+          .from('movimentacoes')
+          .select('valor_total, forma_pagamento')
+          .eq('status_movimentacao', 'finalizado')
+          .gte('entrada', desde)
+          .lte('entrada', now.toISOString());
+        if (error) throw error;
+        const items = data || [];
+        results[key] = {
+          total: items.reduce((s, m) => s + (Number(m.valor_total) || 0), 0),
+          count: items.length,
+          pix: items.filter(m => m.forma_pagamento === 'pix').reduce((s, m) => s + (Number(m.valor_total) || 0), 0),
+          dinheiro: items.filter(m => m.forma_pagamento === 'dinheiro').reduce((s, m) => s + (Number(m.valor_total) || 0), 0),
+        };
+      }
+      return results;
+    },
+    refetchInterval: 60000,
+  });
+
   // Faturamento por dia (bar chart)
   const chartDataDia = useMemo(() => {
     const days: Record<string, { dia: string; faturamento: number; veiculos: number; carros: number; motos: number }> = {};
