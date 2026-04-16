@@ -376,6 +376,51 @@ export default function Relatorios() {
         ))}
       </div>
 
+      {/* Resumo de Ganhos por Período */}
+      {resumoGanhos && (
+        <div className="glass-card p-6">
+          <h3 className="section-title mb-5 flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-accent" />
+            💰 Resumo Total de Ganhos
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+            {[
+              { label: 'Hoje (Diário)', key: 'hoje', icon: '📅' },
+              { label: 'Mês Atual', key: 'mesAtual', icon: '🗓️' },
+              { label: 'Últimos 30 Dias', key: 'ultimos30', icon: '📊' },
+              { label: 'Últimos 6 Meses', key: 'ultimos6m', icon: '📈' },
+              { label: 'Último Ano', key: 'ultimoAno', icon: '🏆' },
+            ].map((p) => {
+              const data = resumoGanhos[p.key];
+              return (
+                <div key={p.key} className="rounded-xl border-2 border-border bg-secondary/30 p-4 space-y-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{p.icon} {p.label}</p>
+                  <p className="text-xl font-display font-bold text-accent">
+                    R$ {data.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>{data.count} saídas</span>
+                    <span>•</span>
+                    <span>PIX: R${data.pix.toFixed(0)}</span>
+                    <span>•</span>
+                    <span>Din: R${data.dinheiro.toFixed(0)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="rounded-xl bg-accent/5 border-2 border-accent/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground">VALOR TOTAL DE GANHOS (Último Ano)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Soma de todas as saídas finalizadas nos últimos 12 meses</p>
+            </div>
+            <p className="text-3xl font-display font-bold text-accent">
+              R$ {resumoGanhos.ultimoAno.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Charts Row 1: Faturamento + Pagamento */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 glass-card p-6" ref={chartRef}>
