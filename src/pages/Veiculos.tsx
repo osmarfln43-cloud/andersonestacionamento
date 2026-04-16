@@ -121,6 +121,8 @@ export default function Veiculos() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-1 text-sm">
+              <span className="text-muted-foreground">Tipo:</span>
+              <span className="text-foreground">{v.categoria === 'moto' ? 'Moto' : 'Carro'}</span>
               <span className="text-muted-foreground">Veículo:</span>
               <span className="text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</span>
               <span className="text-muted-foreground">Cor:</span>
