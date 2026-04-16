@@ -48,7 +48,7 @@ export default function Entrada() {
       if (data) {
         setAiResult(data);
         if (data.placa && data.placa.length >= 6) { setPlaca(data.placa.toUpperCase()); lastSearchedPlateRef.current = data.placa.toUpperCase(); }
-        if (data.marca || data.modelo) setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
+        if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
         if (data.categoria === 'moto') setCategoria('moto'); else setCategoria('carro');
         toast({ title: "🤖 IA identificou!", description: `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}` });
@@ -101,7 +101,7 @@ export default function Entrada() {
       if (error) throw error;
       if (data) {
         setAiResult(data);
-        if (data.marca || data.modelo) setModelo([data.marca, data.modelo].filter(Boolean).join(' ').trim());
+        if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
         toast({ title: "🤖 IA sugeriu", description: `${data.marca} ${data.modelo}` });
       }
@@ -174,9 +174,12 @@ export default function Entrada() {
     const doSubmit = async () => {
       const placaUpper = placa.toUpperCase();
       const fotoUrl = await uploadVehiclePhoto(placaUpper);
-      const modeloCompleto = modelo.trim() || 'N/I';
+      const descParts = descricao.trim().split(/\s+/);
+      const corFinal = descParts.length > 1 ? descParts.pop()! : '';
+      const modeloFinal = descParts.join(' ') || 'N/I';
+      const modeloCompleto = descricao.trim() || 'N/I';
       registrarEntrada.mutate(
-        { placa: placaUpper, modelo: modelo.trim() || 'N/I', cor, tipo_cliente: tipo, observacao, foto_url: fotoUrl || undefined, categoria },
+        { placa: placaUpper, modelo: modeloFinal, cor: corFinal, tipo_cliente: tipo, observacao, foto_url: fotoUrl || undefined, categoria },
         {
           onSuccess: (result) => {
             toast({ title: "✓ Entrada registrada", description: `${placaUpper} – ${modeloCompleto}` });
@@ -195,7 +198,7 @@ export default function Entrada() {
               cnpj: config?.cnpj || undefined,
             });
             lastSearchedPlateRef.current = "";
-            setPlaca(""); setModelo(""); setCor(""); setObservacao(""); setTipo('avulso'); setCategoria('carro');
+            setPlaca(""); setDescricao(""); setCor(""); setObservacao(""); setTipo('avulso'); setCategoria('carro');
             setImagePreview(null); setAiResult(null); setCapturedFile(null); setShowAiSection(false);
           },
           onError: (err: any) => { toast({ title: "Erro", description: err.message, variant: "destructive" }); },
@@ -244,12 +247,8 @@ export default function Entrada() {
             <label className="text-lg font-black uppercase tracking-wider text-muted-foreground">DESCRIÇÃO (modelo + cor)</label>
             <input
               placeholder="Ex: CIVIC PRETO"
-              value={[modelo, cor].filter(Boolean).join(' ')}
-              onChange={(e) => {
-                const parts = e.target.value.split(' ');
-                if (parts.length > 1) { setCor(parts.pop() || ''); setModelo(parts.join(' ')); }
-                else { setModelo(e.target.value); setCor(''); }
-              }}
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
               className="pdv-input w-full text-2xl font-bold uppercase py-3"
             />
           </div>
@@ -366,7 +365,7 @@ export default function Entrada() {
         <button type="button" onClick={() => setShowAiSection(!showAiSection)} className="pdv-btn-yellow text-[11px]">
           Foto<br/><span className="text-[9px] opacity-60">IA</span>
         </button>
-        <button type="button" onClick={() => { setPlaca(''); setModelo(''); setCor(''); setObservacao(''); setAiResult(null); }} className="pdv-btn-red text-[11px]">
+        <button type="button" onClick={() => { setPlaca(''); setDescricao(''); setCor(''); setObservacao(''); setAiResult(null); }} className="pdv-btn-red text-[11px]">
           Limpar<br/><span className="text-[9px] opacity-60">ESC</span>
         </button>
         <button type="button" onClick={() => placa.length >= 7 && identifyByPlaca()} className="pdv-btn-green text-[11px]" disabled={aiLoading || placa.length < 7}>
