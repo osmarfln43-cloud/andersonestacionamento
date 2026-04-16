@@ -121,6 +121,8 @@ export default function Veiculos() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-1 text-sm">
+              <span className="text-muted-foreground">Tipo:</span>
+              <span className="text-foreground">{v.categoria === 'moto' ? 'Moto' : 'Carro'}</span>
               <span className="text-muted-foreground">Veículo:</span>
               <span className="text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</span>
               <span className="text-muted-foreground">Cor:</span>
@@ -139,6 +141,7 @@ export default function Veiculos() {
             <thead>
               <tr className="border-b border-border/50">
                 <th className="text-left p-4 stat-label">Placa</th>
+                <th className="text-left p-4 stat-label">Tipo</th>
                 <th className="text-left p-4 stat-label">Veículo</th>
                 <th className="text-left p-4 stat-label">Cor</th>
                 <th className="text-left p-4 stat-label">Proprietário</th>
@@ -147,12 +150,13 @@ export default function Veiculos() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Carregando...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Nenhum veículo encontrado</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Nenhum veículo encontrado</td></tr>
               ) : filtered.map((v: any) => (
                 <tr key={v.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
                   <td className="p-4"><span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span></td>
+                  <td className="p-4"><span className="text-sm text-foreground">{v.categoria === 'moto' ? 'Moto' : 'Carro'}</span></td>
                   <td className="p-4"><p className="text-sm text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</p></td>
                   <td className="p-4"><span className="text-sm text-muted-foreground">{v.cor || '—'}</span></td>
                   <td className="p-4"><span className="text-sm text-muted-foreground">{v.clientes?.nome || '—'}</span></td>
