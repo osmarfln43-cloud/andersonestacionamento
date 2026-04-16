@@ -113,22 +113,25 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   const buildPrintHTML = (content: string, paperWidth: '58mm' | '80mm' = '80mm') => {
     const is58mm = paperWidth === '58mm';
-    const contentWidth = is58mm ? '44mm' : '50mm';
-    const baseFontSize = is58mm ? '8.5px' : '9.5px';
-    const rowFontSize = is58mm ? '8.5px' : '9px';
-    const titleFontSize = is58mm ? '11px' : '13px';
-    const plateFontSize = is58mm ? '17px' : '20px';
-    const vehicleInfoFontSize = is58mm ? '8.5px' : '9px';
-    const totalLabelFontSize = is58mm ? '11px' : '12px';
-    const totalValueFontSize = is58mm ? '15px' : '18px';
-    const paymentFontSize = is58mm ? '9px' : '10px';
-    const disclaimerFontSize = is58mm ? '7px' : '8px';
-    const footerFontSize = is58mm ? '7.5px' : '8px';
-    const footerAddrFontSize = is58mm ? '7px' : '7.5px';
-    const moneyFontSize = is58mm ? '11px' : '12px';
-    const qrSize = is58mm ? '22mm' : '24mm';
-    const letterSpacing = is58mm ? '0.5px' : '1px';
-    const bodyPadding = '1.5mm 3mm 2mm 2mm';
+    const layout = {
+      contentWidth: is58mm ? '36mm' : '44mm',
+      baseFontSize: is58mm ? '8px' : '9px',
+      rowFontSize: is58mm ? '8px' : '8.8px',
+      titleFontSize: is58mm ? '10px' : '12px',
+      plateFontSize: is58mm ? '15px' : '18px',
+      vehicleInfoFontSize: is58mm ? '8px' : '8.5px',
+      totalLabelFontSize: is58mm ? '10px' : '11px',
+      totalValueFontSize: is58mm ? '14px' : '16px',
+      paymentFontSize: is58mm ? '8.5px' : '9px',
+      disclaimerFontSize: is58mm ? '6.8px' : '7.4px',
+      footerFontSize: is58mm ? '7px' : '7.6px',
+      footerAddrFontSize: is58mm ? '6.8px' : '7.2px',
+      moneyFontSize: is58mm ? '10.2px' : '11.2px',
+      qrSize: is58mm ? '20mm' : '22mm',
+      letterSpacing: is58mm ? '0.4px' : '0.8px',
+      bodyPadding: is58mm ? '2mm 4mm 2.5mm' : '2mm 5mm 2.5mm',
+      receiptPadding: is58mm ? '0 1mm 0 0.5mm' : '0 1.5mm 0 1mm',
+    };
 
     return `
     <!DOCTYPE html>
@@ -145,37 +148,51 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         }
         body {
           font-family: 'Courier New', Courier, monospace;
-          font-size: ${baseFontSize};
+          font-size: ${layout.baseFontSize};
           width: ${paperWidth};
           margin: 0 auto;
-          padding: ${bodyPadding};
+          padding: ${layout.bodyPadding};
           color: #000 !important;
           background: #fff !important;
           line-height: 1.25;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
         .receipt {
-          width: 100%;
-          max-width: ${contentWidth};
-          margin: 0;
+          width: ${layout.contentWidth};
+          max-width: 100%;
+          margin: 0 auto;
+          padding: ${layout.receiptPadding};
           color: #000 !important;
         }
-        .title { font-size: ${titleFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; }
-        .plate { font-size: ${plateFontSize}; font-weight: 900; text-align: center; letter-spacing: ${letterSpacing}; margin: 3px 0 1px; overflow-wrap: anywhere; }
-        .vehicle-info { font-size: ${vehicleInfoFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; overflow-wrap: anywhere; }
+        .title { font-size: ${layout.titleFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; padding-right: 1mm; overflow-wrap: anywhere; }
+        .plate { font-size: ${layout.plateFontSize}; font-weight: 900; text-align: center; letter-spacing: ${layout.letterSpacing}; margin: 3px 0 1px; padding-right: 1mm; overflow-wrap: anywhere; }
+        .vehicle-info { font-size: ${layout.vehicleInfoFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; padding-right: 1mm; overflow-wrap: anywhere; }
         .dashed { border-top: 1px dashed #000; margin: 3px 0; }
         .row {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr);
-          align-items: start;
-          gap: 1px;
+          display: block;
           padding: 2px 0;
-          font-size: ${rowFontSize};
+          font-size: ${layout.rowFontSize};
           width: 100%;
         }
-        .row-label { font-weight: 700; white-space: nowrap; }
+        .row-label {
+          display: block;
+          width: 100%;
+          max-width: 100%;
+          padding-right: 1mm;
+          font-weight: 700;
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
         .row-value {
+          display: block;
+          width: 100%;
+          max-width: 100%;
+          margin-top: 1px;
+          padding-right: 1mm;
           font-weight: 900;
           text-align: left;
           white-space: normal;
@@ -184,27 +201,31 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           font-variant-numeric: tabular-nums;
         }
         .row-value-money {
-          font-size: ${moneyFontSize};
+          display: block;
+          width: 100%;
+          max-width: 100%;
+          margin-top: 1px;
+          padding-right: 1mm;
+          font-size: ${layout.moneyFontSize};
           font-weight: 900;
           text-align: left;
-          white-space: normal;
-          overflow-wrap: anywhere;
-          word-break: break-word;
+          white-space: nowrap;
+          overflow: visible;
           font-variant-numeric: tabular-nums;
         }
-        .total-label { font-size: ${totalLabelFontSize}; font-weight: 900; text-align: center; margin-top: 2px; }
-        .total-value { font-size: ${totalValueFontSize}; font-weight: 900; text-align: center; margin: 1px 0; font-variant-numeric: tabular-nums; }
-        .payment-highlight { font-size: ${paymentFontSize}; font-weight: 900; text-align: center; margin: 2px 0; }
-        .disclaimer { font-size: ${disclaimerFontSize}; text-align: center; line-height: 1.2; margin: 1px 0; font-weight: 700; overflow-wrap: anywhere; }
-        .footer { font-size: ${footerFontSize}; text-align: center; font-weight: 900; margin-top: 2px; overflow-wrap: anywhere; }
-        .footer-addr { font-size: ${footerAddrFontSize}; text-align: center; margin-top: 1px; font-weight: 700; overflow-wrap: anywhere; }
-        .qr-container { text-align: center; margin: 3px 0; }
-        .qr-container img, .qr-container canvas { width: ${qrSize} !important; height: ${qrSize} !important; }
+        .total-label { font-size: ${layout.totalLabelFontSize}; font-weight: 900; text-align: center; margin-top: 2px; padding-right: 1mm; }
+        .total-value { font-size: ${layout.totalValueFontSize}; font-weight: 900; text-align: center; margin: 1px 0; padding-right: 1mm; font-variant-numeric: tabular-nums; }
+        .payment-highlight { font-size: ${layout.paymentFontSize}; font-weight: 900; text-align: center; margin: 2px 0; padding-right: 1mm; overflow-wrap: anywhere; }
+        .disclaimer { font-size: ${layout.disclaimerFontSize}; text-align: center; line-height: 1.2; margin: 1px 0; padding-right: 1mm; font-weight: 700; overflow-wrap: anywhere; }
+        .footer { font-size: ${layout.footerFontSize}; text-align: center; font-weight: 900; margin-top: 2px; padding-right: 1mm; overflow-wrap: anywhere; }
+        .footer-addr { font-size: ${layout.footerAddrFontSize}; text-align: center; margin-top: 1px; padding-right: 1mm; font-weight: 700; overflow-wrap: anywhere; }
+        .qr-container { width: 100%; text-align: center; margin: 3px 0; padding-right: 1mm; }
+        .qr-container img, .qr-container canvas { width: ${layout.qrSize} !important; height: ${layout.qrSize} !important; }
         .regra-box { font-size: 11px; font-weight: 900; text-align: center; border: 1px solid #000; padding: 2px 4px; margin: 2px auto; display: inline-block; }
         @media print {
           html, body { width: ${paperWidth}; margin: 0; }
-          body { padding: ${bodyPadding}; }
-          .receipt { max-width: ${contentWidth}; }
+          body { padding: ${layout.bodyPadding}; justify-content: center; }
+          .receipt { width: ${layout.contentWidth}; max-width: 100%; padding: ${layout.receiptPadding}; }
           * { color: #000 !important; }
         }
       </style>
