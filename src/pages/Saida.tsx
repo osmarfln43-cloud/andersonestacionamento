@@ -21,6 +21,7 @@ type MovData = {
 };
 
 export default function Saida() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [busca, setBusca] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showPix, setShowPix] = useState(false);
@@ -34,6 +35,19 @@ export default function Saida() {
   const registrarSaida = useRegistrarSaida();
   const excluirMovimentacao = useExcluirMovimentacao();
   const { toast } = useToast();
+
+  // Auto-select vehicle from query param
+  useEffect(() => {
+    const placaParam = searchParams.get('placa');
+    if (placaParam && veiculosAtivos.length > 0) {
+      const found = veiculosAtivos.find(v => v.placa === placaParam.toUpperCase());
+      if (found) {
+        setSelectedId(found.id);
+        setBusca(placaParam.toUpperCase());
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, veiculosAtivos]);
 
   const filteredAtivos = busca.length > 0
     ? veiculosAtivos.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
