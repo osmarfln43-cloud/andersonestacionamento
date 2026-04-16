@@ -157,7 +157,7 @@ export default function Veiculos() {
                 <tr key={v.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
                   <td className="p-4"><span className="font-mono font-bold text-foreground text-base tracking-wider">{v.placa}</span></td>
                   <td className="p-4"><span className="text-sm text-foreground">{v.categoria === 'moto' ? 'Moto' : 'Carro'}</span></td>
-                  <td className="p-4"><p className="text-sm text-foreground">{v.marca ? `${v.marca} ` : ''}{v.modelo}</p></td>
+                  <td className="p-4"><p className="text-sm text-foreground">{[v.marca, v.modelo, v.cor].filter(Boolean).join(' ')}</p></td>
                   <td className="p-4"><span className="text-sm text-muted-foreground">{v.cor || '—'}</span></td>
                   <td className="p-4"><span className="text-sm text-muted-foreground">{v.clientes?.nome || '—'}</span></td>
                   <td className="p-4 text-right">
