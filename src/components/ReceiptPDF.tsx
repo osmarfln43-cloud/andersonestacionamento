@@ -227,7 +227,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
           <div className="row">
             <span className="row-label">Valor/hora:</span>
-            <span className="row-value">R$ {Number(data.valorHora || 10).toFixed(2).replace('.', ',')}</span>
+            <span className="row-value-money">R$ {Number(data.valorHora || 10).toFixed(2).replace('.', ',')}</span>
           </div>
 
           {data.formaPagamento && (
