@@ -128,6 +128,73 @@ function dashedLine(width: number): number[] {
   return [...textToBytes('-'.repeat(width)), LF];
 }
 
+function formatCurrency(value: number): string {
+  return Number(value).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function wrapText(text: string, width: number): string[] {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (!normalized) return [''];
+
+  const words = normalized.split(' ');
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    if (word.length > width) {
+      if (current) {
+        lines.push(current);
+        current = '';
+      }
+
+      for (let i = 0; i < word.length; i += width) {
+        lines.push(word.slice(i, i + width));
+      }
+      continue;
+    }
+
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= width) {
+      current = candidate;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = word;
+  }
+
+  if (current) lines.push(current);
+  return lines;
+}
+
+function pushWrappedText(cmds: number[], text: string, width: number) {
+  wrapText(text, width).forEach((line) => cmds.push(...textToBytes(line), LF));
+}
+
+function pushLabelValueBlock(
+  cmds: number[],
+  label: string,
+  value: string,
+  width: number,
+  valueAlign: 'left' | 'center' | 'right' = 'left',
+  emphasizeValue = false,
+) {
+  cmds.push(...escposAlign('left'));
+  cmds.push(...escposBold(true));
+  cmds.push(...textToBytes(`${label}:`), LF);
+  cmds.push(...escposBold(false));
+
+  cmds.push(...escposAlign(valueAlign));
+  if (emphasizeValue) cmds.push(...escposBold(true));
+  pushWrappedText(cmds, value, width);
+  if (emphasizeValue) cmds.push(...escposBold(false));
+
+  cmds.push(...escposAlign('left'));
+}
+
 export function buildReceiptESCPOS(data: {
   nomeEstacionamento?: string;
   disclaimer?: string;
@@ -149,7 +216,7 @@ export function buildReceiptESCPOS(data: {
   telefone?: string;
   cnpj?: string;
 }, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
-  const cols = paperWidth === '58mm' ? 32 : 48;
+  const cols = paperWidth === '58mm' ? 28 : 40;
   const cmds: number[] = [];
 
   cmds.push(...escposDensity(12)); // High density for darker print
@@ -159,7 +226,7 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposAlign('center'));
   cmds.push(...escposBold(true));
   cmds.push(...escposFontSize(1, 1));
-  cmds.push(...textToBytes(data.nomeEstacionamento || 'ANDERSON ESTACIONAMENTO'), LF);
+  pushWrappedText(cmds, data.nomeEstacionamento || 'ANDERSON ESTACIONAMENTO', cols);
   cmds.push(...escposBold(false));
   cmds.push(...dashedLine(cols));
 
@@ -167,8 +234,8 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposFontSize(1, 1));
   const disclaimer = data.disclaimer || 'NAO NOS RESPONSABILIZAMOS POR OBJETOS DEIXADOS NO INTERIOR DO VEICULO';
   const horarios = `FUNC. ${(data.diasFuncionamento || 'SEG A SEX').toUpperCase()} ${data.horarioAbertura || '07:00'}-${data.horarioFechamento || '19:00'}`;
-  cmds.push(...textToBytes(disclaimer), LF);
-  cmds.push(...textToBytes(horarios), LF);
+  pushWrappedText(cmds, disclaimer, cols);
+  pushWrappedText(cmds, horarios, cols);
   cmds.push(...dashedLine(cols));
 
   // Plate (big)
@@ -176,7 +243,7 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposBold(true));
   cmds.push(...textToBytes(data.placa), LF);
   cmds.push(...escposFontSize(1, 1));
-  cmds.push(...textToBytes(`(${(data.modelo || 'N/I').toUpperCase()} ${(data.cor || '').toUpperCase()})`), LF);
+  pushWrappedText(cmds, `(${(data.modelo || 'N/I').toUpperCase()} ${(data.cor || '').toUpperCase()})`, cols);
   cmds.push(...escposBold(false));
   cmds.push(...dashedLine(cols));
 
@@ -184,25 +251,25 @@ export function buildReceiptESCPOS(data: {
   cmds.push(...escposAlign('left'));
   const entradaDt = new Date(data.entrada);
   const entradaStr = `${entradaDt.toLocaleDateString('pt-BR')} ${entradaDt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-  cmds.push(...textToBytes(`Entrada: ${entradaStr}`), LF);
+  pushLabelValueBlock(cmds, 'Entrada', entradaStr, cols);
 
   if (data.saida) {
     const saidaDt = new Date(data.saida);
     const saidaStr = `${saidaDt.toLocaleDateString('pt-BR')} ${saidaDt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
-    cmds.push(...textToBytes(`Saida:   ${saidaStr}`), LF);
+    pushLabelValueBlock(cmds, 'Saida', saidaStr, cols);
   }
 
   if (data.tempoTotal) {
-    cmds.push(...textToBytes(`Tempo:   ${data.tempoTotal}`), LF);
+    pushLabelValueBlock(cmds, 'Permanencia', data.tempoTotal, cols);
   }
 
-  cmds.push(...textToBytes(`Tabela:  ${data.tipoCliente === 'mensalista' ? 'Mensalista' : 'Avulso'}`), LF);
+  pushLabelValueBlock(cmds, 'Tabela', data.tipoCliente === 'mensalista' ? 'Mensalista' : 'Avulso', cols);
 
   if (data.formaPagamento) {
-    cmds.push(...textToBytes(`Pgto:    ${data.formaPagamento.toUpperCase()}`), LF);
+    pushLabelValueBlock(cmds, 'Pagamento', data.formaPagamento.toUpperCase(), cols);
   }
 
-  cmds.push(...textToBytes(`Vlr/hr:  R$ ${Number(data.valorHora || 10).toFixed(2).replace('.', ',')}`), LF);
+  pushLabelValueBlock(cmds, 'Valor/hora', `R$ ${formatCurrency(data.valorHora || 10)}`, cols, 'center', true);
   cmds.push(...dashedLine(cols));
 
   // Total
@@ -212,7 +279,7 @@ export function buildReceiptESCPOS(data: {
     cmds.push(...escposFontSize(1, 1));
     cmds.push(...textToBytes('Total'), LF);
     cmds.push(...escposFontSize(2, 2));
-    cmds.push(...textToBytes(`R$ ${Number(data.valorTotal).toFixed(2).replace('.', ',')}`), LF);
+    cmds.push(...textToBytes(`R$ ${formatCurrency(data.valorTotal)}`), LF);
     cmds.push(...escposFontSize(1, 1));
     cmds.push(...escposBold(false));
     cmds.push(...dashedLine(cols));
@@ -227,16 +294,16 @@ export function buildReceiptESCPOS(data: {
 
   // Footer
   cmds.push(...escposBold(true));
-  cmds.push(...textToBytes(data.mensagemComprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERENCIA'), LF);
+  pushWrappedText(cmds, data.mensagemComprovante || 'ANDERSON ESTACIONAMENTO AGRADECE A PREFERENCIA', cols);
   cmds.push(...escposBold(false));
   if (data.endereco) {
-    cmds.push(...textToBytes(data.endereco.toUpperCase()), LF);
+    pushWrappedText(cmds, data.endereco.toUpperCase(), cols);
   }
   if (data.telefone) {
-    cmds.push(...textToBytes(`MEU CONTATO: ${data.telefone}`), LF);
+    pushWrappedText(cmds, `MEU CONTATO: ${data.telefone}`, cols);
   }
   if (data.cnpj) {
-    cmds.push(...textToBytes(`CNPJ: ${data.cnpj}`), LF);
+    pushWrappedText(cmds, `CNPJ: ${data.cnpj}`, cols);
   }
 
   cmds.push(...escposFeed(4));
