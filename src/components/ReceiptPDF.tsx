@@ -113,21 +113,22 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   const buildPrintHTML = (content: string, paperWidth: '58mm' | '80mm' = '80mm') => {
     const is58mm = paperWidth === '58mm';
-    const contentWidth = is58mm ? '50mm' : '72mm';
-    const baseFontSize = is58mm ? '9px' : '11px';
-    const rowFontSize = is58mm ? '9px' : '10px';
+    const contentWidth = is58mm ? '44mm' : '50mm';
+    const baseFontSize = is58mm ? '8.5px' : '9.5px';
+    const rowFontSize = is58mm ? '8.5px' : '9px';
     const titleFontSize = is58mm ? '11px' : '13px';
-    const plateFontSize = is58mm ? '18px' : '22px';
-    const vehicleInfoFontSize = is58mm ? '9px' : '10px';
+    const plateFontSize = is58mm ? '17px' : '20px';
+    const vehicleInfoFontSize = is58mm ? '8.5px' : '9px';
     const totalLabelFontSize = is58mm ? '11px' : '12px';
-    const totalValueFontSize = is58mm ? '17px' : '20px';
-    const paymentFontSize = is58mm ? '10px' : '11px';
+    const totalValueFontSize = is58mm ? '15px' : '18px';
+    const paymentFontSize = is58mm ? '9px' : '10px';
     const disclaimerFontSize = is58mm ? '7px' : '8px';
-    const footerFontSize = is58mm ? '8px' : '9px';
-    const footerAddrFontSize = is58mm ? '7px' : '8px';
-    const moneyFontSize = is58mm ? '12px' : '14px';
-    const qrSize = is58mm ? '24mm' : '28mm';
-    const letterSpacing = is58mm ? '1px' : '2px';
+    const footerFontSize = is58mm ? '7.5px' : '8px';
+    const footerAddrFontSize = is58mm ? '7px' : '7.5px';
+    const moneyFontSize = is58mm ? '11px' : '12px';
+    const qrSize = is58mm ? '22mm' : '24mm';
+    const letterSpacing = is58mm ? '0.5px' : '1px';
+    const bodyPadding = '1.5mm 3mm 2mm 2mm';
 
     return `
     <!DOCTYPE html>
@@ -147,7 +148,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           font-size: ${baseFontSize};
           width: ${paperWidth};
           margin: 0 auto;
-          padding: 1mm 0;
+          padding: ${bodyPadding};
           color: #000 !important;
           background: #fff !important;
           line-height: 1.25;
@@ -157,40 +158,42 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         .receipt {
           width: 100%;
           max-width: ${contentWidth};
-          margin: 0 auto;
+          margin: 0;
           color: #000 !important;
         }
         .title { font-size: ${titleFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; }
-        .plate { font-size: ${plateFontSize}; font-weight: 900; text-align: center; letter-spacing: ${letterSpacing}; margin: 3px 0 1px; }
+        .plate { font-size: ${plateFontSize}; font-weight: 900; text-align: center; letter-spacing: ${letterSpacing}; margin: 3px 0 1px; overflow-wrap: anywhere; }
         .vehicle-info { font-size: ${vehicleInfoFontSize}; font-weight: 900; text-align: center; margin-bottom: 2px; overflow-wrap: anywhere; }
         .dashed { border-top: 1px dashed #000; margin: 3px 0; }
         .row {
           display: grid;
-          grid-template-columns: max-content minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr);
           align-items: start;
-          gap: 2px 4px;
+          gap: 1px;
           padding: 2px 0;
           font-size: ${rowFontSize};
           width: 100%;
         }
         .row-label { font-weight: 700; white-space: nowrap; }
         .row-value {
-          min-width: 0;
           font-weight: 900;
-          text-align: right;
+          text-align: left;
           white-space: normal;
           overflow-wrap: anywhere;
           word-break: break-word;
+          font-variant-numeric: tabular-nums;
         }
         .row-value-money {
-          min-width: 0;
           font-size: ${moneyFontSize};
           font-weight: 900;
-          text-align: right;
-          white-space: nowrap;
+          text-align: left;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          font-variant-numeric: tabular-nums;
         }
         .total-label { font-size: ${totalLabelFontSize}; font-weight: 900; text-align: center; margin-top: 2px; }
-        .total-value { font-size: ${totalValueFontSize}; font-weight: 900; text-align: center; margin: 1px 0; }
+        .total-value { font-size: ${totalValueFontSize}; font-weight: 900; text-align: center; margin: 1px 0; font-variant-numeric: tabular-nums; }
         .payment-highlight { font-size: ${paymentFontSize}; font-weight: 900; text-align: center; margin: 2px 0; }
         .disclaimer { font-size: ${disclaimerFontSize}; text-align: center; line-height: 1.2; margin: 1px 0; font-weight: 700; overflow-wrap: anywhere; }
         .footer { font-size: ${footerFontSize}; text-align: center; font-weight: 900; margin-top: 2px; overflow-wrap: anywhere; }
@@ -199,7 +202,8 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         .qr-container img, .qr-container canvas { width: ${qrSize} !important; height: ${qrSize} !important; }
         .regra-box { font-size: 11px; font-weight: 900; text-align: center; border: 1px solid #000; padding: 2px 4px; margin: 2px auto; display: inline-block; }
         @media print {
-          html, body { width: ${paperWidth}; margin: 0 auto; }
+          html, body { width: ${paperWidth}; margin: 0; }
+          body { padding: ${bodyPadding}; }
           .receipt { max-width: ${contentWidth}; }
           * { color: #000 !important; }
         }
@@ -226,6 +230,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     : "";
 
   const isSaida = data.tipo === 'saida' && data.saida;
+  const formatCurrency = (value: number) => Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div style={{ position: "fixed", left: "-9999px", top: "-9999px" }}>
@@ -281,7 +286,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
           <div className="row">
             <span className="row-label">Valor/hora:</span>
-            <span className="row-value-money">R$ {Number(data.valorHora || 10).toFixed(2).replace('.', ',')}</span>
+            <span className="row-value-money">R$ {formatCurrency(data.valorHora || 10)}</span>
           </div>
 
           {data.formaPagamento && (
@@ -296,7 +301,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           {data.saida && data.valorTotal != null && (
             <>
               <div className="total-label">TOTAL</div>
-              <div className="total-value">R$ {Number(data.valorTotal).toFixed(2).replace('.', ',')}</div>
+              <div className="total-value">R$ {formatCurrency(data.valorTotal)}</div>
               <div className="dashed"></div>
             </>
           )}
