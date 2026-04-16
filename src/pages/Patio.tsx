@@ -1,12 +1,26 @@
-import { Car, Clock, Search, TrendingUp, LogIn, LogOut, Check, X } from "lucide-react";
+import { Car, Clock, Search, TrendingUp, LogIn, LogOut, Check, X, Pencil } from "lucide-react";
 import { useMovimentacoesAtivas, useMovimentacoesHoje, useMovimentacoesFinalizadasHoje } from "@/hooks/useDatabase";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export default function Patio() {
   const [busca, setBusca] = useState("");
   const { data: veiculosAtivos = [], isLoading } = useMovimentacoesAtivas();
   const { data: movHoje = [] } = useMovimentacoesHoje();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const [editMov, setEditMov] = useState<any>(null);
+  const [editModelo, setEditModelo] = useState("");
+  const [editCor, setEditCor] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const entradasHoje = movHoje.length;
   const saidasHoje = finalizadosHoje.length;
@@ -24,6 +38,46 @@ export default function Patio() {
     const diffH = (Date.now() - new Date(v.entrada).getTime()) / 3600000;
     return sum + Math.max(Math.ceil(diffH), 1) * Number(v.valor_hora);
   }, 0);
+
+  const openEdit = (mov: any) => {
+    setEditMov(mov);
+    setEditModelo(mov.modelo || '');
+    setEditCor(mov.cor || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editMov) return;
+    setSaving(true);
+    try {
+      // Update movimentacao
+      const { error } = await supabase.from('movimentacoes').update({
+        modelo: editModelo.trim() || null,
+        cor: editCor.trim() || null,
+      }).eq('id', editMov.id);
+      if (error) throw error;
+
+      // Also update the veiculos table if linked
+      if (editMov.veiculo_id) {
+        await supabase.from('veiculos').update({
+          modelo: editModelo.trim() || 'N/I',
+          cor: editCor.trim() || null,
+        }).eq('id', editMov.veiculo_id);
+      } else {
+        // Update by placa
+        await supabase.from('veiculos').update({
+          modelo: editModelo.trim() || 'N/I',
+          cor: editCor.trim() || null,
+        }).eq('placa', editMov.placa);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['veiculos'] });
+      toast({ title: "Veículo atualizado!" });
+      setEditMov(null);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
 
   return (
     <div className="space-y-3">
@@ -83,11 +137,12 @@ export default function Patio() {
               <th>Entrada</th>
               <th>Tempo</th>
               <th>Estimado</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && !isLoading && (
-              <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">Pátio vazio</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Pátio vazio</td></tr>
             )}
             {filtered.map((v, i) => {
               const diffMs = Date.now() - new Date(v.entrada).getTime();
@@ -104,12 +159,40 @@ export default function Patio() {
                   <td>{new Date(v.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
                   <td>{h}h{String(m).padStart(2, '0')}</td>
                   <td className="font-bold text-accent">R$ {valor}</td>
+                  <td>
+                    <button onClick={() => openEdit(v)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground" title="Editar veículo">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editMov} onOpenChange={() => setEditMov(null)}>
+        <DialogContent className="max-w-sm rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Editar Veículo — {editMov?.placa}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label className="stat-label">Modelo</Label>
+              <Input value={editModelo} onChange={e => setEditModelo(e.target.value)} placeholder="Ex: Honda Civic" />
+            </div>
+            <div className="space-y-2">
+              <Label className="stat-label">Cor</Label>
+              <Input value={editCor} onChange={e => setEditCor(e.target.value)} placeholder="Ex: Preto" />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditMov(null)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} disabled={saving}>{saving ? 'Salvando...' : 'Atualizar'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
