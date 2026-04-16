@@ -133,9 +133,9 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         .plate { font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 2px; margin: 3px 0 1px; }
         .vehicle-info { font-size: 10px; font-weight: 900; text-align: center; margin-bottom: 2px; }
         .dashed { border-top: 1px dashed #000; margin: 3px 0; }
-        .row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 10px; }
-        .row-label { font-weight: 700; }
-        .row-value { font-weight: 900; }
+        .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; padding: 1px 0; font-size: 10px; width: 100%; }
+        .row-label { font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+        .row-value { font-weight: 900; text-align: right; white-space: nowrap; flex-shrink: 0; }
         .total-label { font-size: 12px; font-weight: 900; text-align: center; margin-top: 2px; }
         .total-value { font-size: 20px; font-weight: 900; text-align: center; margin: 1px 0; }
         .payment-highlight { font-size: 11px; font-weight: 900; text-align: center; margin: 2px 0; }
