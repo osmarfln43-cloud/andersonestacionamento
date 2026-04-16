@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+type StatDialog = 'patio' | 'entradas' | 'saidas' | 'estimado' | null;
+
 export default function Patio() {
   const [busca, setBusca] = useState("");
   const { data: veiculosAtivos = [], isLoading } = useMovimentacoesAtivas();
@@ -21,6 +23,7 @@ export default function Patio() {
   const [editModelo, setEditModelo] = useState("");
   const [editCor, setEditCor] = useState("");
   const [saving, setSaving] = useState(false);
+  const [statDialog, setStatDialog] = useState<StatDialog>(null);
 
   const entradasHoje = movHoje.length;
   const saidasHoje = finalizadosHoje.length;
