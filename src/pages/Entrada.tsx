@@ -10,7 +10,7 @@ import ReceiptPDF from "@/components/ReceiptPDF";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
-  const [modelo, setModelo] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [cor, setCor] = useState("");
   const [observacao, setObservacao] = useState("");
   const [tipo, setTipo] = useState<'avulso' | 'mensalista'>('avulso');
