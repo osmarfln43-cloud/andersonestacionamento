@@ -283,6 +283,29 @@ export default function Patio() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editMov} onOpenChange={() => setEditMov(null)}>
+        <DialogContent className="max-w-sm rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Editar Veículo — {editMov?.placa}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label className="stat-label">Modelo</Label>
+              <Input value={editModelo} onChange={e => setEditModelo(e.target.value)} placeholder="Ex: Honda Civic" />
+            </div>
+            <div className="space-y-2">
+              <Label className="stat-label">Cor</Label>
+              <Input value={editCor} onChange={e => setEditCor(e.target.value)} placeholder="Ex: Preto" />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditMov(null)}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} disabled={saving}>{saving ? 'Salvando...' : 'Atualizar'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
