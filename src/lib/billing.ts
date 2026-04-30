@@ -9,14 +9,14 @@ export type BillingSummary = {
 
 /**
  * Regras de cobrança:
- * - Até 1h19m  → 1 hora
- * - 1h20m–2h09m → 2 horas
- * - 2h10m–3h19m → 3 horas
- * - 3h20m+      → diária cheia (valor fixo)
+ * - Até 1h15m  → 1 hora
+ * - 1h16m–2h15m → 2 horas
+ * - 2h16m–3h15m → 3 horas
+ * - 3h16m+      → diária cheia (valor fixo)
  */
-const HOUR_THRESHOLD_MINUTES = 80;   // 1h20m → 2 horas
-const THREE_HOUR_THRESHOLD = 130;    // 2h10m → 3 horas
-const DAILY_THRESHOLD_MINUTES = 200; // 3h20m → diária
+const HOUR_THRESHOLD_MINUTES = 76;   // 1h16m → 2 horas
+const THREE_HOUR_THRESHOLD = 136;    // 2h16m → 3 horas
+const DAILY_THRESHOLD_MINUTES = 196; // 3h16m → diária
 
 export function calculateParkingBilling(params: {
   entrada: string | Date;
