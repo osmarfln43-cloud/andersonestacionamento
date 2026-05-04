@@ -46,6 +46,7 @@ export default function Comprovantes() {
       entrada: mov.entrada,
       valorHora: Number(mov.valor_hora || 10),
       valorDiaria,
+      toleranciaMinutos: Number((config as any)?.tolerancia_minutos ?? 15),
       now: new Date(mov.saida),
     });
 

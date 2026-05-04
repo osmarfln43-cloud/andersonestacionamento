@@ -176,7 +176,7 @@ export function useRegistrarSaida() {
       const categoria = (mov as any).categoria || 'carro';
       const { data: configData } = await supabase
         .from('configuracoes')
-        .select('valor_maximo_diario, valor_maximo_diario_moto')
+        .select('valor_maximo_diario, valor_maximo_diario_moto, tolerancia_minutos')
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -189,6 +189,7 @@ export function useRegistrarSaida() {
         entrada,
         valorHora: Number(mov.valor_hora),
         valorDiaria: maxDiario,
+        toleranciaMinutos: Number((configData as any)?.tolerancia_minutos ?? 15),
         now: saida,
       });
 
