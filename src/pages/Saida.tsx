@@ -67,6 +67,7 @@ export default function Saida() {
       entrada: mov.entrada,
       valorHora: Number(mov.valor_hora),
       valorDiaria,
+      toleranciaMinutos: Number(config?.tolerancia_minutos ?? 15),
     });
   };
 
