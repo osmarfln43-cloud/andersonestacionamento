@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { calculateParkingBilling } from "@/lib/billing";
+import { useConfiguracoes } from "@/hooks/useDatabase";
 
 type StatDialog = 'patio' | 'entradas' | 'saidas' | 'estimado' | null;
 
@@ -16,6 +18,7 @@ export default function Patio() {
   const { data: veiculosAtivos = [], isLoading } = useMovimentacoesAtivas();
   const { data: movHoje = [] } = useMovimentacoesHoje();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
+  const { data: config } = useConfiguracoes();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -37,10 +40,19 @@ export default function Patio() {
   const placaEncontrada = buscaPlaca.length >= 3 ? veiculosAtivos.find(v => v.placa.includes(buscaPlaca)) : null;
   const placaNaoEncontrada = buscaPlaca.length >= 7 && !placaEncontrada;
 
-  const totalEstimado = veiculosAtivos.reduce((sum, v) => {
-    const diffH = (Date.now() - new Date(v.entrada).getTime()) / 3600000;
-    return sum + Math.max(Math.ceil(diffH), 1) * Number(v.valor_hora);
-  }, 0);
+  const calcularEstimativa = (v: any) => {
+    const valorDiaria = v?.categoria === 'moto'
+      ? Number(config?.valor_maximo_diario_moto ?? 15)
+      : Number(config?.valor_maximo_diario ?? 35);
+
+    return calculateParkingBilling({
+      entrada: v.entrada,
+      valorHora: Number(v.valor_hora),
+      valorDiaria,
+    });
+  };
+
+  const totalEstimado = veiculosAtivos.reduce((sum, v) => sum + calcularEstimativa(v).total, 0);
 
   const openEdit = (mov: any) => {
     setEditMov(mov);
@@ -151,7 +163,7 @@ export default function Patio() {
               const diffMs = Date.now() - new Date(v.entrada).getTime();
               const h = Math.floor(diffMs / 3600000);
               const m = Math.round((diffMs % 3600000) / 60000);
-              const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
+              const valor = calcularEstimativa(v).total;
 
               return (
                 <tr key={v.id} className={v.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
@@ -186,7 +198,7 @@ export default function Patio() {
               const diffMs = Date.now() - new Date(v.entrada).getTime();
               const h = Math.floor(diffMs / 3600000);
               const m = Math.round((diffMs % 3600000) / 60000);
-              const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
+              const valor = calcularEstimativa(v).total;
               return (
                 <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
                   <div>
@@ -265,7 +277,7 @@ export default function Patio() {
               const diffMs = Date.now() - new Date(v.entrada).getTime();
               const h = Math.floor(diffMs / 3600000);
               const m = Math.round((diffMs % 3600000) / 60000);
-              const valor = Math.max(Math.ceil(diffMs / 3600000), 1) * Number(v.valor_hora);
+              const valor = calcularEstimativa(v).total;
               return (
                 <div key={v.id} className="pdv-card p-3 flex items-center justify-between">
                   <div>
