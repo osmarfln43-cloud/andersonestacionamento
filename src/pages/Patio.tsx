@@ -49,6 +49,7 @@ export default function Patio() {
       entrada: v.entrada,
       valorHora: Number(v.valor_hora),
       valorDiaria,
+      toleranciaMinutos: Number(config?.tolerancia_minutos ?? 15),
     });
   };
 
