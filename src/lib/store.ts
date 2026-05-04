@@ -1,5 +1,6 @@
 // Local data store for ME PARK AI (will be replaced by Supabase later)
 import { useState, useCallback } from 'react';
+import { calculateParkingBilling } from './billing';
 
 export interface Vehicle {
   id: string;
@@ -97,6 +98,7 @@ function seedDemoData() {
     const entrada = new Date(now.getTime() - hoursAgoIn * 3600000);
     const saida = new Date(now.getTime() - hoursAgoOut * 3600000);
     const diffH = (saida.getTime() - entrada.getTime()) / 3600000;
+    const billing = calculateParkingBilling({ entrada, valorHora: 12, valorDiaria: 35, now: saida });
     data.movimentacoes.push({
       id: generateId(),
       placa: placas[i],
@@ -107,7 +109,7 @@ function seedDemoData() {
       saida,
       tempoTotal: `${Math.floor(diffH)}h ${Math.round((diffH % 1) * 60)}min`,
       valorHora: 12,
-      valorTotal: Math.ceil(diffH) * 12,
+      valorTotal: billing.total,
       formaPagamento: i % 2 === 0 ? 'pix' : 'dinheiro',
       statusPagamento: 'pago',
       statusMovimentacao: 'finalizado',
@@ -145,14 +147,11 @@ export function useStore() {
     if (!mov) return null;
     
     const saida = new Date();
-    const diffMs = saida.getTime() - new Date(mov.entrada).getTime();
-    const diffH = diffMs / 3600000;
-    const hours = Math.floor(diffH);
-    const mins = Math.round((diffH % 1) * 60);
+    const billing = calculateParkingBilling({ entrada: mov.entrada, valorHora: mov.valorHora, valorDiaria: 35, now: saida });
 
     mov.saida = saida;
-    mov.tempoTotal = `${hours}h ${mins}min`;
-    mov.valorTotal = Math.max(Math.ceil(diffH), 1) * mov.valorHora;
+    mov.tempoTotal = `${billing.hours}h ${billing.mins}min`;
+    mov.valorTotal = billing.total;
     mov.formaPagamento = formaPagamento;
     mov.statusPagamento = 'pago';
     mov.statusMovimentacao = 'finalizado';
