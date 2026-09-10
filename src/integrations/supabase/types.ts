@@ -192,6 +192,56 @@ export type Database = {
           },
         ]
       }
+      despesas: {
+        Row: {
+          categoria: string
+          created_at: string
+          created_by: string | null
+          data: string
+          descricao: string
+          forma_pagamento: string | null
+          id: string
+          observacao: string | null
+          unidade_id: string | null
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          descricao: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despesas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensalistas: {
         Row: {
           cliente_id: string
@@ -272,6 +322,7 @@ export type Database = {
           status_movimentacao: string
           status_pagamento: string
           tempo_total: string | null
+          ticket_codigo: string | null
           tipo_cliente: string
           unidade_id: string | null
           updated_at: string
@@ -297,6 +348,7 @@ export type Database = {
           status_movimentacao?: string
           status_pagamento?: string
           tempo_total?: string | null
+          ticket_codigo?: string | null
           tipo_cliente?: string
           unidade_id?: string | null
           updated_at?: string
@@ -322,6 +374,7 @@ export type Database = {
           status_movimentacao?: string
           status_pagamento?: string
           tempo_total?: string | null
+          ticket_codigo?: string | null
           tipo_cliente?: string
           unidade_id?: string | null
           updated_at?: string
