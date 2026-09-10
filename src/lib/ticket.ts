@@ -31,8 +31,6 @@ export function barcodeSvgMarkup(
 ): string {
   if (!value) return '';
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const JsBarcode = require('jsbarcode');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     JsBarcode(svg, value, {
       format: 'CODE128B',
