@@ -332,6 +332,13 @@ export default function Entrada() {
             <span className="stat-label flex items-center gap-1"><Camera className="h-3 w-3" /> FOTO (OPCIONAL)</span>
             <button type="button" onClick={() => { setShowAiSection(false); setImagePreview(null); }} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
           </div>
+          <button
+            type="button"
+            onClick={() => setNightMode(!nightMode)}
+            className={`w-full flex items-center justify-center gap-2 text-base font-black ${nightMode ? 'pdv-btn-green' : 'pdv-btn-yellow'}`}
+          >
+            <Moon className="h-4 w-4" /> MODO NOTURNO {nightMode ? 'LIGADO' : 'DESLIGADO'}
+          </button>
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageCapture} />
           <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageCapture} />
           {imagePreview ? (
@@ -340,13 +347,21 @@ export default function Entrada() {
               {aiLoading && <div className="absolute inset-0 flex items-center justify-center bg-background/60"><span className="text-sm font-mono">Analisando...</span></div>}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-2"><Camera className="h-4 w-4" /> Câmera</button>
-              <button type="button" onClick={() => uploadInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-2"><Upload className="h-4 w-4" /> Galeria</button>
+            <div className="grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => setLiveCameraOpen(true)} className="pdv-btn-green flex items-center justify-center gap-1 text-xs font-black"><Moon className="h-4 w-4" /> Noturna</button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-1 text-xs"><Camera className="h-4 w-4" /> Câmera</button>
+              <button type="button" onClick={() => uploadInputRef.current?.click()} className="pdv-btn-yellow flex items-center justify-center gap-1 text-xs"><Upload className="h-4 w-4" /> Galeria</button>
             </div>
           )}
         </div>
       )}
+
+      <NightCameraCapture
+        open={liveCameraOpen}
+        nightMode={nightMode}
+        onClose={() => setLiveCameraOpen(false)}
+        onCapture={(dataUrl) => processCapturedImage(dataUrl, null)}
+      />
 
       {/* Table of today's entries - like PARKEE */}
       <div className="pdv-card overflow-hidden">
