@@ -6,7 +6,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
   admin: [
     'dashboard', 'entrada', 'saida', 'patio',
     'clientes', 'veiculos', 'mensalistas',
-    'financeiro', 'relatorios', 'comprovantes',
+    'financeiro', 'caixa', 'relatorios', 'comprovantes',
     'admin', 'configuracoes', 'usuarios',
     'exportar_pdf', 'importar', 'deletar',
   ],
@@ -19,7 +19,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     'entrada', 'saida', 'patio', 'comprovantes',
   ],
   financeiro: [
-    'dashboard', 'financeiro', 'relatorios', 'mensalistas',
+    'dashboard', 'financeiro', 'caixa', 'relatorios', 'mensalistas',
   ],
 };
 
@@ -33,6 +33,7 @@ export const routePermissions: Record<string, string> = {
   '/veiculos': 'veiculos',
   '/mensalistas': 'mensalistas',
   '/financeiro': 'financeiro',
+  '/caixa': 'caixa',
   '/relatorios': 'relatorios',
   '/comprovantes': 'comprovantes',
   '/admin': 'admin',
