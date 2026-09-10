@@ -19,6 +19,7 @@ import Veiculos from "./pages/Veiculos";
 import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
 import Financeiro from "./pages/Financeiro";
+import Caixa from "./pages/Caixa";
 import Comprovantes from "./pages/Comprovantes";
 import Admin from "./pages/Admin";
 import Configuracoes from "./pages/Configuracoes";
