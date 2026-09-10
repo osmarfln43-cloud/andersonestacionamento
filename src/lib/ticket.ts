@@ -1,4 +1,5 @@
 // Ticket code generation + barcode helpers
+import JsBarcode from 'jsbarcode';
 
 /**
  * Generates a short numeric ticket code (10 digits) used on the printed
