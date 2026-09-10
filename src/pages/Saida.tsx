@@ -53,10 +53,11 @@ export default function Saida() {
     }
   }, [searchParams, veiculosAtivos]);
 
+  const buscaDigitos = busca.replace(/\D/g, '');
   const matchBusca = (v: any) =>
     v.placa.includes(busca.toUpperCase()) ||
     (v.modelo || '').toLowerCase().includes(busca.toLowerCase()) ||
-    (v.ticket_codigo || '').includes(busca.replace(/\D/g, ''));
+    (buscaDigitos.length >= 3 && (v.ticket_codigo || '').includes(buscaDigitos));
 
   const filteredAtivos = busca.length > 0 ? veiculosAtivos.filter(matchBusca) : veiculosAtivos;
   const filteredFinalizados = busca.length > 0 ? finalizadosHoje.filter(matchBusca) : finalizadosHoje;
