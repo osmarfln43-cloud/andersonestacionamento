@@ -230,6 +230,7 @@ export function buildReceiptESCPOS(data: {
   endereco?: string;
   telefone?: string;
   cnpj?: string;
+  ticketCodigo?: string;
 }, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
   const cols = paperWidth === '58mm' ? 24 : 32;
   const cmds: number[] = [];
