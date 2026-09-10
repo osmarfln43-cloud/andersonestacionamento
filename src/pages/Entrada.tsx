@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike } from "lucide-react";
+import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRegistrarEntrada, useConfiguracoes, useMovimentacoesHoje } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptPDF from "@/components/ReceiptPDF";
+import NightCameraCapture from "@/components/NightCameraCapture";
+import { enhanceForNightPlate, isNightTime } from "@/lib/nightVision";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
@@ -24,6 +26,8 @@ export default function Entrada() {
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const lastSearchedPlateRef = useRef("");
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
+  const [nightMode, setNightMode] = useState(() => isNightTime());
+  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
   const { data: movHoje = [] } = useMovimentacoesHoje();
