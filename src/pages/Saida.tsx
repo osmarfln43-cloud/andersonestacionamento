@@ -60,7 +60,33 @@ export default function Saida() {
     ? finalizadosHoje.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
     : finalizadosHoje;
 
-  const selected = selectedId ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData : null;
+  const selected = selectedId
+    ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData || ticketMov
+    : null;
+
+  const handleTicketCode = useCallback(async (codigo: string) => {
+    try {
+      const mov = await buscarMovimentacaoPorTicket(codigo);
+      if (!mov) {
+        toast({ title: "Ticket não encontrado", description: `Código ${codigo}`, variant: "destructive" });
+        return;
+      }
+      setScannerOpen(false);
+      if (mov.status_movimentacao === 'finalizado') {
+        toast({ title: "Ticket já finalizado", description: `${mov.placa} — saída em ${mov.saida ? new Date(mov.saida).toLocaleString('pt-BR') : ''}`, variant: "destructive" });
+        setBusca(mov.placa);
+        return;
+      }
+      setTicketMov(mov as any);
+      setFinalizado(false);
+      setShowPix(false);
+      setFinalizadoData(null);
+      setSelectedId(mov.id);
+      toast({ title: "🎫 Ticket lido", description: `${mov.placa} — ${mov.modelo || 'N/I'}` });
+    } catch (err: any) {
+      toast({ title: "Erro ao ler ticket", description: err.message, variant: "destructive" });
+    }
+  }, [toast]);
 
   const calcularValor = (mov: any) => {
     const valorDiaria = mov?.categoria === 'moto'
