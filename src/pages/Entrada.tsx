@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike } from "lucide-react";
+import { LogIn, Camera, Sparkles, Clock, Zap, Car, X, Search, Upload, CarFront, Bike, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRegistrarEntrada, useConfiguracoes, useMovimentacoesHoje } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptPDF from "@/components/ReceiptPDF";
+import NightCameraCapture from "@/components/NightCameraCapture";
+import { enhanceForNightPlate, isNightTime } from "@/lib/nightVision";
 
 export default function Entrada() {
   const [placa, setPlaca] = useState("");
@@ -24,6 +26,8 @@ export default function Entrada() {
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const lastSearchedPlateRef = useRef("");
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
+  const [nightMode, setNightMode] = useState(() => isNightTime());
+  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
   const registrarEntrada = useRegistrarEntrada();
   const { data: config } = useConfiguracoes();
   const { data: movHoje = [] } = useMovimentacoesHoje();
@@ -162,13 +166,30 @@ export default function Entrada() {
     });
   };
 
+  const dataUrlToFile = (dataUrl: string, name: string): File | null => {
+    try {
+      const [head, body] = dataUrl.split(',');
+      const mime = head.match(/:(.*?);/)?.[1] || 'image/jpeg';
+      const bin = atob(body);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new File([bytes], name, { type: mime });
+    } catch { return null; }
+  };
+
+  const processCapturedImage = async (rawDataUrl: string, sourceFile: File | null) => {
+    const finalImage = nightMode ? await enhanceForNightPlate(rawDataUrl) : rawDataUrl;
+    setCapturedFile(sourceFile ?? dataUrlToFile(finalImage, `placa-${Date.now()}.jpg`));
+    setImagePreview(finalImage);
+    if (nightMode) toast({ title: "🌙 Modo noturno", description: "Imagem realçada para leitura da placa" });
+    identifyByPhoto(finalImage);
+  };
+
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setCapturedFile(file);
-    const compressed = await compressImage(file);
-    setImagePreview(compressed);
-    identifyByPhoto(compressed);
+    const compressed = await compressImage(file, nightMode ? 1000 : 800, nightMode ? 0.85 : 0.6);
+    await processCapturedImage(compressed, file);
   };
 
   const uploadVehiclePhoto = async (placaStr: string): Promise<string | null> => {
