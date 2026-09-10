@@ -301,6 +301,19 @@ export function buildReceiptESCPOS(data: {
     cmds.push(...dashedLine(cols));
   }
 
+  // Ticket barcode (used to read the ticket back at the exit)
+  if (data.ticketCodigo) {
+    cmds.push(...escposAlign('center'));
+    cmds.push(...escposBold(true));
+    cmds.push(...textToBytes('TICKET'), LF);
+    cmds.push(...escposFontSize(2, 1));
+    cmds.push(...textToBytes(data.ticketCodigo), LF);
+    cmds.push(...escposFontSize(1, 1));
+    cmds.push(...escposBold(false));
+    cmds.push(...escposBarcode(data.ticketCodigo, 70, paperWidth === '58mm' ? 2 : 3));
+    cmds.push(...dashedLine(cols));
+  }
+
   // Payment highlight
   cmds.push(...escposAlign('center'));
   cmds.push(...escposBold(true));
