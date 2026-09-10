@@ -416,3 +416,23 @@ export async function buscarMovimentacaoPorTicket(codigo: string) {
   if (error) throw error;
   return data;
 }
+
+// Todas as movimentações dos últimos 13 meses (base do fluxo de caixa)
+export function useMovimentacoesHistorico() {
+  return useQuery({
+    queryKey: ['movimentacoes', 'historico'],
+    queryFn: async () => {
+      const inicio = new Date();
+      inicio.setMonth(inicio.getMonth() - 13);
+      inicio.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('entrada, saida, valor_total, forma_pagamento, tipo_cliente, categoria, status_movimentacao')
+        .gte('entrada', inicio.toISOString())
+        .order('entrada', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+}
