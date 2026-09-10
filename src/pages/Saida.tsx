@@ -53,12 +53,13 @@ export default function Saida() {
     }
   }, [searchParams, veiculosAtivos]);
 
-  const filteredAtivos = busca.length > 0
-    ? veiculosAtivos.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
-    : veiculosAtivos;
-  const filteredFinalizados = busca.length > 0
-    ? finalizadosHoje.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
-    : finalizadosHoje;
+  const matchBusca = (v: any) =>
+    v.placa.includes(busca.toUpperCase()) ||
+    (v.modelo || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (v.ticket_codigo || '').includes(busca.replace(/\D/g, ''));
+
+  const filteredAtivos = busca.length > 0 ? veiculosAtivos.filter(matchBusca) : veiculosAtivos;
+  const filteredFinalizados = busca.length > 0 ? finalizadosHoje.filter(matchBusca) : finalizadosHoje;
 
   const selected = selectedId
     ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData || ticketMov
