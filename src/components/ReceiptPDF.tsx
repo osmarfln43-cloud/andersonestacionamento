@@ -355,6 +355,19 @@ export default function ReceiptPDF({ data, onDone }: Props) {
             </>
           )}
 
+          {data.ticketCodigo && (
+            <>
+              <div className="ticket-label">TICKET</div>
+              <div className="ticket-code">{data.ticketCodigo}</div>
+              <div className="barcode-container">
+                <BarcodeSvg value={data.ticketCodigo} width={1.5} height={45} fontSize={0} displayValue={false} />
+              </div>
+              <div className="dashed"></div>
+            </>
+          )}
+
+
+
           <div className="footer">{data.mensagemComprovante || "AGRADECEMOS A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}
           {data.telefone && <div className="footer-addr">MEU CONTATO: {data.telefone}</div>}
