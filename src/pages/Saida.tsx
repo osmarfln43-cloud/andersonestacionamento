@@ -19,6 +19,7 @@ type MovData = {
   entrada: string; saida: string | null; tempo_total: string | null;
   valor_hora: number; valor_total: number | null; forma_pagamento: string | null;
   tipo_cliente: string; status_movimentacao: string; foto_url?: string | null; categoria?: string | null;
+  ticket_codigo?: string | null;
 };
 
 export default function Saida() {
