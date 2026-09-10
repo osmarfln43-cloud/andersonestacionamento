@@ -323,3 +323,96 @@ export function useConfiguracoes() {
     },
   });
 }
+
+// Despesas
+export type Despesa = {
+  id: string;
+  descricao: string;
+  categoria: string;
+  valor: number;
+  data: string;
+  forma_pagamento: string | null;
+  observacao: string | null;
+  created_at: string;
+};
+
+export const CATEGORIAS_DESPESA = [
+  'funcionarios',
+  'aluguel',
+  'energia',
+  'agua',
+  'manutencao',
+  'impostos',
+  'outros',
+] as const;
+
+export function useDespesas() {
+  return useQuery({
+    queryKey: ['despesas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('despesas')
+        .select('*')
+        .order('data', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as Despesa[];
+    },
+  });
+}
+
+export function useSalvarDespesa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (despesa: {
+      id?: string;
+      descricao: string;
+      categoria: string;
+      valor: number;
+      data: string;
+      forma_pagamento?: string;
+      observacao?: string;
+    }) => {
+      const payload = {
+        descricao: despesa.descricao,
+        categoria: despesa.categoria,
+        valor: despesa.valor,
+        data: despesa.data,
+        forma_pagamento: despesa.forma_pagamento || 'dinheiro',
+        observacao: despesa.observacao || null,
+      };
+      if (despesa.id) {
+        const { error } = await supabase.from('despesas').update(payload).eq('id', despesa.id);
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase.from('despesas').insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['despesas'] }),
+  });
+}
+
+export function useExcluirDespesa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('despesas').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['despesas'] }),
+  });
+}
+
+// Busca movimentação pelo código do ticket (código de barras)
+export async function buscarMovimentacaoPorTicket(codigo: string) {
+  const { data, error } = await supabase
+    .from('movimentacoes')
+    .select('*')
+    .eq('ticket_codigo', codigo)
+    .order('entrada', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
