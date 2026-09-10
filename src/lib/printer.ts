@@ -113,6 +113,21 @@ function escposFeed(lines: number): number[] {
   return [ESC, 0x64, lines];
 }
 
+// CODE128 barcode with human readable text below
+function escposBarcode(code: string, height = 70, moduleWidth = 2): number[] {
+  const clean = code.replace(/[^\x20-\x7e]/g, '');
+  if (!clean) return [];
+  const payload = textToBytes(`{B${clean}`);
+  return [
+    GS, 0x48, 0x02,            // HRI below barcode
+    GS, 0x66, 0x00,            // HRI font A
+    GS, 0x68, height,          // barcode height
+    GS, 0x77, moduleWidth,     // module width
+    GS, 0x6b, 73, payload.length, ...payload,
+    LF,
+  ];
+}
+
 // Set print density (0-15, higher = darker)
 function escposDensity(level: number): number[] {
   // GS ( K - Set print density
