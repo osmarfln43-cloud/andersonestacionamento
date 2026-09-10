@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { getSavedPrinterConfig, buildReceiptESCPOS, printViaUSB } from "@/lib/printer";
+import BarcodeSvg from "@/components/BarcodeSvg";
 
 export interface ReceiptData {
   placa: string;
@@ -28,6 +29,7 @@ export interface ReceiptData {
   qrCodeUrl?: string;
   cnpj?: string;
   regraAplicada?: string;
+  ticketCodigo?: string;
 }
 
 interface Props {
@@ -73,6 +75,7 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           endereco: data.endereco,
           telefone: data.telefone,
           cnpj: data.cnpj,
+          ticketCodigo: data.ticketCodigo,
         }, paperWidth);
 
       const success = await printViaUSB(escposData);
@@ -222,6 +225,10 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         .qr-container { width: 100%; text-align: center; margin: 3px 0; padding-right: 1mm; }
         .qr-container img, .qr-container canvas { width: ${layout.qrSize} !important; height: ${layout.qrSize} !important; }
         .regra-box { font-size: 11px; font-weight: 900; text-align: center; border: 1px solid #000; padding: 2px 4px; margin: 2px auto; display: inline-block; }
+        .ticket-label { font-size: ${layout.paymentFontSize}; font-weight: 900; text-align: center; margin-top: 2px; }
+        .ticket-code { font-size: ${layout.totalValueFontSize}; font-weight: 900; text-align: center; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+        .barcode-container { width: 100%; text-align: center; margin: 2px 0 3px; }
+        .barcode-container svg { width: 100% !important; max-width: ${layout.contentWidth}; height: auto !important; }
         @media print {
           html, body { width: ${paperWidth}; margin: 0; }
           body { padding: ${layout.bodyPadding}; justify-content: center; }
@@ -347,6 +354,19 @@ export default function ReceiptPDF({ data, onDone }: Props) {
               <div className="dashed"></div>
             </>
           )}
+
+          {data.ticketCodigo && (
+            <>
+              <div className="ticket-label">TICKET</div>
+              <div className="ticket-code">{data.ticketCodigo}</div>
+              <div className="barcode-container">
+                <BarcodeSvg value={data.ticketCodigo} width={1.5} height={45} fontSize={0} displayValue={false} />
+              </div>
+              <div className="dashed"></div>
+            </>
+          )}
+
+
 
           <div className="footer">{data.mensagemComprovante || "AGRADECEMOS A PREFERENCIA"}</div>
           {data.endereco && <div className="footer-addr">{data.endereco.toUpperCase()}</div>}

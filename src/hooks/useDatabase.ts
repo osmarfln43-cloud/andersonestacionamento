@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { calculateParkingBilling } from '@/lib/billing';
+import { generateTicketCode } from '@/lib/ticket';
 
 // Movimentacoes
 export function useMovimentacoesAtivas() {
@@ -132,22 +133,34 @@ export function useRegistrarEntrada() {
         ? Number((configData as any)?.valor_hora_moto ?? 6) 
         : Number(configData?.valor_hora ?? 12);
 
-      const { data, error } = await supabase
-        .from('movimentacoes')
-        .insert({
-          placa: placaUpper,
-          veiculo_id: veiculoId,
-          modelo: modeloMovimentacao,
-          cor: corFinal || null,
-          tipo_cliente: mov.tipo_cliente,
-          observacao: mov.observacao,
-          valor_hora: valorHora,
-          foto_url: mov.foto_url || null,
-          categoria: categoriaVeiculo,
-        } as any)
-        .select()
-        .single();
-      if (error) throw error;
+      // Generate a unique ticket code (retry on the rare collision)
+      let data: any = null;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const result = await supabase
+          .from('movimentacoes')
+          .insert({
+            placa: placaUpper,
+            veiculo_id: veiculoId,
+            modelo: modeloMovimentacao,
+            cor: corFinal || null,
+            tipo_cliente: mov.tipo_cliente,
+            observacao: mov.observacao,
+            valor_hora: valorHora,
+            foto_url: mov.foto_url || null,
+            categoria: categoriaVeiculo,
+            ticket_codigo: generateTicketCode(),
+          } as any)
+          .select()
+          .single();
+        if (!result.error) {
+          data = result.data;
+          break;
+        }
+        lastError = result.error;
+        if (result.error.code !== '23505') break;
+      }
+      if (!data) throw lastError;
       return data;
     },
     onSuccess: () => {
@@ -308,5 +321,118 @@ export function useConfiguracoes() {
       if (error) throw error;
       return data;
     },
+  });
+}
+
+// Despesas
+export type Despesa = {
+  id: string;
+  descricao: string;
+  categoria: string;
+  valor: number;
+  data: string;
+  forma_pagamento: string | null;
+  observacao: string | null;
+  created_at: string;
+};
+
+export const CATEGORIAS_DESPESA = [
+  'funcionarios',
+  'aluguel',
+  'energia',
+  'agua',
+  'manutencao',
+  'impostos',
+  'outros',
+] as const;
+
+export function useDespesas() {
+  return useQuery({
+    queryKey: ['despesas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('despesas')
+        .select('*')
+        .order('data', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as Despesa[];
+    },
+  });
+}
+
+export function useSalvarDespesa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (despesa: {
+      id?: string;
+      descricao: string;
+      categoria: string;
+      valor: number;
+      data: string;
+      forma_pagamento?: string;
+      observacao?: string;
+    }) => {
+      const payload = {
+        descricao: despesa.descricao,
+        categoria: despesa.categoria,
+        valor: despesa.valor,
+        data: despesa.data,
+        forma_pagamento: despesa.forma_pagamento || 'dinheiro',
+        observacao: despesa.observacao || null,
+      };
+      if (despesa.id) {
+        const { error } = await supabase.from('despesas').update(payload).eq('id', despesa.id);
+        if (error) throw error;
+        return;
+      }
+      const { error } = await supabase.from('despesas').insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['despesas'] }),
+  });
+}
+
+export function useExcluirDespesa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('despesas').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['despesas'] }),
+  });
+}
+
+// Busca movimentação pelo código do ticket (código de barras)
+export async function buscarMovimentacaoPorTicket(codigo: string) {
+  const { data, error } = await supabase
+    .from('movimentacoes')
+    .select('*')
+    .eq('ticket_codigo', codigo)
+    .order('entrada', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Todas as movimentações dos últimos 13 meses (base do fluxo de caixa)
+export function useMovimentacoesHistorico() {
+  return useQuery({
+    queryKey: ['movimentacoes', 'historico'],
+    queryFn: async () => {
+      const inicio = new Date();
+      inicio.setMonth(inicio.getMonth() - 13);
+      inicio.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('movimentacoes')
+        .select('entrada, saida, valor_total, forma_pagamento, tipo_cliente, categoria, status_movimentacao')
+        .gte('entrada', inicio.toISOString())
+        .order('entrada', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 60000,
   });
 }

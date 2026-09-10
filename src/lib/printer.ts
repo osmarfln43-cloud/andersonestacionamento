@@ -113,6 +113,21 @@ function escposFeed(lines: number): number[] {
   return [ESC, 0x64, lines];
 }
 
+// CODE128 barcode with human readable text below
+function escposBarcode(code: string, height = 70, moduleWidth = 2): number[] {
+  const clean = code.replace(/[^\x20-\x7e]/g, '');
+  if (!clean) return [];
+  const payload = textToBytes(`{B${clean}`);
+  return [
+    GS, 0x48, 0x02,            // HRI below barcode
+    GS, 0x66, 0x00,            // HRI font A
+    GS, 0x68, height,          // barcode height
+    GS, 0x77, moduleWidth,     // module width
+    GS, 0x6b, 73, payload.length, ...payload,
+    LF,
+  ];
+}
+
 // Set print density (0-15, higher = darker)
 function escposDensity(level: number): number[] {
   // GS ( K - Set print density
@@ -215,6 +230,7 @@ export function buildReceiptESCPOS(data: {
   endereco?: string;
   telefone?: string;
   cnpj?: string;
+  ticketCodigo?: string;
 }, paperWidth: '58mm' | '80mm' = '80mm'): Uint8Array {
   const cols = paperWidth === '58mm' ? 24 : 32;
   const cmds: number[] = [];
@@ -282,6 +298,19 @@ export function buildReceiptESCPOS(data: {
     cmds.push(...textToBytes(`R$ ${formatCurrency(data.valorTotal)}`), LF);
     cmds.push(...escposFontSize(1, 1));
     cmds.push(...escposBold(false));
+    cmds.push(...dashedLine(cols));
+  }
+
+  // Ticket barcode (used to read the ticket back at the exit)
+  if (data.ticketCodigo) {
+    cmds.push(...escposAlign('center'));
+    cmds.push(...escposBold(true));
+    cmds.push(...textToBytes('TICKET'), LF);
+    cmds.push(...escposFontSize(2, 1));
+    cmds.push(...textToBytes(data.ticketCodigo), LF);
+    cmds.push(...escposFontSize(1, 1));
+    cmds.push(...escposBold(false));
+    cmds.push(...escposBarcode(data.ticketCodigo, 70, paperWidth === '58mm' ? 2 : 3));
     cmds.push(...dashedLine(cols));
   }
 

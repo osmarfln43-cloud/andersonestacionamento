@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
   FileText, Printer, Settings, Wallet, ChevronLeft,
-  ChevronRight, ParkingCircle, Sparkles, ShieldCheck
+  ChevronRight, ParkingCircle, Sparkles, ShieldCheck, PiggyBank
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -29,6 +29,7 @@ const managementItems = [
 
 const businessItems = [
   { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro" },
+  { title: "Fluxo de Caixa", url: "/caixa", icon: PiggyBank, perm: "caixa" },
   { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios" },
   { title: "Comprovantes", url: "/comprovantes", icon: Printer, perm: "comprovantes" },
 ];

@@ -1,23 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2, Printer } from "lucide-react";
+import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2, Printer, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes, useExcluirMovimentacao } from "@/hooks/useDatabase";
+import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes, useExcluirMovimentacao, buscarMovimentacaoPorTicket } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { calculateParkingBilling } from "@/lib/billing";
 import { formatBillingRuleLabel } from "@/lib/receipt";
 import ReceiptPDF, { ReceiptData } from "@/components/ReceiptPDF";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 type MovData = {
   id: string; placa: string; modelo: string | null; cor: string | null;
   entrada: string; saida: string | null; tempo_total: string | null;
   valor_hora: number; valor_total: number | null; forma_pagamento: string | null;
   tipo_cliente: string; status_movimentacao: string; foto_url?: string | null; categoria?: string | null;
+  ticket_codigo?: string | null;
 };
 
 export default function Saida() {
@@ -27,6 +29,8 @@ export default function Saida() {
   const [showPix, setShowPix] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [finalizadoData, setFinalizadoData] = useState<MovData | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [ticketMov, setTicketMov] = useState<MovData | null>(null);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [receiptKey, setReceiptKey] = useState(0);
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
@@ -49,14 +53,42 @@ export default function Saida() {
     }
   }, [searchParams, veiculosAtivos]);
 
-  const filteredAtivos = busca.length > 0
-    ? veiculosAtivos.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
-    : veiculosAtivos;
-  const filteredFinalizados = busca.length > 0
-    ? finalizadosHoje.filter(v => v.placa.includes(busca.toUpperCase()) || (v.modelo || '').toLowerCase().includes(busca.toLowerCase()))
-    : finalizadosHoje;
+  const buscaDigitos = busca.replace(/\D/g, '');
+  const matchBusca = (v: any) =>
+    v.placa.includes(busca.toUpperCase()) ||
+    (v.modelo || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (buscaDigitos.length >= 3 && (v.ticket_codigo || '').includes(buscaDigitos));
 
-  const selected = selectedId ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData : null;
+  const filteredAtivos = busca.length > 0 ? veiculosAtivos.filter(matchBusca) : veiculosAtivos;
+  const filteredFinalizados = busca.length > 0 ? finalizadosHoje.filter(matchBusca) : finalizadosHoje;
+
+  const selected = selectedId
+    ? veiculosAtivos.find(v => v.id === selectedId) || finalizadoData || ticketMov
+    : null;
+
+  const handleTicketCode = useCallback(async (codigo: string) => {
+    try {
+      const mov = await buscarMovimentacaoPorTicket(codigo);
+      if (!mov) {
+        toast({ title: "Ticket não encontrado", description: `Código ${codigo}`, variant: "destructive" });
+        return;
+      }
+      setScannerOpen(false);
+      if (mov.status_movimentacao === 'finalizado') {
+        toast({ title: "Ticket já finalizado", description: `${mov.placa} — saída em ${mov.saida ? new Date(mov.saida).toLocaleString('pt-BR') : ''}`, variant: "destructive" });
+        setBusca(mov.placa);
+        return;
+      }
+      setTicketMov(mov as any);
+      setFinalizado(false);
+      setShowPix(false);
+      setFinalizadoData(null);
+      setSelectedId(mov.id);
+      toast({ title: "🎫 Ticket lido", description: `${mov.placa} — ${mov.modelo || 'N/I'}` });
+    } catch (err: any) {
+      toast({ title: "Erro ao ler ticket", description: err.message, variant: "destructive" });
+    }
+  }, [toast]);
 
   const calcularValor = (mov: any) => {
     const valorDiaria = mov?.categoria === 'moto'
@@ -110,6 +142,7 @@ export default function Saida() {
             qrCodeUrl: config?.qr_code_url || undefined,
             cnpj: config?.cnpj || undefined,
             regraAplicada: billing.regraAplicada,
+            ticketCodigo: (selected as any)?.ticket_codigo || undefined,
           });
           setReceiptKey(k => k + 1);
         },
@@ -162,6 +195,16 @@ export default function Saida() {
             <p className="text-[10px] text-muted-foreground whitespace-nowrap">{dataAtual}</p>
           </div>
         </div>
+
+        {(displayData as any)?.ticket_codigo && (
+          <div className="glass-card px-4 py-2 flex items-center justify-between">
+            <span className="stat-label text-[11px]">Ticket</span>
+            <span className="font-mono text-base font-bold tracking-widest">{(displayData as any).ticket_codigo}</span>
+          </div>
+        )}
+
+
+
 
         {/* Vehicle info row */}
         <div className="glass-card p-4 md:p-5">
@@ -309,12 +352,23 @@ export default function Saida() {
         </div>
       </div>
 
-      <div className="glass-card p-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por placa ou modelo..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 text-sm" autoFocus />
+      <div className="glass-card p-3 space-y-2">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por placa, modelo ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 text-sm" autoFocus />
+          </div>
+          <Button onClick={() => setScannerOpen(true)} className="h-11 gap-2 px-4 font-bold">
+            <ScanLine className="h-5 w-5" /> Ler código
+          </Button>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          Leia o código de barras do comprovante com a câmera ou digite o número do ticket.
+        </p>
       </div>
+
+      <BarcodeScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onDetected={handleTicketCode} />
+
 
       <Tabs defaultValue="ativos" className="space-y-4">
         <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto">

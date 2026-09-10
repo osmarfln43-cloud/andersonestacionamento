@@ -232,6 +232,7 @@ export default function Entrada() {
               disclaimerComprovante: (config as any)?.disclaimer_comprovante,
               qrCodeUrl: (config as any)?.qr_code_url || undefined,
               cnpj: config?.cnpj || undefined,
+              ticketCodigo: (result as any)?.ticket_codigo || undefined,
             });
             lastSearchedPlateRef.current = "";
             setPlaca(""); setDescricao(""); setCor(""); setObservacao(""); setTipo('avulso'); setCategoria('carro');
