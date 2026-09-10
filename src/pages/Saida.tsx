@@ -339,12 +339,23 @@ export default function Saida() {
         </div>
       </div>
 
-      <div className="glass-card p-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por placa ou modelo..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 text-sm" autoFocus />
+      <div className="glass-card p-3 space-y-2">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por placa, modelo ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-10 h-11 text-sm" autoFocus />
+          </div>
+          <Button onClick={() => setScannerOpen(true)} className="h-11 gap-2 px-4 font-bold">
+            <ScanLine className="h-5 w-5" /> Ler código
+          </Button>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          Leia o código de barras do comprovante com a câmera ou digite o número do ticket.
+        </p>
       </div>
+
+      <BarcodeScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onDetected={handleTicketCode} />
+
 
       <Tabs defaultValue="ativos" className="space-y-4">
         <TabsList className="bg-secondary/50 border border-border/50 p-1 h-auto">
