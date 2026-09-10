@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { getSavedPrinterConfig, buildReceiptESCPOS, printViaUSB } from "@/lib/printer";
+import BarcodeSvg from "@/components/BarcodeSvg";
 
 export interface ReceiptData {
   placa: string;
