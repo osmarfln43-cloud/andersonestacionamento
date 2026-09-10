@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { calculateParkingBilling } from '@/lib/billing';
+import { generateTicketCode } from '@/lib/ticket';
 
 // Movimentacoes
 export function useMovimentacoesAtivas() {
@@ -132,22 +133,34 @@ export function useRegistrarEntrada() {
         ? Number((configData as any)?.valor_hora_moto ?? 6) 
         : Number(configData?.valor_hora ?? 12);
 
-      const { data, error } = await supabase
-        .from('movimentacoes')
-        .insert({
-          placa: placaUpper,
-          veiculo_id: veiculoId,
-          modelo: modeloMovimentacao,
-          cor: corFinal || null,
-          tipo_cliente: mov.tipo_cliente,
-          observacao: mov.observacao,
-          valor_hora: valorHora,
-          foto_url: mov.foto_url || null,
-          categoria: categoriaVeiculo,
-        } as any)
-        .select()
-        .single();
-      if (error) throw error;
+      // Generate a unique ticket code (retry on the rare collision)
+      let data: any = null;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const result = await supabase
+          .from('movimentacoes')
+          .insert({
+            placa: placaUpper,
+            veiculo_id: veiculoId,
+            modelo: modeloMovimentacao,
+            cor: corFinal || null,
+            tipo_cliente: mov.tipo_cliente,
+            observacao: mov.observacao,
+            valor_hora: valorHora,
+            foto_url: mov.foto_url || null,
+            categoria: categoriaVeiculo,
+            ticket_codigo: generateTicketCode(),
+          } as any)
+          .select()
+          .single();
+        if (!result.error) {
+          data = result.data;
+          break;
+        }
+        lastError = result.error;
+        if (result.error.code !== '23505') break;
+      }
+      if (!data) throw lastError;
       return data;
     },
     onSuccess: () => {
