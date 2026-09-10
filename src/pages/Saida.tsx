@@ -1,17 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2, Printer } from "lucide-react";
+import { LogOut, Search, QrCode, Banknote, Clock, ArrowLeft, Check, Copy, Car, Trash2, Printer, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes, useExcluirMovimentacao } from "@/hooks/useDatabase";
+import { useMovimentacoesAtivas, useMovimentacoesFinalizadasHoje, useRegistrarSaida, useConfiguracoes, useExcluirMovimentacao, buscarMovimentacaoPorTicket } from "@/hooks/useDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { calculateParkingBilling } from "@/lib/billing";
 import { formatBillingRuleLabel } from "@/lib/receipt";
 import ReceiptPDF, { ReceiptData } from "@/components/ReceiptPDF";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 type MovData = {
   id: string; placa: string; modelo: string | null; cor: string | null;
@@ -27,6 +28,8 @@ export default function Saida() {
   const [showPix, setShowPix] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [finalizadoData, setFinalizadoData] = useState<MovData | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [ticketMov, setTicketMov] = useState<MovData | null>(null);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [receiptKey, setReceiptKey] = useState(0);
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
