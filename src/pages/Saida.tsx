@@ -142,6 +142,7 @@ export default function Saida() {
             qrCodeUrl: config?.qr_code_url || undefined,
             cnpj: config?.cnpj || undefined,
             regraAplicada: billing.regraAplicada,
+            ticketCodigo: (selected as any)?.ticket_codigo || undefined,
           });
           setReceiptKey(k => k + 1);
         },
