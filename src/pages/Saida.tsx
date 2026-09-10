@@ -193,8 +193,16 @@ export default function Saida() {
           <div className="glass-card w-full shrink-0 px-3 py-2 text-center sm:w-auto sm:px-4 sm:text-right">
             <p className="text-base sm:text-lg md:text-xl font-mono font-bold text-primary tabular-nums whitespace-nowrap">{horaAtual}</p>
             <p className="text-[10px] text-muted-foreground whitespace-nowrap">{dataAtual}</p>
-          </div>
         </div>
+
+        {(displayData as any)?.ticket_codigo && (
+          <div className="glass-card px-4 py-2 flex items-center justify-between">
+            <span className="stat-label text-[11px]">Ticket</span>
+            <span className="font-mono text-base font-bold tracking-widest">{(displayData as any).ticket_codigo}</span>
+          </div>
+        )}
+
+
 
         {/* Vehicle info row */}
         <div className="glass-card p-4 md:p-5">
