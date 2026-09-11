@@ -153,7 +153,8 @@ Para a placa devolva só letras e números (ex: ABC1D23).`,
   result.marca = result.marca || "";
   result.modelo = result.modelo || "";
   result.cor = result.cor || "";
-  result.categoria = result.categoria || "carro";
+  const catRaw = String(result.categoria || "").toLowerCase().trim();
+  result.categoria = ["carro", "moto", "caminhonete", "van"].includes(catRaw) ? catRaw : (CATEGORY_PT[catRaw] || "");
   return result;
 }
 
