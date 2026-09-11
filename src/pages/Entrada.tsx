@@ -117,7 +117,7 @@ export default function Entrada() {
         setAiResult(data);
         if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
-        setCategoria(normalizeCategoria(data.categoria));
+        if (data.categoria) setCategoria(normalizeCategoria(data.categoria));
         toast({ title: "🤖 IA sugeriu", description: `${data.marca} ${data.modelo}` });
       }
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
