@@ -116,8 +116,8 @@ Para a placa devolva só letras e números (ex: ABC1D23).`,
         {
           type: "text",
           text: placa
-            ? `A placa já lida por ALPR é ${placa}. Complete marca, modelo e cor SOMENTE se visíveis na foto.`
-            : "Leia a placa e identifique marca, modelo, cor e categoria do veículo visível na foto.",
+            ? `A placa já lida por ALPR é ${placa}. Diga a categoria (moto ou carro) olhando o veículo da foto e complete marca, modelo e cor SOMENTE se visíveis.`
+            : "Leia a placa e identifique marca, modelo, cor e diga se é moto ou carro, pelo veículo visível na foto.",
         },
         { type: "image_url", image_url: { url: image } },
       ],
