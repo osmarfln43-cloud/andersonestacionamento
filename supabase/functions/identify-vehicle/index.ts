@@ -77,7 +77,7 @@ async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult 
     const marca = mmc?.make ? String(mmc.make).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
     const modelo = mmc?.model ? String(mmc.model).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
     const cor = colorRaw ? (COLOR_PT[String(colorRaw).toLowerCase()] || String(colorRaw)) : "";
-    const categoria = vehicleType ? (CATEGORY_PT[vehicleType] || "carro") : "carro";
+    const categoria = mapVehicleType(vehicleType, vehicleScore);
 
     return {
       placa: plate && plate.length >= 6 ? plate : null,
