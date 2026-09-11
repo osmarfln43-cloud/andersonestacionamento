@@ -8,7 +8,30 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const PLATE_RECOGNIZER_API_KEY = Deno.env.get("PLATE_RECOGNIZER_API_KEY");
 
-async function recognizePlateWithPlateRecognizer(imageBase64: string): Promise<string | null> {
+interface AlprResult {
+  placa: string | null;
+  marca: string;
+  modelo: string;
+  cor: string;
+  categoria: string;
+}
+
+const COLOR_PT: Record<string, string> = {
+  white: "Branco", black: "Preto", silver: "Prata", gray: "Cinza", grey: "Cinza",
+  red: "Vermelho", blue: "Azul", green: "Verde", yellow: "Amarelo", orange: "Laranja",
+  brown: "Marrom", beige: "Bege", gold: "Dourado", purple: "Roxo", pink: "Rosa", tan: "Bege",
+};
+
+const CATEGORY_PT: Record<string, string> = {
+  Car: "carro", Sedan: "carro", Hatchback: "carro", Wagon: "carro", Coupe: "carro",
+  SUV: "carro", "SUV/Crossover": "carro",
+  Motorcycle: "moto", Bicycle: "moto",
+  "Pickup Truck": "caminhonete", Truck: "caminhonete",
+  Van: "van", "Minivan": "van", Bus: "van",
+};
+
+/** Plate Recognizer com MMC (make, model, color) — leitura real, sem inferência. */
+async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult | null> {
   if (!PLATE_RECOGNIZER_API_KEY) return null;
 
   try {
@@ -18,67 +41,75 @@ async function recognizePlateWithPlateRecognizer(imageBase64: string): Promise<s
 
     const form = new FormData();
     form.append("upload", blob, "plate.jpg");
+    form.append("mmc", "true");
+    form.append("regions", "br");
 
     const response = await fetch("https://api.platerecognizer.com/v1/plate-reader/", {
       method: "POST",
-      headers: {
-        Authorization: `Token ${PLATE_RECOGNIZER_API_KEY}`,
-      },
+      headers: { Authorization: `Token ${PLATE_RECOGNIZER_API_KEY}` },
       body: form,
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      console.error("Plate Recognizer error:", response.status, text);
+      console.error("Plate Recognizer error:", response.status, await response.text());
       return null;
     }
 
     const data = await response.json();
-    const results = data?.results || [];
+    const results = data?.results;
     if (!Array.isArray(results) || results.length === 0) return null;
 
-    // Pega a placa com maior confiança
     const best = results.sort((a: any, b: any) => (b.score || 0) - (a.score || 0))[0];
     const plate = best?.plate?.toString().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
-    return plate && plate.length >= 6 ? plate : null;
+
+    const mmc = Array.isArray(best?.model_make) ? best.model_make[0] : null;
+    const colorRaw = Array.isArray(best?.color) ? best.color[0]?.color : null;
+    const vehicleType = best?.vehicle?.type as string | undefined;
+
+    const marca = mmc?.make ? String(mmc.make).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+    const modelo = mmc?.model ? String(mmc.model).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+    const cor = colorRaw ? (COLOR_PT[String(colorRaw).toLowerCase()] || String(colorRaw)) : "";
+    const categoria = vehicleType ? (CATEGORY_PT[vehicleType] || "carro") : "carro";
+
+    return {
+      placa: plate && plate.length >= 6 ? plate : null,
+      marca,
+      modelo,
+      cor,
+      categoria,
+    };
   } catch (err) {
     console.error("Plate Recognizer exception:", err);
     return null;
   }
 }
 
-async function identifyWithAI(image: string | null, placa: string | null): Promise<any> {
+/** Visão computacional (IA) apenas quando há foto real — nunca inventa a partir da placa. */
+async function identifyWithAI(image: string, placa: string | null): Promise<any> {
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
   const messages: any[] = [
     {
       role: "system",
-      content: `Você é um assistente especializado em identificação de veículos e leitura de placas.
-Quando receber uma foto de veículo:
-1. Leia a placa visível na foto (formato brasileiro antigo ABC-1234 ou Mercosul ABC1D23)
-2. Identifique marca, modelo, cor e categoria do veículo
-Quando receber apenas uma placa brasileira, identifique possíveis marcas e modelos.
-Responda SEMPRE em JSON com esta estrutura exata:
-{"placa": "string ou vazio se não conseguir ler", "marca": "string", "modelo": "string", "cor": "string", "categoria": "carro|moto|caminhonete|van", "confianca": "alta|media|baixa"}
-Responda APENAS o JSON, sem texto adicional.
-Para a placa, retorne apenas letras e números sem traço (ex: ABC1D23). Se não conseguir ler a placa, retorne "".`,
+      content: `Você lê placas brasileiras e identifica veículos (carros e motos) em fotos.
+Use SOMENTE o que estiver visível na imagem. Nunca invente marca, modelo ou cor: se não estiver claro na foto, devolva string vazia.
+Responda SEMPRE apenas este JSON:
+{"placa":"","marca":"","modelo":"","cor":"","categoria":"carro|moto|caminhonete|van","confianca":"alta|media|baixa"}
+Para a placa devolva só letras e números (ex: ABC1D23).`,
     },
-  ];
-
-  if (image) {
-    messages.push({
+    {
       role: "user",
       content: [
-        { type: "text", text: placa ? `A placa já identificada é ${placa}. Confirme e complete marca, modelo, cor e categoria em JSON.` : "Identifique este veículo. Leia a placa e retorne marca, modelo, cor, categoria e placa em JSON." },
+        {
+          type: "text",
+          text: placa
+            ? `A placa já lida por ALPR é ${placa}. Complete marca, modelo e cor SOMENTE se visíveis na foto.`
+            : "Leia a placa e identifique marca, modelo, cor e categoria do veículo visível na foto.",
+        },
         { type: "image_url", image_url: { url: image } },
       ],
-    });
-  } else if (placa) {
-    messages.push({
-      role: "user",
-      content: `A placa do veículo é: ${placa}. Com base no padrão de placas brasileiras e conhecimento geral, sugira a marca e modelo mais provável. Retorne em JSON.`,
-    });
-  }
+    },
+  ];
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -86,40 +117,30 @@ Para a placa, retorne apenas letras e números sem traço (ex: ABC1D23). Se não
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
-      messages,
-      max_tokens: 200,
-    }),
+    body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, max_tokens: 200 }),
   });
 
   if (!response.ok) {
-    if (response.status === 429) {
-      throw new Error("Limite de requisições excedido. Tente novamente.");
-    }
-    if (response.status === 402) {
-      throw new Error("Créditos insuficientes.");
-    }
-    const t = await response.text();
-    console.error("AI gateway error:", response.status, t);
+    if (response.status === 429) throw new Error("Limite de requisições excedido. Tente novamente.");
+    if (response.status === 402) throw new Error("Créditos insuficientes.");
+    console.error("AI gateway error:", response.status, await response.text());
     throw new Error("Erro no serviço de IA");
   }
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || "";
-
-  let result;
+  let result: any;
   try {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    result = jsonMatch ? JSON.parse(jsonMatch[0]) : { placa: "", marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
+    result = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
   } catch {
-    result = { placa: "", marca: "", modelo: "", cor: "", categoria: "carro", confianca: "baixa" };
+    result = {};
   }
-
-  if (result.placa) {
-    result.placa = result.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 7);
-  }
-
+  result.placa = result.placa ? String(result.placa).replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 7) : "";
+  result.marca = result.marca || "";
+  result.modelo = result.modelo || "";
+  result.cor = result.cor || "";
+  result.categoria = result.categoria || "carro";
   return result;
 }
 
@@ -136,27 +157,53 @@ serve(async (req) => {
       });
     }
 
-    // Se houver imagem, tenta ler a placa com Plate Recognizer primeiro
-    let plateFromImage: string | null = null;
-    if (image) {
-      plateFromImage = await recognizePlateWithPlateRecognizer(image);
-      if (plateFromImage) {
-        console.log("Plate Recognizer leu placa:", plateFromImage);
-      }
+    // Sem foto não há como identificar o veículo sem adivinhar: devolve vazio.
+    if (!image) {
+      return new Response(
+        JSON.stringify({
+          placa: String(placa).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7),
+          marca: "", modelo: "", cor: "", categoria: "", confianca: "baixa",
+          source: "none",
+          message: "Identificação de marca/modelo/cor exige foto do veículo.",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    // Se a placa foi lida pela imagem, usa a IA apenas para completar detalhes do veículo.
-    // Se não leu, a IA faz a leitura completa (placa + detalhes).
-    const result = await identifyWithAI(image, plateFromImage || placa);
+    const alpr = await readWithPlateRecognizer(image);
+    if (alpr) {
+      console.log("ALPR:", alpr.placa, alpr.marca, alpr.modelo, alpr.cor, alpr.categoria);
+    }
 
-    // Se Plate Recognizer leu a placa, prefere essa leitura sobre a da IA
-    if (plateFromImage) {
-      result.placa = plateFromImage;
-      result.source = "plate-recognizer";
-    } else if (image) {
-      result.source = "ai";
-    } else {
-      result.source = "ai";
+    let result: any = {
+      placa: alpr?.placa || "",
+      marca: alpr?.marca || "",
+      modelo: alpr?.modelo || "",
+      cor: alpr?.cor || "",
+      categoria: alpr?.categoria || "carro",
+      confianca: alpr?.placa ? "alta" : "baixa",
+      source: alpr?.placa ? "plate-recognizer" : "ai",
+    };
+
+    // Completa somente o que o ALPR não trouxe, usando a própria foto.
+    const faltaDados = !result.placa || !result.modelo || !result.cor;
+    if (faltaDados) {
+      try {
+        const ai = await identifyWithAI(image, alpr?.placa || placa || null);
+        result = {
+          ...result,
+          placa: result.placa || ai.placa || "",
+          marca: result.marca || ai.marca || "",
+          modelo: result.modelo || ai.modelo || "",
+          cor: result.cor || ai.cor || "",
+          categoria: alpr?.categoria || ai.categoria || "carro",
+          confianca: result.placa ? result.confianca : (ai.confianca || "baixa"),
+          source: alpr?.placa ? "plate-recognizer+ai" : "ai",
+        };
+      } catch (aiErr) {
+        console.error("AI complement failed:", aiErr);
+        if (!result.placa) throw aiErr;
+      }
     }
 
     return new Response(JSON.stringify(result), {
