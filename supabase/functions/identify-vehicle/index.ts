@@ -23,12 +23,19 @@ const COLOR_PT: Record<string, string> = {
 };
 
 const CATEGORY_PT: Record<string, string> = {
-  Car: "carro", Sedan: "carro", Hatchback: "carro", Wagon: "carro", Coupe: "carro",
-  SUV: "carro", "SUV/Crossover": "carro",
-  Motorcycle: "moto", Bicycle: "moto",
-  "Pickup Truck": "caminhonete", Truck: "caminhonete",
-  Van: "van", "Minivan": "van", Bus: "van",
+  car: "carro", sedan: "carro", hatchback: "carro", wagon: "carro", coupe: "carro",
+  suv: "carro", "suv/crossover": "carro", "big truck": "caminhonete",
+  motorcycle: "moto", motorbike: "moto", scooter: "moto", bicycle: "moto",
+  "pickup truck": "caminhonete", truck: "caminhonete",
+  van: "van", minivan: "van", bus: "van",
 };
+
+/** Traduz o tipo do ALPR; devolve "" quando o tipo não veio ou não é confiável. */
+function mapVehicleType(type?: string | null, score?: number | null): string {
+  if (!type) return "";
+  if (typeof score === "number" && score < 0.25) return "";
+  return CATEGORY_PT[String(type).toLowerCase().trim()] || "";
+}
 
 /** Plate Recognizer com MMC (make, model, color) — leitura real, sem inferência. */
 async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult | null> {
@@ -65,11 +72,12 @@ async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult 
     const mmc = Array.isArray(best?.model_make) ? best.model_make[0] : null;
     const colorRaw = Array.isArray(best?.color) ? best.color[0]?.color : null;
     const vehicleType = best?.vehicle?.type as string | undefined;
+    const vehicleScore = best?.vehicle?.score as number | undefined;
 
     const marca = mmc?.make ? String(mmc.make).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
     const modelo = mmc?.model ? String(mmc.model).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
     const cor = colorRaw ? (COLOR_PT[String(colorRaw).toLowerCase()] || String(colorRaw)) : "";
-    const categoria = vehicleType ? (CATEGORY_PT[vehicleType] || "carro") : "carro";
+    const categoria = mapVehicleType(vehicleType, vehicleScore);
 
     return {
       placa: plate && plate.length >= 6 ? plate : null,
@@ -93,8 +101,13 @@ async function identifyWithAI(image: string, placa: string | null): Promise<any>
       role: "system",
       content: `Você lê placas brasileiras e identifica veículos (carros e motos) em fotos.
 Use SOMENTE o que estiver visível na imagem. Nunca invente marca, modelo ou cor: se não estiver claro na foto, devolva string vazia.
+A categoria é OBRIGATÓRIA e deve ser decidida pela imagem, nunca pelo texto da placa:
+- "moto" quando houver duas rodas, guidão, garupa, escapamento lateral, ou quando a placa for pequena/quadrada montada atrás sem para-choque;
+- "carro" quando houver quatro rodas, para-choque, faróis do carro, placa retangular larga;
+- "caminhonete" para picapes com caçamba; "van" para furgões e micro-ônibus.
+Se a imagem realmente não permitir decidir, use categoria "" (vazio).
 Responda SEMPRE apenas este JSON:
-{"placa":"","marca":"","modelo":"","cor":"","categoria":"carro|moto|caminhonete|van","confianca":"alta|media|baixa"}
+{"placa":"","marca":"","modelo":"","cor":"","categoria":"carro|moto|caminhonete|van|","confianca":"alta|media|baixa"}
 Para a placa devolva só letras e números (ex: ABC1D23).`,
     },
     {
@@ -103,8 +116,8 @@ Para a placa devolva só letras e números (ex: ABC1D23).`,
         {
           type: "text",
           text: placa
-            ? `A placa já lida por ALPR é ${placa}. Complete marca, modelo e cor SOMENTE se visíveis na foto.`
-            : "Leia a placa e identifique marca, modelo, cor e categoria do veículo visível na foto.",
+            ? `A placa já lida por ALPR é ${placa}. Diga a categoria (moto ou carro) olhando o veículo da foto e complete marca, modelo e cor SOMENTE se visíveis.`
+            : "Leia a placa e identifique marca, modelo, cor e diga se é moto ou carro, pelo veículo visível na foto.",
         },
         { type: "image_url", image_url: { url: image } },
       ],
@@ -140,7 +153,8 @@ Para a placa devolva só letras e números (ex: ABC1D23).`,
   result.marca = result.marca || "";
   result.modelo = result.modelo || "";
   result.cor = result.cor || "";
-  result.categoria = result.categoria || "carro";
+  const catRaw = String(result.categoria || "").toLowerCase().trim();
+  result.categoria = ["carro", "moto", "caminhonete", "van"].includes(catRaw) ? catRaw : (CATEGORY_PT[catRaw] || "");
   return result;
 }
 
@@ -180,13 +194,13 @@ serve(async (req) => {
       marca: alpr?.marca || "",
       modelo: alpr?.modelo || "",
       cor: alpr?.cor || "",
-      categoria: alpr?.categoria || "carro",
+      categoria: alpr?.categoria || "",
       confianca: alpr?.placa ? "alta" : "baixa",
       source: alpr?.placa ? "plate-recognizer" : "ai",
     };
 
-    // Completa somente o que o ALPR não trouxe, usando a própria foto.
-    const faltaDados = !result.placa || !result.modelo || !result.cor;
+    // Completa somente o que o ALPR não trouxe (inclusive moto x carro), usando a própria foto.
+    const faltaDados = !result.placa || !result.modelo || !result.cor || !result.categoria;
     if (faltaDados) {
       try {
         const ai = await identifyWithAI(image, alpr?.placa || placa || null);
@@ -196,7 +210,7 @@ serve(async (req) => {
           marca: result.marca || ai.marca || "",
           modelo: result.modelo || ai.modelo || "",
           cor: result.cor || ai.cor || "",
-          categoria: alpr?.categoria || ai.categoria || "carro",
+          categoria: result.categoria || ai.categoria || "",
           confianca: result.placa ? result.confianca : (ai.confianca || "baixa"),
           source: alpr?.placa ? "plate-recognizer+ai" : "ai",
         };
