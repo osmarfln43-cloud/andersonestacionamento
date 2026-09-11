@@ -56,8 +56,13 @@ export default function Entrada() {
         if (data.placa && data.placa.length >= 6) { setPlaca(data.placa.toUpperCase()); lastSearchedPlateRef.current = data.placa.toUpperCase(); }
         if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
         if (data.cor) setCor(data.cor);
-        setCategoria(normalizeCategoria(data.categoria));
-        toast({ title: "🤖 IA identificou!", description: `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}` });
+        if (data.categoria) setCategoria(normalizeCategoria(data.categoria));
+        toast({
+          title: data.categoria ? "🤖 IA identificou!" : "🤖 Placa lida",
+          description: data.categoria
+            ? `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}`
+            : "Não deu para ver se é moto ou carro — confirme no campo TIPO.",
+        });
       }
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
     finally { setAiLoading(false); }
