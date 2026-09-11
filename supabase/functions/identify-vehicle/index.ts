@@ -23,12 +23,19 @@ const COLOR_PT: Record<string, string> = {
 };
 
 const CATEGORY_PT: Record<string, string> = {
-  Car: "carro", Sedan: "carro", Hatchback: "carro", Wagon: "carro", Coupe: "carro",
-  SUV: "carro", "SUV/Crossover": "carro",
-  Motorcycle: "moto", Bicycle: "moto",
-  "Pickup Truck": "caminhonete", Truck: "caminhonete",
-  Van: "van", "Minivan": "van", Bus: "van",
+  car: "carro", sedan: "carro", hatchback: "carro", wagon: "carro", coupe: "carro",
+  suv: "carro", "suv/crossover": "carro", "big truck": "caminhonete",
+  motorcycle: "moto", motorbike: "moto", scooter: "moto", bicycle: "moto",
+  "pickup truck": "caminhonete", truck: "caminhonete",
+  van: "van", minivan: "van", bus: "van",
 };
+
+/** Traduz o tipo do ALPR; devolve "" quando o tipo não veio ou não é confiável. */
+function mapVehicleType(type?: string | null, score?: number | null): string {
+  if (!type) return "";
+  if (typeof score === "number" && score < 0.25) return "";
+  return CATEGORY_PT[String(type).toLowerCase().trim()] || "";
+}
 
 /** Plate Recognizer com MMC (make, model, color) — leitura real, sem inferência. */
 async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult | null> {
