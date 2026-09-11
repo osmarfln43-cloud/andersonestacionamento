@@ -194,13 +194,13 @@ serve(async (req) => {
       marca: alpr?.marca || "",
       modelo: alpr?.modelo || "",
       cor: alpr?.cor || "",
-      categoria: alpr?.categoria || "carro",
+      categoria: alpr?.categoria || "",
       confianca: alpr?.placa ? "alta" : "baixa",
       source: alpr?.placa ? "plate-recognizer" : "ai",
     };
 
-    // Completa somente o que o ALPR não trouxe, usando a própria foto.
-    const faltaDados = !result.placa || !result.modelo || !result.cor;
+    // Completa somente o que o ALPR não trouxe (inclusive moto x carro), usando a própria foto.
+    const faltaDados = !result.placa || !result.modelo || !result.cor || !result.categoria;
     if (faltaDados) {
       try {
         const ai = await identifyWithAI(image, alpr?.placa || placa || null);
@@ -210,7 +210,7 @@ serve(async (req) => {
           marca: result.marca || ai.marca || "",
           modelo: result.modelo || ai.modelo || "",
           cor: result.cor || ai.cor || "",
-          categoria: alpr?.categoria || ai.categoria || "carro",
+          categoria: result.categoria || ai.categoria || "",
           confianca: result.placa ? result.confianca : (ai.confianca || "baixa"),
           source: alpr?.placa ? "plate-recognizer+ai" : "ai",
         };
