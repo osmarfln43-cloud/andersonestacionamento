@@ -92,7 +92,7 @@ export default function BarcodeScanner({ open, onClose, onDetected }: Props) {
         const hints = new Map<DecodeHintType, unknown>();
         hints.set(DecodeHintType.POSSIBLE_FORMATS, FORMATS);
         hints.set(DecodeHintType.TRY_HARDER, true);
-        const reader = new BrowserMultiFormatReader(hints as any, 250);
+        const reader = new BrowserMultiFormatReader(hints as any, { delayBetweenScanAttempts: 200 });
         const controls = await reader.decodeFromStream(stream, videoRef.current!, (result) => {
           if (result) finish(result.getText());
         });
