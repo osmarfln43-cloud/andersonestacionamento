@@ -84,7 +84,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
             className="absolute bottom-6 text-[10px] font-mono"
             style={{ color: "hsl(0 0% 45%)" }}
           >
-            © 2026 Anderson Estacionamento — OSMARJR Sistemas
+            © 2026 Anderson Estacionamento — Fenix Systens
           </motion.p>
         </motion.div>
       )}

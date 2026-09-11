@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
-  FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X
+  FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X, BarChart3
 } from "lucide-react";
 
 const navItems = [
@@ -33,6 +33,7 @@ const navItems = [
   { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos", fKey: "F10", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
   { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard", fKey: "F11", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
   { title: "Admin", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F12", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
+  { title: "Gráficos", url: "/graficos", icon: BarChart3, perm: "graficos", fKey: "", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -98,7 +99,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 z-40">
         <div className="flex items-center gap-2 shrink-0">
           <img src={logoImg} alt="Logo" className="h-7 w-7 rounded-sm object-cover" />
-          <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">OSMARJR SISTEMAS</span>
+          <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">FENIX SYSTENS</span>
         </div>
 
         <span className="text-xs text-white/50 hidden md:block">›</span>
@@ -194,7 +195,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         {/* Row 2 */}
         <div className="flex gap-0.5 px-1 pb-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
-          {visibleItems.slice(6, 12).map((item) => {
+          {visibleItems.slice(6).map((item) => {
             const isActive = location.pathname === item.url;
             return (
               <button
@@ -212,8 +213,21 @@ export function AppLayout({ children }: AppLayoutProps) {
       </nav>
 
       {/* Footer */}
-      <footer className="pdv-header shrink-0 py-1.5 px-4 text-center text-[9px] text-white/40">
-        <p>© 2026 Anderson Estacionamentos — Desenvolvimento ® OSMARJR Sistemas</p>
+      <footer className="pdv-header shrink-0 py-1.5 px-4 text-center text-[9px] leading-relaxed text-white/40">
+        <p>
+          Desenvolvimento{' '}
+          <a
+            href="https://fenixsystens.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold underline-offset-2 transition-colors hover:text-yellow-300 hover:underline focus-visible:text-yellow-300"
+          >
+            fenixsystens.com.br
+          </a>{' '}
+          by osmarjr sistemas
+        </p>
+        <p>Copyright Todos os Direitos Reservados</p>
+        <p>© 2026 Anderson Estacionamentos</p>
       </footer>
 
       <BackToTopButton />
