@@ -213,21 +213,23 @@ export function AppLayout({ children }: AppLayoutProps) {
       </nav>
 
       {/* Footer */}
-      <footer className="pdv-header shrink-0 py-1.5 px-4 text-center text-[9px] leading-relaxed text-white/40">
-        <p>
-          Desenvolvimento{' '}
-          <a
-            href="https://fenixsystens.com.br"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold underline-offset-2 transition-colors hover:text-yellow-300 hover:underline focus-visible:text-yellow-300"
-          >
-            fenixsystens.com.br
-          </a>{' '}
-          by osmarjr sistemas
-        </p>
-        <p>Copyright Todos os Direitos Reservados</p>
-        <p>© 2026 Anderson Estacionamentos</p>
+      <footer className="pdv-header shrink-0 py-1.5 px-2 text-[8px] leading-relaxed text-white/40">
+        <div className="grid grid-cols-3 gap-2 items-center">
+          <p className="text-left break-words">
+            Desenvolvimento{' '}
+            <a
+              href="https://fenixsystens.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold underline-offset-2 transition-colors hover:text-yellow-300 hover:underline focus-visible:text-yellow-300"
+            >
+              fenixsystens.com.br
+            </a>{' '}
+            by osmarjr sistemas
+          </p>
+          <p className="text-center break-words">Copyright Todos os Direitos Reservados</p>
+          <p className="text-right break-words">© 2026 Anderson Estacionamentos</p>
+        </div>
       </footer>
 
       <BackToTopButton />
