@@ -72,6 +72,7 @@ async function readWithPlateRecognizer(imageBase64: string): Promise<AlprResult 
     const mmc = Array.isArray(best?.model_make) ? best.model_make[0] : null;
     const colorRaw = Array.isArray(best?.color) ? best.color[0]?.color : null;
     const vehicleType = best?.vehicle?.type as string | undefined;
+    const vehicleScore = best?.vehicle?.score as number | undefined;
 
     const marca = mmc?.make ? String(mmc.make).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
     const modelo = mmc?.model ? String(mmc.model).replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
