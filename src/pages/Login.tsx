@@ -193,7 +193,7 @@ export default function Login() {
         </form>
 
         <p className="text-center text-[10px] text-muted-foreground/50 font-mono">
-          © 2026 Anderson Estacionamento — OSMARJR Sistemas
+          © 2026 Anderson Estacionamento — Fenix Systens
         </p>
       </div>
     </div>

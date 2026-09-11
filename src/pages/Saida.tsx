@@ -203,6 +203,26 @@ export default function Saida() {
           </div>
         )}
 
+        {(displayData as any)?.foto_url && (
+          <div className="glass-card p-4 space-y-2">
+            <Label className="stat-label text-[11px]">Placa lida na entrada</Label>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <img
+                src={(displayData as any).foto_url}
+                alt={`Placa ${(displayData as any).placa} registrada na entrada`}
+                className="w-full sm:w-56 rounded-lg border border-border object-cover"
+                loading="lazy"
+              />
+              <div className="text-center sm:text-left space-y-1">
+                <p className="font-mono text-2xl font-bold tracking-widest">{(displayData as any).placa}</p>
+                <p className="text-xs text-muted-foreground">
+                  Entrada: {new Date((displayData as any).entrada).toLocaleString('pt-BR')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
 
 
 
