@@ -101,8 +101,13 @@ async function identifyWithAI(image: string, placa: string | null): Promise<any>
       role: "system",
       content: `Você lê placas brasileiras e identifica veículos (carros e motos) em fotos.
 Use SOMENTE o que estiver visível na imagem. Nunca invente marca, modelo ou cor: se não estiver claro na foto, devolva string vazia.
+A categoria é OBRIGATÓRIA e deve ser decidida pela imagem, nunca pelo texto da placa:
+- "moto" quando houver duas rodas, guidão, garupa, escapamento lateral, ou quando a placa for pequena/quadrada montada atrás sem para-choque;
+- "carro" quando houver quatro rodas, para-choque, faróis do carro, placa retangular larga;
+- "caminhonete" para picapes com caçamba; "van" para furgões e micro-ônibus.
+Se a imagem realmente não permitir decidir, use categoria "" (vazio).
 Responda SEMPRE apenas este JSON:
-{"placa":"","marca":"","modelo":"","cor":"","categoria":"carro|moto|caminhonete|van","confianca":"alta|media|baixa"}
+{"placa":"","marca":"","modelo":"","cor":"","categoria":"carro|moto|caminhonete|van|","confianca":"alta|media|baixa"}
 Para a placa devolva só letras e números (ex: ABC1D23).`,
     },
     {
