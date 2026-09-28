@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -99,6 +99,7 @@ const AppRoutes = () => (
 );
 
 const App = () => {
+  const Router = window.location.hostname === 'appassets.androidplatform.net' ? HashRouter : BrowserRouter;
   const [showSplash, setShowSplash] = useState(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     const hasSeenSplash = sessionStorage.getItem('mepark-splash-seen');
@@ -117,12 +118,12 @@ const App = () => {
           <Toaster />
           <Sonner />
           {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-          <BrowserRouter>
+          <Router>
             <RecoveryRedirect />
             <ScrollToTopOnNavigate />
             <AppRoutes />
             <InstallPWA />
-          </BrowserRouter>
+          </Router>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
