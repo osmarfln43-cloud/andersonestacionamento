@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm run build -- --mode android
       - name: Bundle web app in Android assets
         run: |
