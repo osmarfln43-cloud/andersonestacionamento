@@ -4,9 +4,14 @@ import android.app.Activity;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.content.Intent;
+import android.content.ContentValues;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.Environment;
 import android.os.RemoteException;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
@@ -25,12 +30,17 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends Activity {
     private static final String HOME = "https://appassets.androidplatform.net/assets/index.html";
     private WebView webView;
     private ValueCallback<Uri[]> fileCallback;
     private SunmiPrinterService printer;
+    private byte[] pendingPdf;
+    private String pendingPdfName;
     private final InnerPrinterCallback printerConnection = new InnerPrinterCallback() {
         @Override protected void onConnected(SunmiPrinterService service) { printer = service; }
         @Override protected void onDisconnected() { printer = null; }
@@ -72,6 +82,23 @@ public class MainActivity extends Activity {
                 if (!HOME.equals(webView.getUrl().split("#")[0])) return;
                 runOnUiThread(() -> printReceipt(payload));
             }
+            @JavascriptInterface public void savePdf(String name, String base64) {
+                runOnUiThread(() -> {
+                    if (!HOME.equals(webView.getUrl().split("#")[0])) return;
+                    try {
+                        if (base64.length() > 20_000_000) throw new IllegalArgumentException("PDF muito grande");
+                        byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                        if (bytes.length < 5 || bytes[0] != '%' || bytes[1] != 'P' || bytes[2] != 'D' || bytes[3] != 'F')
+                            throw new IllegalArgumentException("Arquivo PDF inválido");
+                        String safeName = name.matches("[a-zA-Z0-9_.-]+\\.pdf") ? name : "relatorio-anderson.pdf";
+                        if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            pendingPdf = bytes;
+                            pendingPdfName = safeName;
+                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 73);
+                        } else savePdfInDownloads(safeName, bytes);
+                    } catch (Exception e) { show("Falha ao preparar PDF: " + e.getMessage()); }
+                });
+            }
         }, "AndersonPOS");
         setContentView(webView);
         try { InnerPrinterManager.getInstance().bindService(this, printerConnection); }
@@ -87,6 +114,49 @@ public class MainActivity extends Activity {
             fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
             fileCallback = null;
         }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 73) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && pendingPdf != null)
+                savePdfInDownloads(pendingPdfName, pendingPdf);
+            else show("Permissão para salvar em Downloads negada");
+            pendingPdf = null;
+            pendingPdfName = null;
+        }
+    }
+
+    private void savePdfInDownloads(String name, byte[] bytes) {
+        new Thread(() -> {
+            Uri uri = null;
+            try {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+                    values.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                    values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Anderson Estacionamento");
+                    values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                    uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                    if (uri == null) throw new Exception("Downloads indisponível");
+                    try (OutputStream stream = getContentResolver().openOutputStream(uri)) {
+                        if (stream == null) throw new Exception("Não foi possível abrir o arquivo");
+                        stream.write(bytes);
+                    }
+                    values.clear();
+                    values.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    getContentResolver().update(uri, values, null, null);
+                } else {
+                    File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Anderson Estacionamento");
+                    if (!folder.exists() && !folder.mkdirs()) throw new Exception("Não foi possível criar a pasta Downloads");
+                    try (OutputStream stream = new FileOutputStream(new File(folder, name))) { stream.write(bytes); }
+                }
+                show("PDF salvo em Downloads/Anderson Estacionamento/" + name);
+            } catch (Exception e) {
+                if (uri != null) getContentResolver().delete(uri, null, null);
+                show("Falha ao salvar PDF: " + e.getMessage());
+            }
+        }).start();
     }
 
     private String date(String value) {
