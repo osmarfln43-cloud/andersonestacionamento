@@ -293,8 +293,17 @@ export default function Relatorios() {
       drawText(config?.mensagem_comprovante || 'ANDERSON ESTACIONAMENTOS AGRADECE A PREFERÊNCIA', margin, y, 7, 'bold', [100, 100, 100]);
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(160, 160, 160); doc.text(`Página ${i} de ${totalPages}`, w - margin, 290, { align: 'right' }); }
-      doc.save(`relatorio-${periodo}-${new Date().toISOString().slice(0, 10)}.pdf`);
-      toast({ title: '✓ Relatório exportado', description: 'PDF gerado com sucesso' });
+      const filename = `relatorio-${periodo}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const pos = (window as Window & { AndersonPOS?: { savePdf?: (name: string, base64: string) => void } }).AndersonPOS;
+      if (typeof pos?.savePdf === 'function') {
+        const base64 = doc.output('datauristring').split(',')[1];
+        if (!base64) throw new Error('Não foi possível preparar o arquivo PDF.');
+        pos.savePdf(filename, base64);
+        toast({ title: 'Salvando relatório', description: 'Confira a confirmação do Android na pasta Downloads.' });
+      } else {
+        doc.save(filename);
+        toast({ title: 'Download iniciado', description: 'Confira a pasta Downloads ou o local definido no navegador.' });
+      }
     } catch (err: any) {
       toast({ title: 'Erro ao exportar', description: err.message, variant: 'destructive' });
     } finally { setExporting(false); }
