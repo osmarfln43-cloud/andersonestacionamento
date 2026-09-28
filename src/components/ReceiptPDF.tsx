@@ -8,6 +8,7 @@ export interface ReceiptData {
   modelo: string;
   cor: string;
   tipo_cliente: string;
+  categoria?: string;
   entrada: string;
   saida?: string;
   tempoTotal?: string;
