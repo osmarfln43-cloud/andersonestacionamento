@@ -108,7 +108,8 @@ public class MainActivity extends Activity {
             printer.printText("ANDERSON ESTACIONAMENTO\n", null);
             printer.printText("--------------------------------\n", null);
             printer.printText("TICKET: " + ticket + "\nPLACA: " + plate + "\n", null);
-            printer.printText("TIPO: " + d.optString("tipo_cliente", "Avulso") + "\n", null);
+            printer.printText("TIPO: " + ("moto".equals(d.optString("categoria")) ? "Moto" : "Carro") + "\n", null);
+            printer.printText("CLIENTE: " + d.optString("tipo_cliente", "Avulso") + "\n", null);
             printer.printText("MODELO: " + d.optString("modelo", "N/I") + "\n", null);
             printer.printText("ENTRADA: " + date(d.optString("entrada", "")) + "\n", null);
             if (d.has("saida")) {
