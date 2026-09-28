@@ -2,7 +2,7 @@ const { app, BrowserWindow, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const APP_URL = 'https://estacionamentoanderson.online/';
+const APP_URL = 'https://andersonestacionamento.online/';
 const APP_ORIGIN = new URL(APP_URL).origin;
 
 app.whenReady().then(() => {
