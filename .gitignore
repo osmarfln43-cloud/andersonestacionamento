@@ -26,3 +26,6 @@ android/app/src/main/assets/
 *.njsproj
 *.sln
 *.sw?
+desktop/icon.ico
+desktop/node_modules/
+desktop/release/
