@@ -1,6 +1,6 @@
 import { ArrowRight, Eye, EyeOff, Mail } from "lucide-react";
 import brandLogo from "@/assets/anderson-logo.png.asset.json";
-import brandIcon from "@/assets/anderson-icon.png.asset.json";
+import brandIcon from "@/assets/anderson-icon-v2.png.asset.json";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";

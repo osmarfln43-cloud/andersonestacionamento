@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import brandLogo from "@/assets/anderson-logo.png.asset.json";
-import brandIcon from "@/assets/anderson-icon.png.asset.json";
+import brandIcon from "@/assets/anderson-icon-v2.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 

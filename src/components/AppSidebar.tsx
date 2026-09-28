@@ -3,7 +3,7 @@ import {
   FileText, Printer, Settings, Wallet, ChevronLeft,
   ChevronRight, ParkingCircle, Sparkles, ShieldCheck, PiggyBank
 } from "lucide-react";
-import brandIcon from "@/assets/anderson-icon.png.asset.json";
+import brandIcon from "@/assets/anderson-icon-v2.png.asset.json";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";

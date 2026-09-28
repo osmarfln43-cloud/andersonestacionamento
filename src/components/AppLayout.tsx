@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import brandLogo from "@/assets/anderson-logo.png.asset.json";
-import brandIcon from "@/assets/anderson-icon.png.asset.json";
+import brandIcon from "@/assets/anderson-icon-v2.png.asset.json";
 import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
 import { BackToTopButton } from "@/components/ScrollToTop";
