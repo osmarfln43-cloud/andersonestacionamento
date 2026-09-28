@@ -8,8 +8,8 @@ android {
         applicationId 'br.com.andersonestacionamento.pos'
         minSdk 23
         targetSdk 28
-        versionCode 2
-        versionName '1.1.0-piloto'
+        versionCode 3
+        versionName '1.2.0-piloto'
     }
     buildTypes { release { minifyEnabled false } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
