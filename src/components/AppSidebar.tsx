@@ -3,7 +3,7 @@ import {
   FileText, Printer, Settings, Wallet, ChevronLeft,
   ChevronRight, ParkingCircle, Sparkles, ShieldCheck, PiggyBank
 } from "lucide-react";
-import brandIcon from "@/assets/anderson-icon-v2.png.asset.json";
+import brandIcon from "@/assets/anderson-icon.png";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
@@ -98,7 +98,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 pb-2">
         <div className="flex items-center gap-3">
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden">
-            <img src={brandIcon.url} alt="Anderson Estacionamento" className="h-10 w-10 object-contain" />
+            <img src={brandIcon} alt="Anderson Estacionamento" className="h-10 w-10 object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col min-w-0">

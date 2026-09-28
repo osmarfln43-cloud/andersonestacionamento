@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import splashLogo from "@/assets/anderson-logo.png.asset.json";
+import splashLogo from "@/assets/anderson-logo.png";
 
 export function SplashScreen({ onFinish }: { onFinish: () => void }) {
   const [visible, setVisible] = useState(true);
@@ -49,7 +49,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
           />
 
           <motion.img
-            src={splashLogo.url}
+            src={splashLogo}
             alt="Anderson Estacionamento"
             className="w-72 sm:w-[26rem] max-w-[86vw]"
             initial={{ scale: 0.7, opacity: 0 }}
