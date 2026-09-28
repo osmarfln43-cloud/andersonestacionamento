@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import watermarkLogo from "@/assets/watermark-logo.png";
+import brandLogo from "@/assets/anderson-logo.png";
+import brandIcon from "@/assets/anderson-icon.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
-import logoImg from "@/assets/logo.png";
 import { BackToTopButton } from "@/components/ScrollToTop";
 import {
   AlertDialog,
@@ -98,7 +98,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Top Header Bar - dark green like PARKEE */}
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 z-40">
         <div className="flex items-center gap-2 shrink-0">
-          <img src={logoImg} alt="Logo" className="h-7 w-7 rounded-sm object-cover" />
+          <img src={brandIcon} alt="Anderson Estacionamento" className="h-8 w-9 object-contain" />
           <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">FENIX SYSTENS</span>
         </div>
 
@@ -167,7 +167,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content */}
       <main className="app-scroll-area relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 pb-8">
-          <img src={watermarkLogo} alt="" className="w-[350px] h-[350px] object-contain opacity-[0.06]" />
+          <img src={brandLogo} alt="" className="w-[420px] max-w-[72vw] object-contain opacity-[0.06]" />
         </div>
         <div className="relative z-10 mx-auto w-full max-w-[1600px] min-h-full p-3 md:p-4">
           {children}
