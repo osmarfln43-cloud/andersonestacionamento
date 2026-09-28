@@ -301,7 +301,7 @@ export default function Relatorios() {
   }, [filtrados, finalizados, faturamento, ticketMedio, pixTotal, dinheiroTotal, pixCount, dinheiroCount, carrosCount, motosCount, chartRef, periodo, customDe, customAte, config, toast]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 overflow-x-hidden">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display flex items-center gap-3">
@@ -358,7 +358,7 @@ export default function Relatorios() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 min-w-0">
         {[
           { icon: Car, label: 'Total', value: filtrados.length, color: 'text-primary' },
           { icon: Car, label: 'Finalizadas', value: finalizados.length, color: 'text-accent' },
@@ -369,21 +369,21 @@ export default function Relatorios() {
           { icon: TrendingUp, label: 'Ticket Médio', value: `R$ ${ticketMedio.toFixed(2)}`, color: 'text-foreground' },
           { icon: DollarSign, label: 'PIX / Dinheiro', value: `${pixCount}/${dinheiroCount}`, color: 'text-primary' },
         ].map((s) => (
-          <div key={s.label} className="glass-card p-4">
+          <div key={s.label} className="glass-card p-3 min-w-0">
             <div className="flex items-center gap-1.5 mb-1"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /><p className="stat-label text-[10px]">{s.label}</p></div>
-            <p className={`stat-value text-lg ${s.color}`}>{s.value}</p>
+            <p className={`stat-value text-base sm:text-lg break-words ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Resumo de Ganhos por Período */}
       {resumoGanhos && (
-        <div className="glass-card p-6">
+        <div className="glass-card p-3 sm:p-6 min-w-0">
           <h3 className="section-title mb-5 flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-accent" />
             💰 Resumo Total de Ganhos
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+          <div className="grid grid-cols-1 min-[440px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4 min-w-0">
             {[
               { label: 'Hoje (Diário)', key: 'hoje', icon: '📅' },
               { label: 'Mês Atual', key: 'mesAtual', icon: '🗓️' },
@@ -393,12 +393,12 @@ export default function Relatorios() {
             ].map((p) => {
               const data = resumoGanhos[p.key];
               return (
-                <div key={p.key} className="rounded-xl border-2 border-border bg-secondary/30 p-4 space-y-2">
+                <div key={p.key} className="rounded-xl border-2 border-border bg-secondary/30 p-3 space-y-2 min-w-0">
                   <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{p.icon} {p.label}</p>
-                  <p className="text-xl font-display font-bold text-accent">
+                  <p className="text-lg sm:text-xl font-display font-bold text-accent break-words">
                     R$ {data.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
                     <span>{data.count} saídas</span>
                     <span>•</span>
                     <span>PIX: R${data.pix.toFixed(0)}</span>
@@ -409,12 +409,12 @@ export default function Relatorios() {
               );
             })}
           </div>
-          <div className="rounded-xl bg-accent/5 border-2 border-accent/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="rounded-xl bg-accent/5 border-2 border-accent/20 p-3 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 min-w-0">
             <div>
               <p className="text-sm font-semibold text-muted-foreground">VALOR TOTAL DE GANHOS (Último Ano)</p>
               <p className="text-xs text-muted-foreground mt-0.5">Soma de todas as saídas finalizadas nos últimos 12 meses</p>
             </div>
-            <p className="text-3xl font-display font-bold text-accent">
+            <p className="text-xl sm:text-3xl font-display font-bold text-accent break-words max-w-full">
               R$ {resumoGanhos.ultimoAno.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
