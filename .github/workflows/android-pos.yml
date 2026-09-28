@@ -16,12 +16,16 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
       - run: npm run build -- --mode android
       - name: Bundle web app in Android assets
         run: |
           mkdir -p android/app/src/main/assets
           cp -R dist/. android/app/src/main/assets/
+      - name: Prepare launcher icon
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-nodpi
+          base64 --decode android/launcher-icon.png.base64 > android/app/src/main/res/mipmap-nodpi/ic_launcher.png
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
