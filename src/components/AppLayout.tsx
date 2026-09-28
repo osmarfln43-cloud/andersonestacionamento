@@ -14,17 +14,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LayoutDashboard, LogIn, LogOut, CalendarCheck, FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, LogIn, LogOut, CalendarCheck, FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 
 const navItems = [
   { title: "Entrada", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F1" },
   { title: "Saída", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2" },
+  { title: "Home", url: "/", icon: Home, perm: "dashboard", fKey: "F8" },
   { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F3" },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F4" },
   { title: "Comprovantes", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F5" },
   { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6" },
   { title: "Gráficos", url: "/graficos", icon: BarChart3, perm: "graficos", fKey: "F7" },
-  { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard", fKey: "F8" },
   { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9" },
   { title: "Administração", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F10" },
 ];
@@ -52,6 +52,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const roleLabel = roleLabels[role] || role.toUpperCase();
 
   const visibleItems = navItems.filter(item => hasPermission(role, item.perm));
+
+  const openPage = (url: string) => {
+    navigate(url);
+    setMobileMenuOpen(false);
+    setAdminOpen(false);
+    if (url === '/') requestAnimationFrame(() => document.querySelector('.app-scroll-area')?.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
 
   const [horaAtual, setHoraAtual] = useState(() =>
     new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -135,7 +142,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               return (
                 <button
                   key={item.url}
-                  onClick={() => { navigate(item.url); setMobileMenuOpen(false); }}
+                  onClick={() => openPage(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-colors rounded-sm ${
                     isActive ? 'bg-white/20 text-yellow-300' : 'text-white hover:bg-white/10'
                   }`}
@@ -170,7 +177,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <nav className="shrink-0 bg-slate-100 px-3 pt-2 pb-1 max-h-[48dvh] overflow-y-auto" aria-label="Ações do estacionamento">
         <div className="grid grid-cols-2 gap-2">
           {visibleItems.slice(0, 2).map((item) => (
-            <button key={item.url} onClick={() => navigate(item.url)}
+            <button key={item.url} onClick={() => openPage(item.url)}
               className={`min-h-[72px] rounded-xl flex items-center justify-center gap-2 text-lg font-black text-white ${item.url === '/entrada' ? 'bg-red-600' : 'bg-green-600'}`}>
               <item.icon className="h-6 w-6" /> {item.title.toUpperCase()}
             </button>
@@ -184,7 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </button>
             {adminOpen && <div className="grid grid-cols-2 gap-2 py-2">
               {visibleItems.slice(2).map((item) => (
-                <button key={item.url} onClick={() => { navigate(item.url); setAdminOpen(false); }}
+                <button key={item.url} onClick={() => openPage(item.url)}
                   className="min-h-[48px] rounded-lg bg-white border border-slate-300 text-slate-900 text-sm font-semibold px-2">
                   {item.title}
                 </button>
