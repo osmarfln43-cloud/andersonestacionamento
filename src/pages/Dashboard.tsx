@@ -1,7 +1,8 @@
 import { Car, LogIn, LogOut, DollarSign, Clock, TrendingUp, Users, Percent, CalendarCheck, Banknote, CreditCard, Flame } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMovimentacoesAtivas, useMovimentacoesHoje, useMensalistas, useMovimentacoesFinalizadasHoje } from "@/hooks/useDatabase";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -29,6 +30,23 @@ function StatCard({ icon: Icon, label, value, color }: {
 }
 
 export default function Dashboard() {
+  const { profile, user } = useAuth();
+  const [today, setToday] = useState(() => new Date());
+
+  useEffect(() => {
+    const updateDate = () => setToday(new Date());
+    const timer = window.setInterval(updateDate, 60_000);
+    document.addEventListener('visibilitychange', updateDate);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', updateDate);
+    };
+  }, []);
+
+  const userName = profile?.nome?.trim() || user?.user_metadata?.nome?.trim() || 'Usuário';
+  const currentDate = today.toLocaleDateString('pt-BR', {
+    timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric',
+  });
   const { data: veiculosAtivos = [] } = useMovimentacoesAtivas();
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
   const { data: mensalistas = [] } = useMensalistas();
@@ -144,7 +162,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-xl font-bold font-mono uppercase tracking-wider text-destructive">Gerenciador</h1>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h1 className="text-xl font-bold font-mono uppercase tracking-wider text-destructive">Gerenciador</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-foreground">
+          <span className="max-w-[180px] truncate sm:max-w-[280px]" title={userName}>Usuário: {userName}</span>
+          <time className="whitespace-nowrap tabular-nums" dateTime={today.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })}>{currentDate}</time>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {stats.map((s, i) => <StatCard key={i} {...s} />)}
