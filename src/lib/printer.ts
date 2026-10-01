@@ -2,10 +2,19 @@
 
 export interface PrinterConfig {
   name: string;
-  type: 'usb' | 'browser';
+  type: 'usb' | 'bluetooth' | 'browser';
   paperWidth: '58mm' | '80mm';
   vendorId?: number;
   productId?: number;
+  bluetoothId?: string;
+  serviceUUID?: string;
+  characteristicUUID?: string;
+}
+
+export interface BluetoothPrinterConnection {
+  device: any;
+  serviceUUID: string;
+  characteristicUUID: string;
 }
 
 const THERMAL_PRINTER_FILTERS = [
@@ -27,9 +36,23 @@ const THERMAL_PRINTER_FILTERS = [
 ];
 
 let connectedDevice: any = null;
+let connectedBluetoothDevice: any = null;
+let bluetoothWriteCharacteristic: any = null;
+
+const BLUETOOTH_PRINTER_SERVICES = [
+  '0000ff00-0000-1000-8000-00805f9b34fb',
+  '000018f0-0000-1000-8000-00805f9b34fb',
+  '0000ae30-0000-1000-8000-00805f9b34fb',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+];
 
 export function isWebUSBSupported(): boolean {
   return 'usb' in navigator;
+}
+
+export function isWebBluetoothSupported(): boolean {
+  return 'bluetooth' in navigator;
 }
 
 export function getSavedPrinterConfig(): PrinterConfig | null {
@@ -48,6 +71,101 @@ export function savePrinterConfig(config: PrinterConfig) {
 export function clearPrinterConfig() {
   localStorage.removeItem('printer_config');
   connectedDevice = null;
+  if (connectedBluetoothDevice?.gatt?.connected) connectedBluetoothDevice.gatt.disconnect();
+  connectedBluetoothDevice = null;
+  bluetoothWriteCharacteristic = null;
+}
+
+function characteristicCanWrite(characteristic: any): boolean {
+  return Boolean(characteristic?.properties?.write || characteristic?.properties?.writeWithoutResponse);
+}
+
+async function locateBluetoothWriter(device: any, preferredService?: string, preferredCharacteristic?: string) {
+  const server = device.gatt?.connected ? device.gatt : await device.gatt?.connect();
+  if (!server) throw new Error('A impressora não oferece conexão Bluetooth para impressão.');
+
+  if (preferredService && preferredCharacteristic) {
+    try {
+      const service = await server.getPrimaryService(preferredService);
+      const characteristic = await service.getCharacteristic(preferredCharacteristic);
+      if (characteristicCanWrite(characteristic)) {
+        return { characteristic, serviceUUID: service.uuid, characteristicUUID: characteristic.uuid };
+      }
+    } catch {
+      // Redescobre o canal caso a impressora tenha sido restaurada.
+    }
+  }
+
+  const services = await server.getPrimaryServices();
+  for (const service of services) {
+    const characteristics = await service.getCharacteristics();
+    const characteristic = characteristics.find(characteristicCanWrite);
+    if (characteristic) {
+      return { characteristic, serviceUUID: service.uuid, characteristicUUID: characteristic.uuid };
+    }
+  }
+  throw new Error('Nenhum canal de impressão foi encontrado neste aparelho Bluetooth.');
+}
+
+export async function requestBluetoothPrinter(): Promise<BluetoothPrinterConnection | null> {
+  if (!isWebBluetoothSupported()) return null;
+  const device = await (navigator as any).bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: BLUETOOTH_PRINTER_SERVICES,
+  });
+  if (!device) return null;
+
+  const writer = await locateBluetoothWriter(device);
+  connectedBluetoothDevice = device;
+  bluetoothWriteCharacteristic = writer.characteristic;
+  device.addEventListener?.('gattserverdisconnected', () => {
+    bluetoothWriteCharacteristic = null;
+  });
+  return { device, serviceUUID: writer.serviceUUID, characteristicUUID: writer.characteristicUUID };
+}
+
+export async function getPairedBluetoothPrinters(): Promise<any[]> {
+  if (!isWebBluetoothSupported()) return [];
+  const bluetooth = (navigator as any).bluetooth;
+  if (typeof bluetooth.getDevices !== 'function') return [];
+  try {
+    return await bluetooth.getDevices();
+  } catch {
+    return [];
+  }
+}
+
+async function restoreBluetoothPrinter(config: PrinterConfig): Promise<any | null> {
+  if (connectedBluetoothDevice?.gatt?.connected && bluetoothWriteCharacteristic) return bluetoothWriteCharacteristic;
+  const devices = await getPairedBluetoothPrinters();
+  const device = devices.find((candidate) => candidate.id === config.bluetoothId);
+  if (!device) return null;
+  const writer = await locateBluetoothWriter(device, config.serviceUUID, config.characteristicUUID);
+  connectedBluetoothDevice = device;
+  bluetoothWriteCharacteristic = writer.characteristic;
+  return bluetoothWriteCharacteristic;
+}
+
+export async function printViaBluetooth(data: Uint8Array, config = getSavedPrinterConfig()): Promise<boolean> {
+  if (!config || config.type !== 'bluetooth') return false;
+  try {
+    const characteristic = await restoreBluetoothPrinter(config);
+    if (!characteristic) return false;
+    for (let offset = 0; offset < data.length; offset += 20) {
+      const chunk = data.slice(offset, offset + 20);
+      if (characteristic.properties?.writeWithoutResponse && characteristic.writeValueWithoutResponse) {
+        await characteristic.writeValueWithoutResponse(chunk);
+      } else {
+        await characteristic.writeValue(chunk);
+      }
+      if (offset > 0 && offset % 200 === 0) await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    return true;
+  } catch (err) {
+    console.error('[Printer] Erro na impressão Bluetooth:', err);
+    bluetoothWriteCharacteristic = null;
+    return false;
+  }
 }
 
 export async function requestUSBPrinter(): Promise<any | null> {
@@ -385,7 +503,10 @@ export async function printViaUSB(data: Uint8Array): Promise<boolean> {
   }
 }
 
-export async function printTestPage(paperWidth: '58mm' | '80mm' = '80mm'): Promise<boolean> {
+export async function printTestPage(
+  paperWidth: '58mm' | '80mm' = '80mm',
+  type: 'usb' | 'bluetooth' = 'usb',
+): Promise<boolean> {
   const testData = buildReceiptESCPOS({
     nomeEstacionamento: 'TESTE DE IMPRESSAO',
     placa: 'TST1234',
@@ -397,5 +518,5 @@ export async function printTestPage(paperWidth: '58mm' | '80mm' = '80mm'): Promi
     mensagemComprovante: 'IMPRESSORA CONFIGURADA COM SUCESSO!',
   }, paperWidth);
 
-  return printViaUSB(testData);
+  return type === 'bluetooth' ? printViaBluetooth(testData) : printViaUSB(testData);
 }
