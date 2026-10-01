@@ -1,6 +1,5 @@
 import { ArrowRight, Eye, EyeOff, Mail } from "lucide-react";
-import brandLogo from "@/assets/anderson-logo.png";
-import brandIcon from "@/assets/anderson-icon.png";
+import andersonLoginLogo from "@/assets/anderson-login-logo";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -83,17 +82,9 @@ export default function Login() {
 
   return (
     <div className="min-h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-background p-4 py-6 relative">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
-        <img src={brandLogo} alt="" className="w-[560px] max-w-[86vw] opacity-[0.06] select-none" draggable={false} />
-      </div>
-
       <div className="w-full max-w-[400px] space-y-5 relative z-10 animate-in" style={{ opacity: 0 }}>
-        <div className="text-center space-y-2">
-          <div className="h-16 w-16 rounded-sm overflow-hidden flex items-center justify-center mx-auto border-2 border-primary/30">
-            <img src={brandIcon} alt="Anderson Estacionamento" className="h-16 w-16 object-contain" />
-          </div>
-          <h1 className="text-xl font-bold font-mono text-primary uppercase tracking-wider">Anderson</h1>
-          <p className="text-xs text-muted-foreground font-mono">Estacionamento</p>
+        <div className="flex justify-center">
+          <img src={andersonLoginLogo} alt="Anderson Estacionamento" className="w-[270px] max-w-[82vw] h-auto object-contain" />
         </div>
 
         <form onSubmit={handleSubmit} className="pdv-card p-5 space-y-4">
@@ -193,9 +184,6 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-[10px] text-muted-foreground/50 font-mono">
-          © 2026 Anderson Estacionamento — Fenix Systens
-        </p>
       </div>
     </div>
   );

@@ -121,6 +121,7 @@ export default function Saida() {
             modelo: (selected as any).modelo || 'N/I',
             cor: (selected as any).cor || '',
             tipo_cliente: (selected as any).tipo_cliente,
+            categoria: (selected as any).categoria || 'carro',
             entrada: (selected as any).entrada,
             saida,
             tempoTotal: formatBillingRuleLabel(billing.regraAplicada) || (data as any)?.tempo_total || `${billing.hours}h ${billing.mins}min`,
