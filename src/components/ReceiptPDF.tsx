@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { getSavedPrinterConfig, buildReceiptESCPOS, printViaUSB } from "@/lib/printer";
+import { getSavedPrinterConfig, buildReceiptESCPOS, printViaBluetooth, printViaUSB } from "@/lib/printer";
 import BarcodeSvg from "@/components/BarcodeSvg";
 
 export interface ReceiptData {
@@ -53,8 +53,8 @@ export default function ReceiptPDF({ data, onDone }: Props) {
     const printerConfig = getSavedPrinterConfig();
     const paperWidth = printerConfig?.paperWidth ?? '80mm';
 
-    // Try USB direct printing first
-    if (printerConfig?.type === 'usb') {
+    // Try direct ESC/POS printing first for the selected connection.
+    if (printerConfig?.type === 'usb' || printerConfig?.type === 'bluetooth') {
         const escposData = buildReceiptESCPOS({
           nomeEstacionamento: data.nomeEstacionamento,
           disclaimer: data.disclaimerComprovante,
@@ -78,12 +78,14 @@ export default function ReceiptPDF({ data, onDone }: Props) {
           ticketCodigo: data.ticketCodigo,
         }, paperWidth);
 
-      const success = await printViaUSB(escposData);
+      const success = printerConfig.type === 'bluetooth'
+        ? await printViaBluetooth(escposData, printerConfig)
+        : await printViaUSB(escposData);
       if (success) {
         onDone();
         return;
       }
-      // Fall through to browser print if USB fails
+      // Fall through to browser print if the direct connection fails.
     }
 
     // Always use hidden iframe for seamless auto-print (no popups)
