@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { getSavedPrinterConfig, buildReceiptESCPOS, printViaBluetooth, printViaUSB } from "@/lib/printer";
+import { toast } from "@/hooks/use-toast";
 import BarcodeSvg from "@/components/BarcodeSvg";
 
 export interface ReceiptData {
@@ -85,6 +86,11 @@ export default function ReceiptPDF({ data, onDone }: Props) {
         onDone();
         return;
       }
+      toast({
+        title: `Falha na impressão ${printerConfig.type === 'bluetooth' ? 'Bluetooth' : 'USB'}`,
+        description: "O comprovante será aberto na impressão do navegador.",
+        variant: "destructive",
+      });
       // Fall through to browser print if the direct connection fails.
     }
 

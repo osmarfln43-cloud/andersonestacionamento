@@ -1,4 +1,4 @@
-import { Settings, Save, Printer, Usb, Wifi, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { Settings, Save, Printer, Usb, Wifi, Check, AlertCircle, RefreshCw, Bluetooth } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import pixQrFallback from "@/assets/pix-qr-fallback.jpg";
 import { Upload, ImageIcon, X } from "lucide-react";
 import {
   isWebUSBSupported, requestUSBPrinter, getConnectedUSBPrinters,
+  isWebBluetoothSupported, requestBluetoothPrinter, getPairedBluetoothPrinters,
   getSavedPrinterConfig, savePrinterConfig, clearPrinterConfig,
   printTestPage, type PrinterConfig,
 } from "@/lib/printer";
@@ -185,9 +186,12 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
   const { toast } = useToast();
   const [printerConfig, setPrinterConfig] = useState<PrinterConfig | null>(getSavedPrinterConfig());
   const [usbDevices, setUsbDevices] = useState<any[]>([]);
+  const [bluetoothDevices, setBluetoothDevices] = useState<any[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [bluetoothScanning, setBluetoothScanning] = useState(false);
   const [testing, setTesting] = useState(false);
   const webUSBAvailable = isWebUSBSupported();
+  const webBluetoothAvailable = isWebBluetoothSupported();
 
   const scanDevices = async () => {
     setScanning(true);
@@ -238,6 +242,48 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
     }
   };
 
+  const connectBluetooth = async () => {
+    if (!webBluetoothAvailable) {
+      toast({
+        title: "Bluetooth não disponível",
+        description: "Abra o sistema no Chrome ou Edge em um celular Android ou computador compatível.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBluetoothScanning(true);
+    try {
+      const connection = await requestBluetoothPrinter();
+      if (!connection) return;
+
+      const nextConfig: PrinterConfig = {
+        name: connection.device.name || 'Impressora Bluetooth',
+        type: 'bluetooth',
+        paperWidth: (form.largura_papel === '58mm' ? '58mm' : '80mm') as '58mm' | '80mm',
+        bluetoothId: connection.device.id,
+        serviceUUID: connection.serviceUUID,
+        characteristicUUID: connection.characteristicUUID,
+      };
+      savePrinterConfig(nextConfig);
+      setPrinterConfig(nextConfig);
+      setBluetoothDevices(await getPairedBluetoothPrinters());
+      toast({ title: "✓ Impressora Bluetooth pareada!", description: nextConfig.name });
+    } catch (err: any) {
+      if (err?.name === 'NotFoundError') {
+        toast({ title: "Busca cancelada", description: "Nenhuma impressora Bluetooth foi selecionada." });
+      } else {
+        toast({
+          title: "Não foi possível parear",
+          description: err?.message || "Ligue a impressora, aproxime-a e tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setBluetoothScanning(false);
+    }
+  };
+
   const useBrowserPrint = () => {
     const config: PrinterConfig = {
       name: 'Impressão via Navegador',
@@ -258,12 +304,16 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
   const testPrint = async () => {
     setTesting(true);
     try {
-      if (printerConfig?.type === 'usb') {
-        const success = await printTestPage(printerConfig.paperWidth);
+      if (printerConfig?.type === 'usb' || printerConfig?.type === 'bluetooth') {
+        const success = await printTestPage(printerConfig.paperWidth, printerConfig.type);
         if (success) {
-          toast({ title: "✓ Página de teste enviada!" });
+          toast({ title: "✓ Comprovante de teste enviado!", description: printerConfig.name });
         } else {
-          toast({ title: "Falha no teste USB", description: "Usando impressão via navegador", variant: "destructive" });
+          toast({
+            title: `Falha no teste ${printerConfig.type === 'bluetooth' ? 'Bluetooth' : 'USB'}`,
+            description: "Reconecte a impressora e tente novamente.",
+            variant: "destructive",
+          });
         }
       } else {
         // Browser print test
@@ -303,6 +353,7 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
 
   useEffect(() => {
     if (webUSBAvailable) scanDevices();
+    if (webBluetoothAvailable) getPairedBluetoothPrinters().then(setBluetoothDevices);
   }, []);
 
   return (
@@ -312,17 +363,19 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
         {printerConfig ? (
           <div className="flex items-center gap-4 p-4 rounded-xl bg-accent/5 border border-accent/20">
             <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              {printerConfig.type === 'usb' ? <Usb className="h-5 w-5 text-accent" /> : <Printer className="h-5 w-5 text-accent" />}
+              {printerConfig.type === 'usb' ? <Usb className="h-5 w-5 text-accent" /> : printerConfig.type === 'bluetooth' ? <Bluetooth className="h-5 w-5 text-accent" /> : <Printer className="h-5 w-5 text-accent" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{printerConfig.name}</p>
               <p className="text-xs text-muted-foreground">
-                {printerConfig.type === 'usb' ? 'USB Direto (ESC/POS)' : 'Via Navegador'} • Papel {printerConfig.paperWidth}
+                {printerConfig.type === 'usb' ? 'USB Direto (ESC/POS)' : printerConfig.type === 'bluetooth' ? 'Bluetooth Direto (ESC/POS)' : 'Via Navegador'} • Papel {printerConfig.paperWidth}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
-              <span className="text-xs font-medium text-accent">Conectada</span>
+              <span className="text-xs font-medium text-accent">
+                {printerConfig.type === 'bluetooth' ? 'Pareada' : printerConfig.type === 'usb' ? 'Conectada' : 'Configurada'}
+              </span>
             </div>
           </div>
         ) : (
@@ -330,7 +383,7 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
             <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
             <div>
               <p className="text-sm font-semibold">Nenhuma impressora configurada</p>
-              <p className="text-xs text-muted-foreground">Conecte uma impressora USB ou use o modo navegador</p>
+              <p className="text-xs text-muted-foreground">Conecte uma impressora Bluetooth, USB ou use o modo navegador</p>
             </div>
           </div>
         )}
@@ -363,20 +416,26 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
         </div>
       </Section>
 
-      {/* Conexão USB */}
+      {/* Conexões diretas */}
       <Section title="Conectar Impressora">
         <div className="space-y-3">
-          {webUSBAvailable ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {webUSBAvailable && (
                 <Button onClick={connectUSB} variant="outline" className="h-14 gap-2 rounded-xl text-sm">
                   <Usb className="h-5 w-5" /> Conectar USB (Plug & Play)
                 </Button>
-                <Button onClick={useBrowserPrint} variant="outline" className="h-14 gap-2 rounded-xl text-sm">
-                  <Printer className="h-5 w-5" /> Usar Impressão do Navegador
-                </Button>
-              </div>
+            )}
+            <Button onClick={connectBluetooth} variant="outline" disabled={bluetoothScanning || !webBluetoothAvailable} className="h-14 gap-2 rounded-xl text-sm">
+              <Bluetooth className={`h-5 w-5 ${bluetoothScanning ? 'animate-pulse' : ''}`} />
+              {bluetoothScanning ? 'Buscando...' : 'Buscar Bluetooth'}
+            </Button>
+            <Button onClick={useBrowserPrint} variant="outline" className="h-14 gap-2 rounded-xl text-sm">
+              <Printer className="h-5 w-5" /> Usar Impressão do Navegador
+            </Button>
+          </div>
 
+          {webUSBAvailable && (
+            <>
               {/* Discovered devices */}
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">Dispositivos USB detectados: {usbDevices.length}</p>
@@ -400,15 +459,38 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
                 </div>
               )}
             </>
-          ) : (
-            <div className="space-y-3">
+          )}
+
+          {!webUSBAvailable && (
               <div className="p-4 rounded-xl bg-warning/5 border border-warning/20">
                 <p className="text-xs text-warning font-medium">⚠️ WebUSB não disponível neste navegador</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Use Google Chrome ou Microsoft Edge para conexão USB direta. Ou use a impressão via navegador.</p>
+                <p className="text-[10px] text-muted-foreground mt-1">A conexão Bluetooth ou a impressão pelo navegador continuam disponíveis.</p>
               </div>
-              <Button onClick={useBrowserPrint} className="h-14 gap-2 rounded-xl text-sm w-full">
-                <Printer className="h-5 w-5" /> Usar Impressão do Navegador
-              </Button>
+          )}
+
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">Impressoras Bluetooth autorizadas: {bluetoothDevices.length}</p>
+            <Button variant="ghost" size="sm" onClick={connectBluetooth} disabled={bluetoothScanning || !webBluetoothAvailable} className="gap-1.5 text-xs h-8">
+              <RefreshCw className={`h-3 w-3 ${bluetoothScanning ? 'animate-spin' : ''}`} /> Buscar impressoras
+            </Button>
+          </div>
+
+          {bluetoothDevices.length > 0 && (
+            <div className="space-y-2">
+              {bluetoothDevices.map((device) => (
+                <div key={device.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border/50">
+                  <Bluetooth className="h-4 w-4 text-primary shrink-0" />
+                  <p className="text-xs font-medium truncate flex-1">{device.name || 'Impressora Bluetooth'}</p>
+                  {printerConfig?.bluetoothId === device.id && <Check className="h-4 w-4 text-accent" />}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!webBluetoothAvailable && (
+            <div className="p-4 rounded-xl bg-warning/5 border border-warning/20">
+              <p className="text-xs text-warning font-medium">Bluetooth direto indisponível neste navegador</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Use Chrome ou Edge no Android ou computador. Impressoras somente Bluetooth clássico devem usar a impressão do navegador.</p>
             </div>
           )}
         </div>
@@ -417,7 +499,7 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
       {/* Actions */}
       <div className="grid grid-cols-2 gap-3">
         <Button onClick={testPrint} variant="outline" disabled={testing} className="h-12 gap-2 rounded-xl">
-          <Printer className="h-4 w-4" /> {testing ? 'Imprimindo...' : 'Teste de Impressão'}
+          <Printer className="h-4 w-4" /> {testing ? 'Imprimindo...' : 'Imprimir Comprovante de Teste'}
         </Button>
         {printerConfig && (
           <Button onClick={disconnectPrinter} variant="outline" className="h-12 gap-2 rounded-xl text-destructive border-destructive/30 hover:bg-destructive/10">
