@@ -1,4 +1,4 @@
-// Thermal Printer Manager using WebUSB API + fallback to browser print
+// Thermal Printer Manager using WebUSB, Web Bluetooth and browser print
 
 export interface PrinterConfig {
   name: string;
@@ -508,13 +508,22 @@ export async function printTestPage(
   type: 'usb' | 'bluetooth' = 'usb',
 ): Promise<boolean> {
   const testData = buildReceiptESCPOS({
-    nomeEstacionamento: 'TESTE DE IMPRESSAO',
+    nomeEstacionamento: 'ANDERSON ESTACIONAMENTO',
+    disclaimer: 'COMPROVANTE DE TESTE BLUETOOTH',
+    diasFuncionamento: 'SEG A SEX',
+    horarioAbertura: '07:00',
+    horarioFechamento: '19:00',
     placa: 'TST1234',
-    modelo: 'TESTE',
+    modelo: 'VEICULO TESTE',
     cor: 'PRETO',
     entrada: new Date().toISOString(),
+    saida: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    tempoTotal: '1 HORA',
     tipoCliente: 'avulso',
+    formaPagamento: 'DINHEIRO',
     valorHora: 10,
+    valorTotal: 10,
+    ticketCodigo: '2610031001',
     mensagemComprovante: 'IMPRESSORA CONFIGURADA COM SUCESSO!',
   }, paperWidth);
 
