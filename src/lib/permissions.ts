@@ -16,7 +16,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
     'graficos', 'relatorios', 'comprovantes',
   ],
   operador: [
-    'entrada', 'saida', 'patio', 'comprovantes',
+    'dashboard', 'entrada', 'saida', 'patio', 'comprovantes',
   ],
   financeiro: [
     'dashboard', 'financeiro', 'caixa', 'graficos', 'relatorios', 'mensalistas',
@@ -59,7 +59,7 @@ export function canAccessRoute(role: string | undefined | null, path: string): b
 // Get the default landing page for a role
 export function getDefaultRoute(role: string | undefined | null): string {
   if (!role || role === 'admin' || role === 'gerente') return '/';
-  if (role === 'operador') return '/entrada';
+  if (role === 'operador') return '/';
   if (role === 'financeiro') return '/';
   return '/';
 }

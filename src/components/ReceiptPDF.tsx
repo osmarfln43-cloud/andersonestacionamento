@@ -9,6 +9,7 @@ export interface ReceiptData {
   modelo: string;
   cor: string;
   tipo_cliente: string;
+  categoria?: string;
   entrada: string;
   saida?: string;
   tempoTotal?: string;
@@ -50,6 +51,14 @@ export default function ReceiptPDF({ data, onDone }: Props) {
 
   const printReceipt = async () => {
     if (!data || !printRef.current) return;
+
+    // The POS build owns the integrated printer. Never fall back to a browser dialog there.
+    const nativePrinter = (window as Window & { AndersonPOS?: { printTicket: (payload: string) => void } }).AndersonPOS;
+    if (nativePrinter) {
+      nativePrinter.printTicket(JSON.stringify(data));
+      onDone();
+      return;
+    }
 
     const printerConfig = getSavedPrinterConfig();
     const paperWidth = printerConfig?.paperWidth ?? '80mm';

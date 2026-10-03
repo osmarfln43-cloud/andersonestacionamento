@@ -51,6 +51,12 @@ export default function Dashboard() {
   const { data: movimentacoesHoje = [] } = useMovimentacoesHoje();
   const { data: mensalistas = [] } = useMensalistas();
   const { data: finalizadosHoje = [] } = useMovimentacoesFinalizadasHoje();
+  const movimentosDoDia = useMemo(() => {
+    const porId = new Map([...movimentacoesHoje, ...finalizadosHoje].map(m => [m.id, m]));
+    return [...porId.values()].sort((a, b) =>
+      new Date(b.saida || b.entrada).getTime() - new Date(a.saida || a.entrada).getTime()
+    );
+  }, [movimentacoesHoje, finalizadosHoje]);
 
   const { data: movLast6Months = [] } = useQuery({
     queryKey: ['movimentacoes', 'last-6-months'],
@@ -82,7 +88,7 @@ export default function Dashboard() {
     return Object.values(months);
   }, [movLast6Months]);
 
-  const saidasHoje = movimentacoesHoje.filter(m => m.status_movimentacao === 'finalizado');
+  const saidasHoje = finalizadosHoje;
   const faturamentoHoje = saidasHoje.reduce((sum, m) => sum + (Number(m.valor_total) || 0), 0);
   const ticketMedio = saidasHoje.length > 0 ? (faturamentoHoje / saidasHoje.length).toFixed(0) : '0';
   const ocupacao = Math.min(Math.round((veiculosAtivos.length / 50) * 100), 100);
@@ -102,18 +108,22 @@ export default function Dashboard() {
       const key = `${h.toString().padStart(2, '0')}h`;
       if (hours[key]) {
         hours[key].entradas++;
-        if (m.status_movimentacao === 'finalizado') hours[key].faturamento += Number(m.valor_total) || 0;
       }
+    });
+    finalizadosHoje.forEach(m => {
       if (m.saida) {
         const sh = new Date(m.saida).getHours();
         const skey = `${sh.toString().padStart(2, '0')}h`;
-        if (hours[skey]) hours[skey].saidas++;
+        if (hours[skey]) {
+          hours[skey].saidas++;
+          hours[skey].faturamento += Number(m.valor_total) || 0;
+        }
       }
     });
     const arr = Object.values(hours);
     const maxEntradas = Math.max(...arr.map((h: any) => h.entradas), 0);
     return { hourlyData: arr, peakThreshold: Math.max(Math.ceil(maxEntradas * 0.7), 2) };
-  }, [movimentacoesHoje]);
+  }, [movimentacoesHoje, finalizadosHoje]);
 
   const paymentData = useMemo(() => {
     const pix = saidasHoje.filter(m => m.forma_pagamento === 'pix').length;
@@ -234,45 +244,34 @@ export default function Dashboard() {
       <div className="pdv-card overflow-hidden">
           <div className="flex items-center justify-between p-3 pb-2">
             <h3 className="section-title">Movimentações de Hoje</h3>
-            <span className="text-xs font-mono text-muted-foreground">
+            <span className="text-[10px] font-mono text-muted-foreground text-right">
               {new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })} — {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
-          <table className="pdv-table">
-            <thead>
-              <tr>
-                <th>Cupom</th>
-                <th>Entrada</th>
-                <th>Placa</th>
-                <th>Descrição</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movimentacoesHoje.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">Nenhuma hoje</td></tr>
-              )}
-              {movimentacoesHoje.slice(0, 12).map((m, i) => {
-                const cupomNum = movimentacoesHoje.length - i;
-                const rowColor = m.categoria === 'moto' ? 'hsl(0,72%,50%)' : 'hsl(120,55%,42%)';
-                return (
-                  <tr key={m.id} className={m.categoria === 'moto' ? 'pdv-moto-row' : 'pdv-carro-row'}>
-                    <td className="font-bold font-mono" style={{ color: rowColor }}>{String(cupomNum).padStart(4, '0')}</td>
-                    <td className="font-mono" style={{ color: rowColor }}>{new Date(m.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="font-bold text-sm font-mono">{m.placa}</td>
-                    <td className="text-sm uppercase">{(m.modelo || 'N/I').toUpperCase()} {(m.cor || '').toUpperCase()}</td>
-                    <td>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                        m.status_movimentacao === 'ativo' ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="px-2 pb-2 space-y-1">
+            {movimentosDoDia.length === 0 && <p className="text-center py-6 text-muted-foreground">Nenhuma movimentação hoje</p>}
+            {movimentosDoDia.map(m => {
+              const hora = (valor: string) => new Date(valor).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+              return (
+                <div key={m.id} className="rounded border border-border/70 bg-secondary/20 px-2 py-1.5 text-xs min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-mono font-bold text-sm">{m.placa}</span>
+                      <span className="ml-2 uppercase text-muted-foreground">{m.categoria === 'moto' ? 'Moto' : 'Carro'}</span>
+                    </div>
+                    <span className={`shrink-0 font-bold ${m.status_movimentacao === 'ativo' ? 'text-accent' : 'text-primary'}`}>
+                      {m.status_movimentacao === 'ativo' ? 'PÁTIO' : 'SAIU'}
+                    </span>
+                  </div>
+                  <p className="uppercase break-words leading-snug">{[m.modelo, m.cor].filter(Boolean).join(' • ') || 'Descrição não informada'}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] leading-snug">
+                    <span>Entrada: <strong>{hora(m.entrada)}</strong></span>
+                    <span>Saída: <strong>{m.saida ? hora(m.saida) : 'Em aberto'}</strong></span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

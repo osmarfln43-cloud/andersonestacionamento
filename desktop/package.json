@@ -1,0 +1,17 @@
+{
+  "name": "anderson-estacionamento-desktop",
+  "version": "1.6.0",
+  "private": true,
+  "description": "Anderson Estacionamento para Windows",
+  "main": "main.cjs",
+  "scripts": { "dist": "electron-builder --win portable --publish never" },
+  "devDependencies": { "electron": "^33.4.11", "electron-builder": "^26.0.12" },
+  "build": {
+    "appId": "br.com.andersonestacionamento.desktop",
+    "productName": "Anderson Estacionamento",
+    "artifactName": "Anderson-Estacionamento-Windows-${version}.${ext}",
+    "directories": { "output": "release" },
+    "files": ["main.cjs", "icon.ico", "package.json"],
+    "win": { "target": ["portable"], "icon": "icon.ico" }
+  }
+}

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import brandLogo from "@/assets/anderson-logo.png";
-import brandIcon from "@/assets/anderson-icon.png";
 import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
 import { BackToTopButton } from "@/components/ScrollToTop";
@@ -15,25 +14,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  LayoutDashboard, LogIn, LogOut, Car, Users, CarFront, CalendarCheck,
-  FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X, BarChart3
-} from "lucide-react";
+import { Home, LogIn, LogOut, CalendarCheck, FileText, Printer, Settings, Wallet, ShieldCheck, User, Menu, X, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 
 const navItems = [
-  { title: "Pátio", url: "/patio", icon: Car, perm: "patio", fKey: "F1", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
-  { title: "Saída/Fechamento", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2", bg: "hsl(50 80% 72%)", bgActive: "hsl(50 80% 62%)", textColor: "#333" },
-  { title: "Comprovantes", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F3", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
-  { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F4", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F5", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
-  { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
-  { title: "Entrada", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F7", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Clientes", url: "/clientes", icon: Users, perm: "clientes", fKey: "F8", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Veículos", url: "/veiculos", icon: CarFront, perm: "veiculos", fKey: "F10", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Gerenciador", url: "/", icon: LayoutDashboard, perm: "dashboard", fKey: "F11", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Admin", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F12", bg: "hsl(65 70% 52%)", bgActive: "hsl(65 65% 45%)", textColor: "#333" },
-  { title: "Gráficos", url: "/graficos", icon: BarChart3, perm: "graficos", fKey: "", bg: "hsl(130 40% 55%)", bgActive: "hsl(130 40% 45%)", textColor: "#fff" },
+  { title: "Entrada", url: "/entrada", icon: LogIn, perm: "entrada", fKey: "F1" },
+  { title: "Saída", url: "/saida", icon: LogOut, perm: "saida", fKey: "F2" },
+  { title: "Home", url: "/", icon: Home, perm: "dashboard", fKey: "F8" },
+  { title: "Pgto. Mensal", url: "/mensalistas", icon: CalendarCheck, perm: "mensalistas", fKey: "F3" },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, perm: "financeiro", fKey: "F4" },
+  { title: "Comprovantes", url: "/comprovantes", icon: Printer, perm: "comprovantes", fKey: "F5" },
+  { title: "Configurações", url: "/configuracoes", icon: Settings, perm: "configuracoes", fKey: "F6" },
+  { title: "Gráficos", url: "/graficos", icon: BarChart3, perm: "graficos", fKey: "F7" },
+  { title: "Relatórios", url: "/relatorios", icon: FileText, perm: "relatorios", fKey: "F9" },
+  { title: "Administração", url: "/admin", icon: ShieldCheck, perm: "admin", fKey: "F10" },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -53,11 +46,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const role = profile?.perfil || 'operador';
   const roleLabel = roleLabels[role] || role.toUpperCase();
 
   const visibleItems = navItems.filter(item => hasPermission(role, item.perm));
+
+  const openPage = (url: string) => {
+    navigate(url);
+    setMobileMenuOpen(false);
+    setAdminOpen(false);
+    if (url === '/') requestAnimationFrame(() => document.querySelector('.app-scroll-area')?.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
 
   const [horaAtual, setHoraAtual] = useState(() =>
     new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -98,7 +99,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Top Header Bar - dark green like PARKEE */}
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 z-40">
         <div className="flex items-center gap-2 shrink-0">
-          <img src={brandIcon} alt="Anderson Estacionamento" className="h-8 w-9 object-contain" />
           <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">FENIX SYSTENS</span>
         </div>
 
@@ -142,7 +142,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               return (
                 <button
                   key={item.url}
-                  onClick={() => { navigate(item.url); setMobileMenuOpen(false); }}
+                  onClick={() => openPage(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-colors rounded-sm ${
                     isActive ? 'bg-white/20 text-yellow-300' : 'text-white hover:bg-white/10'
                   }`}
@@ -174,42 +174,32 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </main>
 
-      {/* Bottom Navigation - always visible */}
-      <nav className="shrink-0">
-        {/* Row 1 */}
-        <div className="flex gap-0.5 px-1 pt-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
-          {visibleItems.slice(0, 6).map((item) => {
-            const isActive = location.pathname === item.url;
-            return (
-              <button
-                key={item.url}
-                onClick={() => navigate(item.url)}
-                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
-                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
-              >
-                <span>{item.title}</span>
-                <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
-              </button>
-            );
-          })}
+      <nav className="shrink-0 bg-slate-100 px-3 pt-2 pb-1 max-h-[48dvh] overflow-y-auto" aria-label="Ações do estacionamento">
+        <div className="grid grid-cols-2 gap-2">
+          {visibleItems.slice(0, 2).map((item) => (
+            <button key={item.url} onClick={() => openPage(item.url)}
+              className={`min-h-[72px] rounded-xl flex items-center justify-center gap-2 text-lg font-black text-white ${item.url === '/entrada' ? 'bg-red-600' : 'bg-green-600'}`}>
+              <item.icon className="h-6 w-6" /> {item.title.toUpperCase()}
+            </button>
+          ))}
         </div>
-        {/* Row 2 */}
-        <div className="flex gap-0.5 px-1 pb-1" style={{ backgroundColor: 'hsl(200 30% 88%)' }}>
-          {visibleItems.slice(6).map((item) => {
-            const isActive = location.pathname === item.url;
-            return (
-              <button
-                key={item.url}
-                onClick={() => navigate(item.url)}
-                className="flex-1 flex flex-col items-center justify-center py-2 px-1 text-[11px] font-bold uppercase tracking-wide transition-all border-2 border-black/10"
-                style={{ backgroundColor: isActive ? item.bgActive : item.bg, color: item.textColor, borderRadius: '2px' }}
-              >
-                <span>{item.title}</span>
-                <span className="text-[9px] opacity-50 mt-0.5">{item.fKey}</span>
-              </button>
-            );
-          })}
-        </div>
+        {visibleItems.slice(2).length > 0 && (
+          <div className="mt-2">
+            <button onClick={() => setAdminOpen((value) => !value)} aria-expanded={adminOpen}
+              className="w-full min-h-[52px] rounded-xl bg-slate-800 text-white text-base font-bold flex items-center justify-between px-4">
+              <span>ADMIN</span>{adminOpen ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {adminOpen && <div className="grid grid-cols-2 gap-2 py-2">
+              {visibleItems.slice(2).map((item) => (
+                <button key={item.url} onClick={() => openPage(item.url)}
+                  className="min-h-[48px] rounded-lg bg-white border border-slate-300 text-slate-900 text-sm font-semibold px-2">
+                  {item.title}
+                </button>
+              ))}
+            </div>}
+          </div>
+        )}
+        <img src={brandLogo} alt="Anderson Estacionamento" className="h-9 max-w-[150px] object-contain mx-auto mt-1" />
       </nav>
 
       {/* Footer */}

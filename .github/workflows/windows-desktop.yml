@@ -1,0 +1,28 @@
+name: Windows desktop
+on:
+  workflow_dispatch:
+  push:
+    branches: [android-pos-piloto]
+    paths: ["desktop/**", ".github/workflows/windows-desktop.yml"]
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Prepare Windows icon
+        shell: pwsh
+        run: |
+          [IO.File]::WriteAllBytes('desktop/icon.ico', [Convert]::FromBase64String((Get-Content 'desktop/icon.ico.base64' -Raw)))
+      - run: npm install --prefix desktop --no-audit --no-fund
+      - run: npm run dist --prefix desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Anderson-Estacionamento-Windows-EXE
+          path: desktop/release/*.exe
+          if-no-files-found: error

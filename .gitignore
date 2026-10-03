@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/
 *.local
 
 # Editor directories and files
@@ -22,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+desktop/icon.ico
+desktop/node_modules/
+desktop/release/

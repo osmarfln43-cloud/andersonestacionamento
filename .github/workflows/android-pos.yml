@@ -1,0 +1,41 @@
+name: Android POS piloto
+on:
+  workflow_dispatch:
+  push:
+    branches: [android-pos-piloto]
+    paths: ["android/**", "src/**", "public/**", "package*.json", "vite.config.ts", ".github/workflows/android-pos.yml"]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm run build -- --mode android
+      - name: Bundle web app in Android assets
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp -R dist/. android/app/src/main/assets/
+      - name: Prepare launcher icon
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-nodpi
+          base64 --decode android/launcher-icon.png.base64 > android/app/src/main/res/mipmap-nodpi/ic_launcher.png
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - run: gradle -p android :app:assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Anderson-Estacionamento-POS-APK-piloto
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
