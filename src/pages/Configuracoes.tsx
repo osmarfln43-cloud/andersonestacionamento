@@ -373,7 +373,9 @@ function PrinterSetup({ form, setField, save }: { form: any; setField: (k: strin
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <div className="h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
-              <span className="text-xs font-medium text-accent">Conectada</span>
+              <span className="text-xs font-medium text-accent">
+                {printerConfig.type === 'bluetooth' ? 'Pareada' : printerConfig.type === 'usb' ? 'Conectada' : 'Configurada'}
+              </span>
             </div>
           </div>
         ) : (
