@@ -146,7 +146,7 @@ export default function ResetPassword() {
           <img
             src={brandLogo}
             alt="Anderson Estacionamento"
-            className="mx-auto h-36 w-full max-w-[230px] object-contain"
+            className="mx-auto h-auto w-[230px] max-w-full object-contain"
           />
           <h1 className="text-xl font-bold font-mono text-primary uppercase tracking-wider">Redefinir senha</h1>
           <p className="text-xs text-muted-foreground font-mono">Crie uma nova senha para acessar o sistema</p>

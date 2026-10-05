@@ -91,7 +91,7 @@ export default function Login() {
           <img
             src={brandLogo}
             alt="Anderson Estacionamento"
-            className="h-36 w-full max-w-[230px] object-contain"
+            className="h-auto w-[230px] max-w-full object-contain"
           />
         </div>
 
