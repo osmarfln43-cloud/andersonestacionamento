@@ -28,6 +28,7 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import InstallPWA from "@/components/InstallPWA";
+import { PageBranding } from "@/components/PageBranding";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +119,7 @@ const App = () => {
           <Sonner />
           {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
           <BrowserRouter>
+            <PageBranding />
             <RecoveryRedirect />
             <ScrollToTopOnNavigate />
             <AppRoutes />

@@ -324,6 +324,23 @@ export function useConfiguracoes() {
   });
 }
 
+export function useBranding() {
+  return useQuery({
+    queryKey: ['identidade-visual'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('identidade_visual')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // Despesas
 export type Despesa = {
   id: string;

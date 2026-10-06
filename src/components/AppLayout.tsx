@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { hasPermission } from "@/lib/permissions";
 import { BackToTopButton } from "@/components/ScrollToTop";
 import { Button } from "@/components/ui/button";
+import { useConfiguracoes } from "@/hooks/useDatabase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const [adminOpen, setAdminOpen] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const { data: config } = useConfiguracoes();
+  const internalLogo = (config as any)?.logo_interna_url || brandIcon;
+  const systemName = (config as any)?.nome_sistema || 'Anderson Estacionamento';
 
   const role = profile?.perfil || 'operador';
   const roleLabel = roleLabels[role] || role.toUpperCase();
@@ -105,7 +109,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Top Header Bar - dark green like PARKEE */}
       <header className="pdv-header h-12 flex items-center px-3 md:px-4 gap-3 shrink-0 z-40">
         <div className="flex items-center gap-2 shrink-0">
-          <img src={brandIcon} alt="Anderson Estacionamento" className="h-8 w-9 object-contain" />
+          <img src={internalLogo} alt={systemName} className="h-8 w-9 object-contain" />
           <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider hidden sm:block">FENIX SYSTENS</span>
         </div>
 
@@ -118,14 +122,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         <div className="ml-auto flex items-center gap-3">
           <span className="text-base md:text-lg font-mono font-bold text-white tabular-nums">{horaAtual}</span>
-          <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <User className="h-4 w-4 text-white/70" />
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => signOut()}
-              className="text-xs text-white/70 hover:text-white transition-colors"
+              className="h-8 px-2 text-xs text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Sair do sistema"
             >
               Sair
-            </button>
+            </Button>
           </div>
         </div>
       </header>
