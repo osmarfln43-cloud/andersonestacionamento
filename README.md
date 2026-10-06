@@ -1,26 +1,18 @@
 # Anderson Estacionamento
 
-(.)
+Sistema de gestão de estacionamento.
 
-This project was built with [Lovable](https://lovable.dev).
+## Acessar o sistema
 
-**Live app**: https://andersonestacionamento.lovable.app
+[Entrar no sistema](https://andersonestacionamento.online/login)
 
-## Build with Lovable
+## Desenvolvimento
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/04b6f216-b9ae-4bf0-9548-ec1487cd24a6).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requisitos: Node.js e npm.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone https://github.com/osmarfln43-cloud/andersonestacionamento.git
+cd andersonestacionamento
+npm install
 npm run dev
 ```
