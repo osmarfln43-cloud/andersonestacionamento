@@ -20,10 +20,13 @@ Preparação iniciada em 05/10/2026 (Brasil). Este roteiro não indica que os da
 - O repositório não contém os registros de produção, os usuários Auth nem os arquivos do Storage.
 - Esta base de produção contém 15 migrações; main contém outras duas. O schema exportado da origem
   deve ser comparado com ambos os históricos. Não inferir o schema ativo somente pela branch web.
-- A auditoria do destino em 05/10/2026 encontrou zero tabelas públicas, zero usuários Auth,
-  nenhum bucket e nenhuma Edge Function. Nenhum dado foi importado nessa auditoria.
-- O projeto Lovable referenciado no README de main não está acessível à conta conectada.
-  O acesso à origem ou o fornecimento de uma exportação completa ainda é necessário.
+- A auditoria do destino em 06/10/2026 encontrou 11 tabelas públicas com RLS, 37 políticas,
+  37 triggers, dois buckets e quatro Edge Functions ativas. As 11 tabelas continuam sem registros
+  e Auth tem zero usuários; os dados de produção ainda não foram importados.
+- Foram enviados cinco arquivos ao bucket `vehicle-photos`. Ainda falta comparar esse conjunto com
+  a origem e conferir/copiar os objetos de `qrcode-images` e quaisquer outros arquivos.
+- O projeto Lovable de origem, `estacionamentoanderson`, pertence a outro perfil. A sessão disponível
+  não tem acesso à origem; a exportação completa do banco e de Auth ainda é necessária.
 
 ## 1. Inventariar e preservar
 
@@ -65,8 +68,11 @@ Testar a criação de registros e verificar a ausência de perfis órfãos e IDs
 
 **Permissões a revisar antes do corte:** o histórico existente permite operações amplas para
 qualquer usuário autenticado, inclusive edição do próprio perfil e exclusão de perfis.
-Controles do menu não substituem RLS. Confirmar os papéis pretendidos e testar operador/admin
-diretamente na API; não declarar que a segurança foi validada só porque o login abriu.
+Controles do menu não substituem RLS. O Advisor do destino também sinaliza que `fn_audit_log`,
+`handle_new_user` e `resolve_auth_email` são funções `SECURITY DEFINER` executáveis por `anon` e
+`authenticated`; revisar as permissões e o uso de e-mail no login por usuário. Confirmar os papéis
+pretendidos e testar operador/admin diretamente na API; não declarar que a segurança foi validada
+só porque o login abriu.
 
 ## 3. Copiar os arquivos
 
@@ -90,14 +96,15 @@ e fotos na versão de testes. Conteúdo histórico em audit_logs deve manter a e
 
 ## 4. Configurar autenticação e funções
 
-Na configuração Auth do destino:
+Na configuração Auth do destino, Site URL e redirects de produção/Preview já foram configurados.
+Antes do corte, conferir confirmação de e-mail, SMTP de produção e os provedores necessários. Hoje:
 
 - Site URL: https://andersonestacionamento.online
-- Redirect URL: https://andersonestacionamento.online/reset-password
+- Redirect URLs: domínio de produção, domínio www e URL de Preview atual.
+- Confirm email está habilitado; o login atual usa e-mail/login + senha. Google não está habilitado.
 - Adicionar explicitamente o endereço de teste e /reset-password enquanto ele for usado.
-- Reproduzir política de cadastro/confirmacão e configurar SMTP de produção.
-- O login observado neste código usa login/e-mail + senha. Google não aparece na tela atual;
-  habilitá-lo somente se a auditoria da origem comprovar que é utilizado.
+- Reproduzir a política de cadastro/confirmacão e configurar SMTP de produção.
+- Habilitar Google somente se a auditoria da origem comprovar que é utilizado.
 - Contas legadas @parking.local precisam de e-mail real verificado por um administrador para
   receber recuperação. A função pública não altera mais o e-mail Auth a partir do perfil.
 
@@ -112,7 +119,8 @@ Segredos das funções no destino:
 SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY são fornecidos pelo ambiente das
 Edge Functions. Nunca colocar service_role, senhas ou chaves do reconhecedor em VITE_*.
 
-Depois de autenticar a CLI com a conta correta, publicar explicitamente no destino:
+As quatro funções abaixo já estão ativas no destino (publicação inicial pelo dashboard). Depois de
+autenticar a CLI com a conta correta, usar estes comandos para publicar versões futuras:
 
     npx supabase functions deploy identify-vehicle --project-ref zjzqtrhctilnyzqoorys
     npx supabase functions deploy request-password-reset --project-ref zjzqtrhctilnyzqoorys
@@ -130,8 +138,10 @@ o histórico. Não há chamada alternativa ao Lovable. Marca/modelo/cor podem fi
 ## 5. Publicar Preview e validar
 
 O projeto Vercel andersonestacionamento-v1u2 já atende o domínio e usa android-pos-piloto em produção.
-Configurar as três variáveis de .env.example para a branch de migração em Preview, usando a chave
-pública real do destino. O build rejeita URL antiga, placeholder e chave service_role.
+As três variáveis de `.env.example` estão configuradas para a branch de migração em Preview, usando
+a chave pública real do destino. O Preview abre a tela de login e o fluxo de recuperação de senha
+foi testado. Production ainda não recebeu as variáveis de destino e continua no deploy antigo.
+O build rejeita URL antiga, placeholder e chave service_role.
 Chaves modernas sb_publishable_ não codificam o ID do projeto: confirmar seu funcionamento
 com o destino durante o teste de integração.
 
