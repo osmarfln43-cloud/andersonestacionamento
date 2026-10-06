@@ -1,6 +1,6 @@
 # Migração do Anderson Estacionamento
 
-Preparação iniciada em 05/10/2026 (Brasil). Este roteiro não indica que os dados já foram transferidos.
+Preparação iniciada em 05/10/2026 (Brasil). Em 06/10/2026 foi feita a restauração inicial do backup de origem no Supabase de destino; o corte para produção ainda não foi feito.
 
 | Componente | Origem | Destino |
 | --- | --- | --- |
@@ -20,13 +20,23 @@ Preparação iniciada em 05/10/2026 (Brasil). Este roteiro não indica que os da
 - O repositório não contém os registros de produção, os usuários Auth nem os arquivos do Storage.
 - Esta base de produção contém 15 migrações; main contém outras duas. O schema exportado da origem
   deve ser comparado com ambos os históricos. Não inferir o schema ativo somente pela branch web.
-- A auditoria do destino em 06/10/2026 encontrou 11 tabelas públicas com RLS, 37 políticas,
-  37 triggers, dois buckets e quatro Edge Functions ativas. As 11 tabelas continuam sem registros
-  e Auth tem zero usuários; os dados de produção ainda não foram importados.
-- Foram enviados cinco arquivos ao bucket `vehicle-photos`. Ainda falta comparar esse conjunto com
-  a origem e conferir/copiar os objetos de `qrcode-images` e quaisquer outros arquivos.
-- O projeto Lovable de origem, `estacionamentoanderson`, pertence a outro perfil. A sessão disponível
-  não tem acesso à origem; a exportação completa do banco e de Auth ainda é necessária.
+- O destino mantém 11 tabelas públicas com RLS, 37 políticas, 37 triggers, dois buckets de aplicação
+  e quatro Edge Functions ativas.
+- A restauração inicial importou todas as linhas das 11 tabelas públicas: audit_logs 3.204,
+  veiculos 636, movimentacoes 700, pagamentos 701, unidades 1, configuracoes 1 e
+  identidade_visual 1; clientes, despesas e mensalistas estão vazias na origem e no destino.
+- Auth contém os três usuários e três identidades de e-mail do backup. Os três hashes de senha e
+  confirmações de e-mail foram preservados. A origem tinha dois perfis; um dos três usuários Auth
+  não tinha perfil, e essa relação foi preservada. Os usuários precisarão entrar novamente.
+- As cinco fotos de `vehicle-photos` foram comparadas por nome com a origem e correspondem a todos
+  os cinco objetos. Faltam quatro objetos de `qrcode-images`; o bucket de destino está vazio.
+  `database_export_06_10_26` é o bucket temporário do export, não um bucket funcional do aplicativo.
+- Os campos ativos de Storage nas tabelas públicas agora apontam para o projeto novo; a conferência
+  encontrou zero URLs com o prefixo antigo. O histórico em audit_logs manteve as URLs originais.
+- O Lovable continua publicado no domínio conforme a captura enviada. A Vercel também lista o domínio
+  como verificado no projeto, mas o DNS/tráfego ainda não foi validado nem cortado para a Vercel.
+- O projeto Lovable de origem `estacionamentoanderson` pertence ao perfil livroscursosc@gmail.com;
+  o backup de banco foi recebido. Ainda falta a cópia dos quatro QR Codes e um export final perto do corte.
 
 ## 1. Inventariar e preservar
 
@@ -39,10 +49,11 @@ Tabelas a conferir, considerando também o histórico de main: audit_logs, clien
 despesas, identidade_visual, mensalistas, movimentacoes, pagamentos, profiles, unidades e veiculos.
 O inventário informa tabelas ausentes; não criar estruturas de main por suposição.
 
-No Lovable: More → Cloud → Overview → Advanced settings → Export project data → Export data.
-Baixar a exportação quando estiver pronta. Baixar separadamente os arquivos de qrcode-images
-e vehicle-photos e verificar se existem outros buckets. O arquivo exportado contém informações
-sensíveis; mantê-lo fora deste repositório público. A pasta migration-data/ está ignorada pelo Git.
+A exportação inicial já foi recebida em formato ZIP com arquivo PostgreSQL customizado e ficou fora
+ do repositório. Antes do corte será necessário gerar uma exportação final para incluir alterações
+ feitas na origem após o primeiro backup. Storage é separado: baixar/copiar os arquivos de todos os
+ buckets. O backup e os arquivos contêm dados sensíveis; mantê-los fora deste repositório público.
+ A pasta migration-data/ está ignorada pelo Git.
 
 O export oficial pode conter contas Auth e hashes de senha. Preservar UUIDs e identidades evita quebrar
 profiles.user_id e os campos de operador em movimentacoes. Sessões precisam de novo login.
@@ -50,10 +61,11 @@ Se houver somente CSV das tabelas públicas, isso não constitui uma exportaçã
 
 ## 2. Restaurar em teste
 
-Inspecionar primeiro o formato e o conteúdo do backup. O export customizado .backup precisa de
-pg_restore com suporte à compressão do arquivo; não é SQL para colar no SQL Editor.
-Revisar os objetos com pg_restore --list antes de planejar a restauração seletiva.
-Supabase já tem schemas gerenciados, roles e extensões: não restaurar todo o arquivo com --clean.
+Concluído para a restauração inicial: o backup customizado foi lido e descomprimido com pg_restore 18,
+e os nomes das colunas das 11 tabelas públicas, auth.users e auth.identities coincidiram com o destino.
+Os dados foram importados seletivamente para o schema já existente; não foi restaurado o arquivo inteiro
+com --clean nem substituídos os metadados internos gerenciados pelo Supabase. O histórico de migrações
+do projeto de destino foi preservado.
 
 Comparar o schema real com supabase/migrations antes de aplicar o histórico.
 A primeira migração insere unidade/configuração de exemplo; outra promove um perfil específico
@@ -62,9 +74,11 @@ da origem. Conciliar seeds, ordem de FKs e triggers de criação de perfil/audit
 Se o backup já trouxe o schema, não reaplicar CREATE TABLE/CREATE POLICY.
 Conferir e reconciliar também o histórico supabase_migrations antes de usar db push no futuro.
 
-Preservar o schema e os dados públicos, as contas e identidades Auth, funções SQL, sequências,
-triggers, índices, RLS e associações Realtime. Executar novamente audit.sql e comparar com a origem.
-Testar a criação de registros e verificar a ausência de perfis órfãos e IDs duplicados.
+Os dados públicos, três contas Auth e três identidades foram importados. Sessões e tokens de atualização
+não foram transferidos; todos precisarão entrar novamente. A conferência no destino mostra as mesmas
+contagens de linhas da exportação inicial, zero URLs ativas com o prefixo antigo, nenhuma FK não validada
+e nenhum gatilho de auditoria deixado desativado. Ainda falta validar login real com uma conta migrada,
+permissões do aplicativo e uma exportação final antes do corte.
 
 **Permissões a revisar antes do corte:** o histórico existente permite operações amplas para
 qualquer usuário autenticado, inclusive edição do próprio perfil e exclusão de perfis.
@@ -76,9 +90,10 @@ só porque o login abriu.
 
 ## 3. Copiar os arquivos
 
-Copiar o conteúdo físico dos buckets, mantendo nomes e caminhos. Reproduzir as políticas da origem
-após revisá-las. Os buckets registrados nas migrações são públicos. Contar objetos e comparar
-conteúdo/tamanho; metadados restaurados não equivalem à cópia física do Storage.
+Os cinco objetos físicos de `vehicle-photos` foram comparados por nome e estão no destino. A origem
+tem quatro objetos físicos em `qrcode-images`, mas nenhum foi copiado ainda. O banco aponta os campos
+ativos de Storage para o projeto destino; os QR Codes continuarão indisponíveis até que seus arquivos
+sejam copiados. O bucket temporário `database_export_06_10_26` não deve ser migrado como bucket do app.
 
 Somente depois de validar a cópia, substituir o prefixo
 https://fllkpiwmckppzvhrjlia.supabase.co/storage/v1/object/public/
@@ -97,14 +112,15 @@ e fotos na versão de testes. Conteúdo histórico em audit_logs deve manter a e
 ## 4. Configurar autenticação e funções
 
 Na configuração Auth do destino, Site URL e redirects de produção/Preview já foram configurados.
-Antes do corte, conferir confirmação de e-mail, SMTP de produção e os provedores necessários. Hoje:
+As três identidades da exportação usam provedor de e-mail. O Google não aparece entre as identidades
+migradas e continua desabilitado. Hoje:
 
 - Site URL: https://andersonestacionamento.online
 - Redirect URLs: domínio de produção, domínio www e URL de Preview atual.
-- Confirm email está habilitado; o login atual usa e-mail/login + senha. Google não está habilitado.
-- Adicionar explicitamente o endereço de teste e /reset-password enquanto ele for usado.
-- Reproduzir a política de cadastro/confirmacão e configurar SMTP de produção.
-- Habilitar Google somente se a auditoria da origem comprovar que é utilizado.
+- Confirm email está habilitado; os três usuários exportados já estavam confirmados.
+- Os hashes de senha foram preservados; é necessário testar login e recuperação com um usuário migrado.
+- Um Auth user da origem não tinha perfil; ele foi mantido sem perfil para não conceder papel novo.
+- Reproduzir a política de cadastro/confirmacão e configurar SMTP de produção antes do corte.
 - Contas legadas @parking.local precisam de e-mail real verificado por um administrador para
   receber recuperação. A função pública não altera mais o e-mail Auth a partir do perfil.
 
@@ -137,13 +153,13 @@ o histórico. Não há chamada alternativa ao Lovable. Marca/modelo/cor podem fi
 
 ## 5. Publicar Preview e validar
 
-O projeto Vercel andersonestacionamento-v1u2 já atende o domínio e usa android-pos-piloto em produção.
-As três variáveis de `.env.example` estão configuradas para a branch de migração em Preview, usando
-a chave pública real do destino. O Preview abre a tela de login e o fluxo de recuperação de senha
-foi testado. Production ainda não recebeu as variáveis de destino e continua no deploy antigo.
+O projeto Vercel `andersonestacionamento-v1u2` usa `android-pos-piloto` em produção. A branch de
+migração está em Preview Ready com variáveis do Supabase de destino; build, TypeScript e 36 testes
+passaram. O domínio aparece associado e verificado no projeto Vercel, mas a captura do Lovable ainda
+mostra o site publicado ali e o DNS não foi confirmado no destino Vercel. Production não recebeu as
+variáveis novas e continua sem corte. Testar login real com usuário migrado, fotos/QR Codes e fluxo do
+estacionamento no Preview antes de alterar Production ou DNS.
 O build rejeita URL antiga, placeholder e chave service_role.
-Chaves modernas sb_publishable_ não codificam o ID do projeto: confirmar seu funcionamento
-com o destino durante o teste de integração.
 
 Build: npm ci, npm run build, saída dist. vercel.json inclui fallback SPA e controle de cache do SW.
 Testar atualização direta de /entrada, /saida e /reset-password.
