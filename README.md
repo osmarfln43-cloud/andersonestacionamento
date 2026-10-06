@@ -1,26 +1,28 @@
 # Anderson Estacionamento
 
-(.)
+Aplicação web para gestão de estacionamento.
 
-This project was built with [Lovable](https://lovable.dev).
+## Ambiente de migração
 
-**Live app**: https://andersonestacionamento.lovable.app
+Esta branch prepara a aplicação para executar com Supabase e Vercel. O deploy de produção e o domínio principal permanecem no ambiente atual até a validação final.
 
-## Build with Lovable
+- Banco, autenticação e arquivos: projeto Supabase de destino.
+- Hospedagem: Vercel.
+- Repositório: GitHub.
+- Variáveis de Preview estão vinculadas especificamente a esta branch.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/04b6f216-b9ae-4bf0-9548-ec1487cd24a6).
+## Validações pendentes antes do corte
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- Confirmar os fluxos de leitura e gravação no Preview.
+- Conferir uploads e arquivos armazenados.
+- Fazer a exportação final dos dados imediatamente antes da troca de produção.
+- Confirmar o deploy de produção antes de alterar o domínio.
 
-## Development
+## Desenvolvimento
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requer Node.js e npm:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm ci
 npm run dev
 ```
