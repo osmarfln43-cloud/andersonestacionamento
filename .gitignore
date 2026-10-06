@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local environment files; keep only the safe template in Git
+.env
+.env.*
+!.env.example
