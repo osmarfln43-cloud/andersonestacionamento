@@ -8,18 +8,16 @@ createRoot(document.getElementById("root")!).render(<App />);
 const isInIframe = (() => {
   try { return window.self !== window.top; } catch { return true; }
 })();
-const isPreviewHost =
-  window.location.hostname.includes("id-preview--") ||
-  window.location.hostname.includes("lovableproject.com");
+const enableServiceWorker = import.meta.env.PROD && !isInIframe;
 
-if (!isPreviewHost && !isInIframe && "serviceWorker" in navigator) {
+if (enableServiceWorker && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   });
 }
 
 // Unregister SWs in preview/iframe
-if (isPreviewHost || isInIframe) {
+if (!enableServiceWorker) {
   navigator.serviceWorker?.getRegistrations().then((regs) =>
     regs.forEach((r) => r.unregister())
   );

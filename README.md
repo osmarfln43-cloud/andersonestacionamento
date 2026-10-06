@@ -1,26 +1,34 @@
 # Anderson Estacionamento
 
-(.)
+Aplicativo React + Vite com Supabase próprio para banco, autenticação, arquivos e Edge Functions.
+Hospedagem prevista na Vercel em https://andersonestacionamento.online.
 
-This project was built with [Lovable](https://lovable.dev).
+Esta branch prepara a migração. A transferência dos dados e a ativação em produção devem seguir
+[migration/README.md](migration/README.md).
 
-**Live app**: https://andersonestacionamento.lovable.app
+## Desenvolvimento
 
-## Build with Lovable
+Usar Node.js 22 ou 24 e npm.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/04b6f216-b9ae-4bf0-9548-ec1487cd24a6).
+1. Executar npm ci.
+2. Copiar .env.example para .env.local.
+3. Preencher a chave pública do projeto Supabase de destino.
+4. Executar npm run dev.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## Verificação
 
-## Development
+- npm test: testes do aplicativo e das funções/configuração.
+- npx tsc --noEmit -p tsconfig.app.json: verificação de tipos do frontend.
+- npm run build: gerar dist para a Vercel.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+O build exige as variáveis do novo Supabase. O banco anterior não é usado como fallback.
+O reconhecimento de fotos chama Plate Recognizer diretamente pelo backend e requer uma chave
+nos segredos do Supabase. Sem ela, o cadastro manual continua disponível.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Infraestrutura
+
+- GitHub: osmarfln43-cloud/andersonestacionamento.
+- Supabase de destino: zjzqtrhctilnyzqoorys.
+- Vercel: npm ci, npm run build, saída dist.
+- Configuração e sequência da migração: [migration/README.md](migration/README.md).
+- Inventário SQL somente leitura: [migration/audit.sql](migration/audit.sql).
