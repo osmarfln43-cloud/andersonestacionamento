@@ -1,4 +1,13 @@
-project_id = "fllkpiwmckppzvhrjlia"
+project_id = "zjzqtrhctilnyzqoorys"
+
+[functions.identify-vehicle]
+verify_jwt = true
+
+[functions.invite-user]
+verify_jwt = true
+
+[functions.admin-set-user-password]
+verify_jwt = true
 
 [functions.request-password-reset]
 verify_jwt = false
