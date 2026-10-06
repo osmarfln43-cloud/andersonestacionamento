@@ -254,6 +254,30 @@ export type Database = {
           },
         ]
       }
+      identidade_visual: {
+        Row: {
+          id: string
+          logo_login_url: string | null
+          nome_sistema: string
+          titulo_pagina_automatico: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          logo_login_url?: string | null
+          nome_sistema?: string
+          titulo_pagina_automatico?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          logo_login_url?: string | null
+          nome_sistema?: string
+          titulo_pagina_automatico?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mensalistas: {
         Row: {
           cliente_id: string
@@ -626,14 +650,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_public_branding: {
-        Args: never
-        Returns: {
-          logo_login_url: string
-          nome_sistema: string
-          titulo_pagina_automatico: boolean
-        }[]
-      }
       normalize_login: { Args: { input_text: string }; Returns: string }
       resolve_auth_email: { Args: { identifier: string }; Returns: string }
     }
