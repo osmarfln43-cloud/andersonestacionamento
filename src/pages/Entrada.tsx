@@ -50,7 +50,12 @@ export default function Entrada() {
     setAiResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('identify-vehicle', { body: { image: base64 } });
-      if (error) throw error;
+      if (error) {
+        const response = (error as { context?: Response }).context;
+        const details = response instanceof Response ? await response.json().catch(() => null) : null;
+        throw new Error(details?.error || "Não foi possível ler a foto. Preencha os dados manualmente.");
+      }
+      if (data?.error) throw new Error(data.error);
       if (data) {
         setAiResult(data);
         if (data.placa && data.placa.length >= 6) { setPlaca(data.placa.toUpperCase()); lastSearchedPlateRef.current = data.placa.toUpperCase(); }
@@ -58,10 +63,8 @@ export default function Entrada() {
         if (data.cor) setCor(data.cor);
         if (data.categoria) setCategoria(normalizeCategoria(data.categoria));
         toast({
-          title: data.categoria ? "🤖 IA identificou!" : "🤖 Placa lida",
-          description: data.categoria
-            ? `${data.categoria === 'moto' ? 'Moto' : 'Carro'} — ${[data.marca, data.modelo].filter(Boolean).join(' ')}`
-            : "Não deu para ver se é moto ou carro — confirme no campo TIPO.",
+          title: data.placa ? "Placa identificada" : "Confira os dados do veículo",
+          description: data.message || "Confira a placa e confirme se o veículo é carro ou moto.",
         });
       }
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
@@ -111,15 +114,8 @@ export default function Entrada() {
         toast({ title: "🔄 Retornou!", description: `${proximaVisita}ª vez` });
         return;
       }
-      const { data, error } = await supabase.functions.invoke('identify-vehicle', { body: { placa: placaUpper } });
-      if (error) throw error;
-      if (data) {
-        setAiResult(data);
-        if (data.marca || data.modelo) setDescricao([data.marca, data.modelo, data.cor].filter(Boolean).join(' ').trim());
-        if (data.cor) setCor(data.cor);
-        if (data.categoria) setCategoria(normalizeCategoria(data.categoria));
-        toast({ title: "🤖 IA sugeriu", description: `${data.marca} ${data.modelo}` });
-      }
+      setAiResult({ source: 'none' });
+      toast({ title: "Veículo não encontrado", description: "Preencha os dados ou envie uma foto para leitura da placa." });
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
     finally { setAiLoading(false); }
   };
@@ -316,6 +312,7 @@ export default function Entrada() {
             {aiResult.source === 'patio' ? '⚠️ JÁ NO PÁTIO' :
              aiResult.source === 'mensalista' ? `📋 MENSALISTA — ${aiResult.clienteNome}` :
              aiResult.source === 'retorno' ? `🔄 ${aiResult.visitCount || 2}ª VEZ` :
+             aiResult.source === 'none' || (aiResult.source === 'plate-recognizer' && !aiResult.placa) ? 'CONFIRA OS DADOS' :
              '✓ ENCONTRADO'}
           </div>
         )}

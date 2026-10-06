@@ -1,15 +1,38 @@
 # Anderson Estacionamento
 
-Código único da interface para web e APK POS. A versão web é publicada na Vercel a partir da branch `android-pos-piloto`; o APK compila a interface no pacote e integra a impressora SUNMI. O aplicativo Windows abre `https://andersonestacionamento.online/` e carrega sempre a versão publicada nesse domínio.
+Interface React + Vite compartilhada entre a web e o APK POS. A Vercel publica a branch
+`android-pos-piloto` em https://andersonestacionamento.online. O APK empacota a interface e
+integra a impressora SUNMI; o aplicativo Windows abre o domínio e acompanha a versão web.
+
+Esta branch prepara a migração do backend para o Supabase próprio `zjzqtrhctilnyzqoorys`.
+A transferência dos dados e a ativação em produção devem seguir [migration/README.md](migration/README.md).
+O ambiente anterior continua em produção até a validação do destino.
+
+## Desenvolvimento e verificação
+
+Usar Node.js 22 ou 24 e npm. Executar `npm ci`, copiar `.env.example` para `.env.local`,
+preencher a chave pública do Supabase de destino e executar `npm run dev`.
+
+- `npm test`: testes do aplicativo e das funções/configuração.
+- `npx tsc --noEmit -p tsconfig.app.json`: verificar tipos do frontend.
+- `npm run build`: gerar `dist` para a Vercel.
+- `npm run build -- --mode android`: gerar os assets para o APK.
+
+O build exige as variáveis do novo Supabase. A leitura de fotos usa Plate Recognizer no backend;
+sem a chave dessa integração, o operador pode preencher os dados manualmente.
 
 ## Publicação
 
-1. Vincule o projeto Vercel a este repositório e use `android-pos-piloto` como Production Branch. Framework Vite, build `npm run build`, output `dist`. Configure `andersonestacionamento.online` no projeto Vercel.
-2. Confirme as variáveis `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_SUPABASE_PROJECT_ID` para o mesmo projeto Supabase do APK. Não troque o projeto sem migrar os dados e a autenticação.
-3. A rota `/` e as demais rotas SPA são tratadas por `vercel.json`. A cada push na branch de produção, a Vercel publica a interface; o EXE a carrega no próximo acesso. O APK requer novo build e instalação.
-4. O workflow `windows-desktop.yml` gera um EXE portátil. Ele requer internet e não contém dados de login. O workflow `android-pos.yml` gera o APK POS.
-5. A função Supabase `identify-vehicle` foi alterada para usar somente Plate Recognizer quando configurado. Publique-a no projeto Supabase com `supabase functions deploy identify-vehicle`; sem `PLATE_RECOGNIZER_API_KEY`, o operador pode informar dados manualmente.
+O projeto Vercel `andersonestacionamento-v1u2` está ligado a este repositório e ao domínio.
+Configurar as três variáveis de `.env.example` primeiro no Preview da branch de migração.
+Mesclar em `android-pos-piloto` somente após migrar e testar os dados, Auth, Storage e funções.
 
-## Limites de migração
+O workflow `android-pos.yml` usa a variável de repositório `VITE_SUPABASE_PUBLISHABLE_KEY`
+para a chave pública do destino. O APK precisa ser recompilado e instalado na POS no corte:
+APKs antigos continuam apontando para o backend anterior. Nunca colocar a chave `service_role`
+nessa variável. O workflow `windows-desktop.yml` e a ponte nativa SUNMI foram preservados.
 
-A aplicação continua usando Supabase Auth, banco e Edge Functions no projeto `fllkpiwmckppzvhrjlia`. É necessário confirmar a titularidade e a administração desse projeto fora do Lovable antes de afirmar independência completa da plataforma. O EXE não aciona a impressora SUNMI da POS; essa integração é exclusiva do APK Android.
+O EXE usa a versão publicada no domínio e requer internet; a impressão SUNMI é exclusiva do APK.
+Validar impressão e download de relatórios nos equipamentos antes de encerrar a migração.
+
+Inventário SQL somente leitura: [migration/audit.sql](migration/audit.sql).

@@ -1,4 +1,4 @@
-const CACHE_NAME = "anderson-v4";
+const CACHE_NAME = "anderson-v4-supabase";
 const PRECACHE = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -16,7 +16,8 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-  if (e.request.url.includes("/~oauth")) return;
+  // Nunca armazenar autenticação, APIs ou fotos privadas de outros domínios.
+  if (e.request.method !== "GET" || new URL(e.request.url).origin !== self.location.origin) return;
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request).catch(() => caches.match("/"))
