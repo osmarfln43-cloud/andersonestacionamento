@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useBranding } from "@/hooks/useDatabase";
 
 export default function Login() {
   const [login, setLogin] = useState("");
@@ -19,6 +20,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { signIn, signUp, requestPasswordReset } = useAuth();
   const { toast } = useToast();
+  const { data: branding } = useBranding();
+  const loginLogo = branding?.logo_login_url || brandLogo;
+  const systemName = branding?.nome_sistema || "Anderson Estacionamento";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,14 +87,14 @@ export default function Login() {
   return (
     <div className="min-h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-background p-4 py-6 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
-        <img src={brandLogo} alt="" className="w-[560px] max-w-[86vw] opacity-[0.06] select-none" draggable={false} />
+        <img src={loginLogo} alt="" className="w-[560px] max-w-[86vw] opacity-[0.06] select-none" draggable={false} />
       </div>
 
       <div className="w-full max-w-[400px] space-y-5 relative z-10 animate-in" style={{ opacity: 0 }}>
         <div className="flex justify-center">
           <img
-            src={brandLogo}
-            alt="Anderson Estacionamento"
+            src={loginLogo}
+            alt={systemName}
             className="h-auto w-[230px] max-w-full object-contain"
           />
         </div>

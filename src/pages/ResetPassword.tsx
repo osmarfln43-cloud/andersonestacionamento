@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import brandLogo from "@/assets/anderson-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useBranding } from "@/hooks/useDatabase";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -15,6 +16,9 @@ export default function ResetPassword() {
   const [isRecoveryReady, setIsRecoveryReady] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: branding } = useBranding();
+  const loginLogo = branding?.logo_login_url || brandLogo;
+  const systemName = branding?.nome_sistema || "Anderson Estacionamento";
 
   useEffect(() => {
     let cancelled = false;
@@ -138,14 +142,14 @@ export default function ResetPassword() {
   return (
     <div className="min-h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-background p-4 py-6 relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
-        <img src={brandLogo} alt="" className="w-[560px] max-w-[86vw] opacity-[0.06] select-none" draggable={false} />
+        <img src={loginLogo} alt="" className="w-[560px] max-w-[86vw] opacity-[0.06] select-none" draggable={false} />
       </div>
 
       <div className="w-full max-w-[420px] space-y-5 relative z-10">
         <div className="text-center space-y-2">
           <img
-            src={brandLogo}
-            alt="Anderson Estacionamento"
+            src={loginLogo}
+            alt={systemName}
             className="mx-auto h-auto w-[230px] max-w-full object-contain"
           />
           <h1 className="text-xl font-bold font-mono text-primary uppercase tracking-wider">Redefinir senha</h1>

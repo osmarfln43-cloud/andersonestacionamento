@@ -115,12 +115,16 @@ export type Database = {
           horario_fechamento: string | null
           id: string
           largura_papel: string | null
+          logo_interna_url: string | null
+          logo_login_url: string | null
           mensagem_comprovante: string | null
           nome_beneficiario: string | null
           nome_estacionamento: string
+          nome_sistema: string
           qr_code_url: string | null
           telefone: string | null
           tipo_chave_pix: string | null
+          titulo_pagina_automatico: boolean
           tolerancia_minutos: number
           unidade_id: string | null
           updated_at: string
@@ -141,12 +145,16 @@ export type Database = {
           horario_fechamento?: string | null
           id?: string
           largura_papel?: string | null
+          logo_interna_url?: string | null
+          logo_login_url?: string | null
           mensagem_comprovante?: string | null
           nome_beneficiario?: string | null
           nome_estacionamento?: string
+          nome_sistema?: string
           qr_code_url?: string | null
           telefone?: string | null
           tipo_chave_pix?: string | null
+          titulo_pagina_automatico?: boolean
           tolerancia_minutos?: number
           unidade_id?: string | null
           updated_at?: string
@@ -167,12 +175,16 @@ export type Database = {
           horario_fechamento?: string | null
           id?: string
           largura_papel?: string | null
+          logo_interna_url?: string | null
+          logo_login_url?: string | null
           mensagem_comprovante?: string | null
           nome_beneficiario?: string | null
           nome_estacionamento?: string
+          nome_sistema?: string
           qr_code_url?: string | null
           telefone?: string | null
           tipo_chave_pix?: string | null
+          titulo_pagina_automatico?: boolean
           tolerancia_minutos?: number
           unidade_id?: string | null
           updated_at?: string
@@ -241,6 +253,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      identidade_visual: {
+        Row: {
+          id: string
+          logo_login_url: string | null
+          nome_sistema: string
+          titulo_pagina_automatico: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          logo_login_url?: string | null
+          nome_sistema?: string
+          titulo_pagina_automatico?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          logo_login_url?: string | null
+          nome_sistema?: string
+          titulo_pagina_automatico?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       mensalistas: {
         Row: {
