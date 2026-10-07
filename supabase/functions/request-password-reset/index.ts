@@ -87,7 +87,8 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("request-password-reset error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Erro inesperado";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
