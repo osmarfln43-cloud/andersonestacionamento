@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { calculateParkingBilling } from '@/lib/billing';
 import { generateTicketCode } from '@/lib/ticket';
 
 // Movimentacoes
@@ -170,71 +169,32 @@ export function useRegistrarEntrada() {
   });
 }
 
+export function useCancelarEntrada() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, motivo }: { id: string; motivo: string }) => {
+      const { data, error } = await supabase.rpc('cancelar_entrada', { p_id: id, p_motivo: motivo });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['movimentacoes'] }),
+  });
+}
+
 export function useRegistrarSaida() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, forma_pagamento }: { id: string; forma_pagamento: 'pix' | 'dinheiro' }) => {
-      // Get the movimentacao first
-      const { data: mov, error: fetchError } = await supabase
-        .from('movimentacoes')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (fetchError || !mov) throw fetchError || new Error('Not found');
-
-      const saida = new Date();
-      const entrada = new Date(mov.entrada);
-
-      // Fetch daily max config
-      const categoria = (mov as any).categoria || 'carro';
-      const { data: configData } = await supabase
-        .from('configuracoes')
-        .select('valor_maximo_diario, valor_maximo_diario_moto, tolerancia_minutos')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      const maxDiario = categoria === 'moto' 
-        ? Number((configData as any)?.valor_maximo_diario_moto ?? 15)
-        : Number(configData?.valor_maximo_diario ?? 35);
-
-      const billing = calculateParkingBilling({
-        entrada,
-        valorHora: Number(mov.valor_hora),
-        valorDiaria: maxDiario,
-        toleranciaMinutos: Number((configData as any)?.tolerancia_minutos ?? 15),
-        now: saida,
+    mutationFn: async ({ id, forma_pagamento, valor_avulso }: { id: string; forma_pagamento: 'pix' | 'dinheiro'; valor_avulso?: number }) => {
+      const { data, error } = await supabase.rpc('finalizar_saida', {
+        p_id: id, p_forma_pagamento: forma_pagamento,
+        ...(valor_avulso !== undefined ? { p_valor_avulso: valor_avulso } : {}),
       });
-
-      const valorTotal = billing.total;
-
-      const { data, error } = await supabase
-        .from('movimentacoes')
-        .update({
-          saida: saida.toISOString(),
-          tempo_total: `${billing.hours}h ${billing.mins}min`,
-          valor_total: valorTotal,
-          forma_pagamento,
-          status_pagamento: 'pago',
-          status_movimentacao: 'finalizado',
-        })
-        .eq('id', id)
-        .select()
-        .single();
       if (error) throw error;
-
-      // Create payment record
-      await supabase.from('pagamentos').insert({
-        movimentacao_id: id,
-        tipo: forma_pagamento,
-        valor: valorTotal,
-        status: 'pago',
-      });
-
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['movimentacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos'] });
     },
   });
 }
