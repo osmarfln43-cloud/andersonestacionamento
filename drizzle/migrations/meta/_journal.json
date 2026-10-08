@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791500299535,
+      "tag": "0000_cancelamento_entrada_valor_avulso_saida",
+      "breakpoints": true
+    }
+  ]
+}

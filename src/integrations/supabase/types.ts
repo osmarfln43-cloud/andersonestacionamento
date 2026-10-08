@@ -341,6 +341,8 @@ export type Database = {
       }
       movimentacoes: {
         Row: {
+          cancelado_em: string | null
+          cancelado_por: string | null
           categoria: string
           cliente_id: string | null
           cor: string | null
@@ -350,6 +352,7 @@ export type Database = {
           foto_url: string | null
           id: string
           modelo: string | null
+          motivo_cancelamento: string | null
           observacao: string | null
           operador_entrada_id: string | null
           operador_saida_id: string | null
@@ -362,11 +365,15 @@ export type Database = {
           tipo_cliente: string
           unidade_id: string | null
           updated_at: string
+          valor_avulso: number | null
+          valor_calculado: number | null
           valor_hora: number
           valor_total: number | null
           veiculo_id: string | null
         }
         Insert: {
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           categoria?: string
           cliente_id?: string | null
           cor?: string | null
@@ -376,6 +383,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           modelo?: string | null
+          motivo_cancelamento?: string | null
           observacao?: string | null
           operador_entrada_id?: string | null
           operador_saida_id?: string | null
@@ -388,11 +396,15 @@ export type Database = {
           tipo_cliente?: string
           unidade_id?: string | null
           updated_at?: string
+          valor_avulso?: number | null
+          valor_calculado?: number | null
           valor_hora?: number
           valor_total?: number | null
           veiculo_id?: string | null
         }
         Update: {
+          cancelado_em?: string | null
+          cancelado_por?: string | null
           categoria?: string
           cliente_id?: string | null
           cor?: string | null
@@ -402,6 +414,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           modelo?: string | null
+          motivo_cancelamento?: string | null
           observacao?: string | null
           operador_entrada_id?: string | null
           operador_saida_id?: string | null
@@ -414,6 +427,8 @@ export type Database = {
           tipo_cliente?: string
           unidade_id?: string | null
           updated_at?: string
+          valor_avulso?: number | null
+          valor_calculado?: number | null
           valor_hora?: number
           valor_total?: number | null
           veiculo_id?: string | null
@@ -650,6 +665,90 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancelar_entrada: {
+        Args: { p_id: string; p_motivo: string }
+        Returns: {
+          cancelado_em: string | null
+          cancelado_por: string | null
+          categoria: string
+          cliente_id: string | null
+          cor: string | null
+          created_at: string
+          entrada: string
+          forma_pagamento: string | null
+          foto_url: string | null
+          id: string
+          modelo: string | null
+          motivo_cancelamento: string | null
+          observacao: string | null
+          operador_entrada_id: string | null
+          operador_saida_id: string | null
+          placa: string
+          saida: string | null
+          status_movimentacao: string
+          status_pagamento: string
+          tempo_total: string | null
+          ticket_codigo: string | null
+          tipo_cliente: string
+          unidade_id: string | null
+          updated_at: string
+          valor_avulso: number | null
+          valor_calculado: number | null
+          valor_hora: number
+          valor_total: number | null
+          veiculo_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "movimentacoes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      finalizar_saida: {
+        Args: {
+          p_forma_pagamento: string
+          p_id: string
+          p_valor_avulso?: number
+        }
+        Returns: {
+          cancelado_em: string | null
+          cancelado_por: string | null
+          categoria: string
+          cliente_id: string | null
+          cor: string | null
+          created_at: string
+          entrada: string
+          forma_pagamento: string | null
+          foto_url: string | null
+          id: string
+          modelo: string | null
+          motivo_cancelamento: string | null
+          observacao: string | null
+          operador_entrada_id: string | null
+          operador_saida_id: string | null
+          placa: string
+          saida: string | null
+          status_movimentacao: string
+          status_pagamento: string
+          tempo_total: string | null
+          ticket_codigo: string | null
+          tipo_cliente: string
+          unidade_id: string | null
+          updated_at: string
+          valor_avulso: number | null
+          valor_calculado: number | null
+          valor_hora: number
+          valor_total: number | null
+          veiculo_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "movimentacoes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       normalize_login: { Args: { input_text: string }; Returns: string }
       resolve_auth_email: { Args: { identifier: string }; Returns: string }
     }
